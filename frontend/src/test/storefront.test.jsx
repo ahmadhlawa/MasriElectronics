@@ -18,7 +18,7 @@ describe("public storefront", () => {
     stubApi(storefrontRoutes);
     renderApp("/");
 
-    expect(await screen.findAllByText(settingsFixture.store_name)).not.toHaveLength(0);
+    expect(await screen.findAllByText(settingsFixture.store_name_ar)).not.toHaveLength(0);
     expect(screen.getByRole("search")).toBeInTheDocument();
     expect(screen.getByText(settingsFixture.announcement)).toBeInTheDocument();
     expect(document.querySelector(".vs-footer")).toHaveTextContent("الدفع عند الاستلام");

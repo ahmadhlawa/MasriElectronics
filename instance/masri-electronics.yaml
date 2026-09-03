@@ -10,8 +10,8 @@ store:
   timezone: "Asia/Hebron"
   currency_code: "ILS"
   currency_symbol: "₪"
-  logo_url: "/branding/masri-electronics-logo.png"
-  favicon_url: "/branding/masri-electronics-icon.png"
+  logo_url: "/branding/logo1.png"
+  favicon_url: "/branding/logo-without-name.png"
   seo_title: "المصري للأدوات الكهربائية"
   seo_description: "حلول كهربائية متكاملة لبيتك ومشروعك. أجهزة أصلية + كفالة + أسعار تنافسية. شحن سريع | خدمة عملاء على مدار الساعة"
 

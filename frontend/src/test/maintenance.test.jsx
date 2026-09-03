@@ -41,7 +41,7 @@ describe("maintenance mode", () => {
     stubApi(maintenanceRoutes);
     renderApp("/");
 
-    expect(await screen.findByText(settingsFixture.store_name)).toBeInTheDocument();
+    expect(await screen.findByText(/المصري للأدوات الكهربائية/)).toBeInTheDocument();
     expect(screen.getByText(settingsFixture.store_tagline)).toBeInTheDocument();
     expect(screen.getAllByText(settingsFixture.whatsapp).length).toBeGreaterThan(0);
   });

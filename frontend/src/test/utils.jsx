@@ -55,7 +55,8 @@ export const page = (items = [], extra = {}) => ({
 });
 
 export const settingsFixture = {
-  store_name: "متجر الاختبار",
+  store_name: "Masri Electronics",
+  store_name_ar: "المصري للأدوات الكهربائية",
   store_tagline: "مستلزمات حرفية",
   phone: "0590000000",
   whatsapp: "0590000000",
