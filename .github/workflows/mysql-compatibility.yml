@@ -1,0 +1,49 @@
+name: MySQL 8 compatibility
+
+on:
+  push:
+    paths: ["backend/**", "instance/**", "VERSION"]
+  pull_request:
+    paths: ["backend/**", "instance/**", "VERSION"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-only
+          MYSQL_DATABASE: commerce_ci
+          MYSQL_USER: commerce_ci
+          MYSQL_PASSWORD: ci-only-password
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-only"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DATABASE_URL: mysql+pymysql://commerce_ci:ci-only-password@127.0.0.1:3306/commerce_ci?charset=utf8mb4
+      MYSQL_LIFECYCLE_URL: mysql+pymysql://commerce_ci:ci-only-password@127.0.0.1:3306/commerce_ci_lifecycle?charset=utf8mb4
+      MYSQL_SEED_URL: mysql+pymysql://commerce_ci:ci-only-password@127.0.0.1:3306/commerce_ci_seed?charset=utf8mb4
+      MYSQL_MIGRATION_URL: mysql+pymysql://commerce_ci:ci-only-password@127.0.0.1:3306/commerce_ci_migration?charset=utf8mb4
+      SECRET_KEY: ci-only-secret
+      STORAGE_PROVIDER: local
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - run: pip install -e ".[dev,mysql]"
+      - run: python -m scripts.mysql_compat --verbose
+      - run: python -m alembic upgrade head
+      - run: pytest

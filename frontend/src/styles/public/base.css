@@ -1,0 +1,587 @@
+/* Storefront base: page frame, layout primitives, buttons, states.
+   Nothing here states a colour; every value is a token from tokens.css, which is
+   what keeps the brand centralised. */
+
+.vs-public {
+  direction: rtl;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--vs-page);
+  color: var(--vs-ink);
+  font-family: var(--vs-font);
+  font-size: var(--vs-fs-body);
+  line-height: var(--vs-lh);
+  /* The fixed category rail sits at the far right of the viewport, so the whole
+     storefront â€” header, content and footer alike â€” reserves its width as a real
+     gutter. Physical `right`, because the layout is RTL and the rail is not on
+     the logical end side. The gutter is 0 below 900px, where the rail is gone.
+     Drawers and the scrim are `position: fixed` and so are unaffected: they
+     still cover the viewport edge to edge. */
+  padding-right: var(--vs-rail-gutter);
+}
+
+.vs-public *,
+.vs-public *::before,
+.vs-public *::after {
+  box-sizing: border-box;
+}
+
+.vs-public h1,
+.vs-public h2,
+.vs-public h3,
+.vs-public h4,
+.vs-public p,
+.vs-public figure {
+  margin: 0;
+}
+
+.vs-public a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.vs-public img {
+  max-width: 100%;
+}
+
+.vs-public :focus-visible {
+  outline: 2px solid var(--vs-primary);
+  outline-offset: 2px;
+  border-radius: var(--vs-r-sm);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-viewport-reveal="pending"] {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+
+  [data-viewport-reveal="entered"] {
+    animation: vs-viewport-reveal var(--vs-t-reveal) var(--vs-ease) both;
+    animation-delay: var(--vs-reveal-delay, 0ms);
+  }
+}
+
+@keyframes vs-viewport-reveal {
+  from { opacity: 0; transform: translateY(18px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.vs-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* â”€â”€ layout primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-container {
+  width: 100%;
+  max-width: var(--vs-container);
+  margin-inline: auto;
+  padding-inline: var(--vs-gutter);
+}
+
+.vs-container--narrow {
+  max-width: var(--vs-container-narrow);
+}
+
+.vs-section {
+  padding-block: var(--vs-section);
+}
+
+.vs-section--tight {
+  padding-block: var(--vs-section-tight);
+}
+
+.vs-section--flush-top {
+  padding-block-start: 0;
+}
+
+.vs-section--tinted {
+  background: var(--vs-surface-2);
+}
+
+.vs-section--surface {
+  background: var(--vs-surface);
+}
+
+/* Section heading: eyebrow, title, optional "see all" on the far side. */
+.vs-sec-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-block-end: 24px;
+}
+
+/* A short accent rule above every section heading. It is the storefront's most
+   repeated brand detail, so it is also the one that has to stay smallest:
+   34Ã—2px, above the type, never around it. */
+.vs-sec-head__text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-block-start: 14px;
+}
+
+.vs-sec-head__text::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 34px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--vs-accent);
+}
+
+.vs-sec-head__eyebrow {
+  font-size: var(--vs-fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--vs-accent-dark);
+  text-transform: uppercase;
+}
+
+.vs-sec-head__title {
+  font-size: var(--vs-fs-h2);
+  font-weight: var(--vs-fw-heading);
+  line-height: 1.4;
+  color: var(--vs-ink);
+}
+
+.vs-sec-head__desc {
+  font-size: var(--vs-fs-sm);
+  color: var(--vs-ink-3);
+  max-width: 62ch;
+}
+
+.vs-sec-head__more {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding-inline: 16px;
+  border: 1px solid var(--vs-border-strong);
+  border-radius: var(--vs-r-pill);
+  background: var(--vs-surface);
+  font-size: var(--vs-fs-sm);
+  font-weight: 500;
+  color: var(--vs-primary);
+  white-space: nowrap;
+  transition: background var(--vs-t) var(--vs-ease), color var(--vs-t) var(--vs-ease),
+    border-color var(--vs-t) var(--vs-ease);
+}
+
+@media (hover: hover) {
+  .vs-sec-head__more:hover {
+    background: var(--vs-primary);
+    border-color: var(--vs-primary);
+    color: var(--vs-on-primary-action);
+  }
+}
+
+/* â”€â”€ grids â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-grid {
+  display: grid;
+  gap: var(--vs-grid-gap);
+  grid-template-columns: repeat(var(--vs-cols), minmax(0, 1fr));
+}
+
+.vs-grid--cats {
+  grid-template-columns: repeat(var(--vs-cols-cat), minmax(0, 1fr));
+}
+
+/* A package gets a tall, editorial card in its own grid â€” and the taller box is
+   also what gives the reveal panel room to sit over the artwork without
+   crowding it. In a mixed catalogue grid a package stays square (tokens.css) so
+   it still lines up with the products around it. */
+.vs-grid--packages {
+  grid-template-columns: repeat(var(--vs-cols-pkg), minmax(0, 1fr));
+  --vs-ar-package: 4 / 5;
+}
+
+@media (max-width: 599px) {
+  .vs-home {
+    --vs-ar-product: 3 / 2;
+    --vs-ar-package: 8 / 5;
+  }
+
+  .vs-home .vs-grid--packages {
+    --vs-ar-package: 8 / 5;
+  }
+
+  .vs-home .vs-sec-head {
+    margin-block-end: 12px;
+  }
+}
+
+/* Horizontal rail: same cards, scrolled instead of wrapped. */
+.vs-rail {
+  display: grid;
+  grid-auto-flow: column;
+  /* The floor matters more than it used to: a rail always overflows, so this is
+     the width the cards actually take. At 210px they were two-thirds the size of
+     the grid cards on the same page, and the reveal panel had almost no room. */
+  grid-auto-columns: minmax(280px, calc((100% - (var(--vs-cols) - 1) * var(--vs-grid-gap)) / var(--vs-cols)));
+  gap: var(--vs-grid-gap);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  padding-block-end: 6px;
+}
+
+.vs-rail > * {
+  scroll-snap-align: start;
+}
+
+/* â”€â”€ buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding-inline: 20px;
+  border: 1px solid transparent;
+  border-radius: var(--vs-r-md);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--vs-fs-sm);
+  font-weight: var(--vs-fw-button);
+  line-height: 1;
+  color: var(--vs-ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--vs-t) var(--vs-ease), color var(--vs-t) var(--vs-ease),
+    border-color var(--vs-t) var(--vs-ease), box-shadow var(--vs-t) var(--vs-ease),
+    transform var(--vs-t-fast) var(--vs-ease);
+}
+
+.vs-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.vs-btn--primary {
+  background: var(--vs-primary);
+  border-color: var(--vs-primary);
+  color: var(--vs-on-primary-action);
+}
+
+/* Secondary is a warm neutral card with a brand colour label, not a second filled
+   button: only one thing in a group should look like the action. */
+.vs-btn--ghost {
+  background: var(--vs-surface);
+  border-color: var(--vs-border-strong);
+  color: var(--vs-primary);
+}
+
+.vs-btn--outline {
+  background: transparent;
+  border-color: var(--vs-primary);
+  color: var(--vs-primary);
+}
+
+.vs-btn--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--vs-ink-3);
+  padding-inline: 12px;
+}
+
+.vs-btn--lg {
+  height: 52px;
+  font-size: 15px;
+  border-radius: var(--vs-r-md);
+}
+
+.vs-btn--block {
+  width: 100%;
+}
+
+@media (hover: hover) {
+  .vs-btn--primary:not(:disabled):hover {
+    background: var(--vs-primary-dark);
+    border-color: var(--vs-primary-dark);
+  }
+  .vs-btn--ghost:not(:disabled):hover {
+    background: var(--vs-primary-soft);
+    border-color: var(--vs-primary-lite);
+  }
+  .vs-btn--outline:not(:disabled):hover {
+    background: var(--vs-primary);
+    color: var(--vs-on-primary-action);
+  }
+  .vs-btn--quiet:not(:disabled):hover {
+    color: var(--vs-primary);
+  }
+}
+
+.vs-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* Icon-only control: always at least a 44px touch target. */
+.vs-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 1px solid var(--vs-border);
+  border-radius: var(--vs-r-md);
+  background: var(--vs-surface);
+  color: var(--vs-ink);
+  cursor: pointer;
+  transition: background var(--vs-t) var(--vs-ease), border-color var(--vs-t) var(--vs-ease),
+    color var(--vs-t) var(--vs-ease);
+}
+
+@media (hover: hover) {
+  .vs-iconbtn:hover {
+    background: var(--vs-primary-soft);
+    border-color: var(--vs-primary-lite);
+    color: var(--vs-primary);
+  }
+}
+
+.vs-iconbtn--bare {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* â”€â”€ chips, badges, pills â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding-inline: 14px;
+  border: 1px solid var(--vs-border);
+  border-radius: var(--vs-r-pill);
+  background: var(--vs-surface);
+  font-size: var(--vs-fs-sm);
+  font-weight: 600;
+  color: var(--vs-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--vs-t) var(--vs-ease), border-color var(--vs-t) var(--vs-ease),
+    color var(--vs-t) var(--vs-ease);
+}
+
+.vs-chip[aria-current="true"],
+.vs-chip--active {
+  background: var(--vs-primary);
+  border-color: var(--vs-primary);
+  color: var(--vs-on-primary-action);
+}
+
+@media (hover: hover) {
+  .vs-chip:not(.vs-chip--active):hover {
+    border-color: var(--vs-primary);
+    color: var(--vs-primary);
+  }
+}
+
+.vs-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding-inline: 8px;
+  border-radius: var(--vs-r-sm);
+  font-size: var(--vs-fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.vs-badge--sale {
+  background: var(--vs-danger);
+  color: var(--vs-ink-invert);
+}
+.vs-badge--new {
+  background: var(--vs-primary);
+  color: var(--vs-on-primary-action);
+}
+/* The one badge that is allowed to be accent, and it is accent as an outline on a
+   light card rather than as a fill â€” a bronze label inside a thin accent border. */
+.vs-badge--featured {
+  background: var(--vs-surface);
+  color: var(--vs-accent-dark);
+  border: 1px solid var(--vs-border-accent);
+}
+.vs-badge--best {
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent-dark);
+  border: 1px solid var(--vs-border-accent);
+}
+/* Tied to the brand token like every other badge. */
+.vs-badge--package {
+  background: color-mix(in srgb, var(--vs-primary) 92%, transparent);
+  color: var(--vs-on-primary-action);
+}
+
+/* â”€â”€ breadcrumb â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--vs-fs-sm);
+  font-weight: var(--vs-fw-body);
+  line-height: var(--vs-lh);
+  color: var(--vs-ink-4);
+}
+
+.vs-crumbs a {
+  color: var(--vs-ink-3);
+  transition: color var(--vs-t) var(--vs-ease);
+}
+
+@media (hover: hover) {
+  .vs-crumbs a:hover {
+    color: var(--vs-primary);
+  }
+}
+
+.vs-crumbs__here {
+  color: var(--vs-ink);
+  font-weight: var(--vs-fw-nav);
+}
+
+/* â”€â”€ skeleton / empty / error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-skel {
+  background: linear-gradient(
+    90deg,
+    var(--vs-surface-2) 8%,
+    var(--vs-surface-3) 18%,
+    var(--vs-surface-2) 33%
+  );
+  background-size: 800px 100%;
+  animation: vs-shimmer 1.4s linear infinite;
+  border-radius: var(--vs-r-sm);
+}
+
+@keyframes vs-shimmer {
+  0% {
+    background-position: -420px 0;
+  }
+  100% {
+    background-position: 420px 0;
+  }
+}
+
+.vs-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 56px 24px;
+  background: var(--vs-surface);
+  border: 1px solid var(--vs-border);
+  border-radius: var(--vs-r-lg);
+}
+
+/* Empty states are what a freshly-set-up store shows most of, so this well gets
+   the same restrained accent ring the premium details elsewhere get. */
+.vs-state__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--vs-surface-2);
+  border: 1px solid var(--vs-border-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: var(--vs-primary-lite);
+}
+
+.vs-state__title {
+  font-size: var(--vs-fs-h3);
+  font-weight: 600;
+}
+
+.vs-state__body {
+  font-size: var(--vs-fs-body);
+  color: var(--vs-ink-3);
+  max-width: 46ch;
+}
+
+.vs-state--error {
+  background: var(--vs-danger-soft);
+  border-color: color-mix(in srgb, var(--vs-danger) 28%, #fff);
+  color: color-mix(in srgb, var(--vs-danger) 82%, #000);
+}
+
+/* â”€â”€ shared helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.vs-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vs-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.vs-mediabox {
+  position: relative;
+  overflow: hidden;
+  background: var(--vs-surface-2);
+  width: 100%;
+}
+
+.vs-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--vs-surface-2);
+}
+
+/* A tone-gradient stand-in used when a record has no uploaded image. */
+.vs-media--fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* â”€â”€ reduced motion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+@media (prefers-reduced-motion: reduce) {
+  .vs-public *,
+  .vs-public *::before,
+  .vs-public *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* State feedback must survive: only movement is removed. */
+  .vs-public [data-motion="transform"] {
+    transform: none !important;
+  }
+}

@@ -1,0 +1,46 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+coverage/
+
+# Runtime data and secrets
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.bak
+*.dump
+*.log
+backend/data/uploads/*
+!backend/data/uploads/.gitkeep
+backups/
+release/
+
+# Test/tool artifacts
+frontend/e2e/.artifacts/
+frontend/playwright-report/
+frontend/test-results/
+.r2-verify-tmp/
+tmp/
+
+# Client catalog data
+instance/generated/
+*.xlsx
+*.xlsm
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

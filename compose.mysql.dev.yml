@@ -1,0 +1,29 @@
+name: masri-electronics-mysql-dev
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: masri-electronics-mysql-dev
+    restart: "no"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env.mysql.dev}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-masri_electronics_dev}
+      MYSQL_USER: ${MYSQL_USER:-masri_electronics_dev}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env.mysql.dev}
+    ports:
+      - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - masri-electronics-mysql-dev-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  masri-electronics-mysql-dev-data:
+    name: masri-electronics-mysql-dev-data

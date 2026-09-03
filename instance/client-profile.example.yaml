@@ -1,0 +1,38 @@
+profile_schema_version: 1
+template_version: "0.3.0-rc.1"
+client_slug: "example-client"
+store:
+  name: "Example Store"
+  display_name_ar: null
+  tagline: null
+  locale: "ar"
+  timezone: "Asia/Hebron"
+  currency_code: "ILS"
+  currency_symbol: "₪"
+  seo_title: null
+  seo_description: null
+domain:
+  primary: null
+  aliases: []
+contact:
+  phone: null
+  whatsapp: null
+  email: null
+  address: null
+  location_url: null
+  working_hours: null
+  instagram_url: null
+  facebook_url: null
+  tiktok_url: null
+  youtube_url: null
+theme:
+  primary_color: "#374151"
+  secondary_color: "#6B7280"
+  accent_color: "#0F766E"
+features:
+  packages: true
+  silicone_molds: true
+  coupons: true
+home_sections: []
+static_pages: []
+delivery_areas: []

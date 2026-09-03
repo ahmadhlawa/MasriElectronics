@@ -1,0 +1,282 @@
+/* Masri Electronics public storefront design tokens.
+   Everything is scoped to `.vs-public`, the storefront shell root, so the admin
+   workspace under /admin never inherits a single storefront rule. Brand colours
+   are supplied by the global store theme.
+
+   The palette is the client's approved one and this is the one place it is
+   stated: every surface, border, ink and accent below is either a stated value
+   or mixed from one, so restyling this store is editing this file rather than hunting
+   hexes through the components. The balance the design asks for â€” a white page,
+   brand carrying the brand, accent as jewellery only â€” is a property of *where*
+   these tokens are spent, and the rule that keeps it true is simple: accent is a
+   border, a rule or a small mark, never a body colour and never a large fill. */
+
+/* Cairo is the storefront's Arabic typeface. It is exposed under a storefront-only
+   family name so loading it cannot change the Admin application's typography. */
+@font-face {
+  font-family: "Masri Cairo";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hOA-W1Q.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Masri Cairo";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hNI-W1Q.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Masri Cairo";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hD45W1Q.ttf") format("truetype");
+}
+
+.vs-public {
+  /* â”€â”€ layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  --vs-container: 1400px;
+  --vs-font: "Masri Cairo", Arial, Helvetica, sans-serif;
+  --vs-container-narrow: 1080px;
+  --vs-gutter: 20px;
+  --vs-section: 56px;
+  --vs-section-tight: 34px;
+  --vs-grid-gap: 20px;
+  --vs-cols: 4;
+  --vs-cols-cat: 4;
+  --vs-cols-pkg: 3;
+
+  /* â”€â”€ header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Two compact bands rather than two roomy ones: the identity row is sized by
+     its tallest control (the logo viewport) plus one 9px rhythm step, and the
+     nav band is just tall enough for a 34px trigger. Everything in the identity
+     row is centred on one axis, so shrinking the band moves nothing sideways. */
+  --vs-strip-h: 34px;
+  --vs-header-h: 64px;
+  --vs-nav-h: 46px;
+  --vs-rail-h: 0px;
+  /* A fixed-size viewport the logo is clipped to. The owner's file carries its
+     own whitespace, so `useLogoFit` measures where the mark actually sits and
+     scales the image inside this box until the mark fills it â€” the file is
+     never edited, never stretched, and a trimmed logo is left alone. */
+  /* Near-square so both compact and landscape customer marks remain usable: in the wide
+     viewport this box used to be, `contain` centred a 46px mark inside 132px and
+     the surplus 86px pushed the logo visibly out of line with the "ÙƒÙ„ Ø§Ù„Ø£Ù‚Ø³Ø§Ù…"
+     trigger sitting directly beneath it. Sized to the mark, the artwork's own
+     ivory meets the header's ivory and there is no seam to see. A little wider
+     than tall so a landscape logo uploaded later is still shown at a usable
+     size â€” `contain` means either shape is scaled, never cropped or stretched. */
+  --vs-logo-h: 46px;
+  --vs-logo-w: 54px;
+  /* How wide the header's search field is allowed to grow. Stated once: the
+     field and the slot it sits in are two elements and were two numbers. */
+  --vs-search-max: 820px;
+  /* The fixed category rail at the far right. It is a real gutter, not an
+     overlay: `--vs-rail-gutter` is what the page reserves for it, so the rail
+     can never sit on top of content. Both drop to 0 on mobile, where the rail
+     is replaced by a header trigger. */
+  --vs-rail-w: 64px;
+  --vs-rail-gutter: var(--vs-rail-w);
+  --vs-drawer-cat-w: 340px;
+  /* What a sticky element must clear. Kept as one token so page-level sticky
+     panels never re-derive it. */
+  --vs-sticky-top: calc(var(--vs-header-h) + var(--vs-nav-h) + 16px);
+
+  /* â”€â”€ brand scale â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Brand scale derived from configurable theme variables. */
+  --vs-brand-lite: var(--brand-primary-pale);
+  --vs-brand: var(--brand-primary-light);
+  --vs-brand-deep: var(--brand-primary);
+
+  /* â”€â”€ surfaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Neutral surfaces mixed from the configurable brand scale. */
+  --vs-page: var(--page-background);
+  --vs-surface: var(--surface-background);
+  --vs-surface-2: color-mix(in srgb, var(--vs-brand-lite) 28%, #fff);
+  --vs-surface-3: color-mix(in srgb, var(--vs-brand-lite) 58%, #fff);
+  --vs-surface-deep: color-mix(in srgb, var(--vs-primary) 62%, #111827);
+  /* Kept under their old names so existing components continue to resolve them. */
+  --vs-surface-dark: var(--vs-surface-deep);
+  --vs-surface-dark-2: color-mix(in srgb, var(--vs-primary) 48%, #1F2937);
+
+  /* â”€â”€ borders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Hairlines mixed from the configurable brand values. */
+  --vs-border: color-mix(in srgb, var(--vs-brand-lite) 52%, #fff);
+  --vs-border-strong: color-mix(in srgb, var(--vs-brand) 46%, #fff);
+  --vs-border-accent: color-mix(in srgb, var(--vs-accent) 52%, #fff);
+  --vs-border-dark: color-mix(in srgb, var(--vs-primary) 34%, #374151);
+
+  /* â”€â”€ text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Text steps retain readable contrast against the white surface. */
+  --vs-ink: var(--text-primary);
+  --vs-ink-2: var(--text-secondary);
+  --vs-ink-3: #6B7280;
+  --vs-ink-4: var(--text-muted);
+  --vs-ink-invert: var(--brand-on-primary);
+  --vs-on-primary-action: var(--button-primary-text);
+
+  /* â”€â”€ brand â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Configurable primary and secondary brand roles. */
+  --vs-primary: var(--button-primary-background);
+  --vs-primary-dark: var(--button-primary-hover);
+  --vs-primary-mid: color-mix(in srgb, var(--vs-primary) 62%, var(--vs-brand));
+  --vs-primary-lite: var(--vs-brand);
+  --vs-primary-soft: var(--brand-soft);
+  /* The two sanctioned gradients. Used sparingly â€” a hero wash, a promo band â€”
+     never as a default fill. */
+  --vs-grad-soft: linear-gradient(135deg, var(--vs-brand-lite), var(--vs-brand));
+  --vs-grad-deep: linear-gradient(135deg, var(--vs-brand), var(--vs-brand-deep));
+  --vs-grad-nav: linear-gradient(110deg, var(--vs-brand-lite), var(--vs-brand));
+  --vs-grad-footer: linear-gradient(135deg, var(--brand-soft), var(--vs-brand-lite));
+  --vs-accent: var(--button-secondary-background);
+  /* Accent text uses the configured hover step for contrast. */
+  --vs-accent-dark: var(--button-secondary-hover);
+  --vs-accent-soft: color-mix(in srgb, var(--vs-accent) 22%, #fff);
+  --vs-success: var(--color-success);
+  --vs-danger: var(--color-danger);
+  --vs-danger-soft: #fbefec;
+  --vs-warn: var(--color-warning);
+
+  /* â”€â”€ radius â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  --vs-r-sm: 8px;
+  --vs-r-md: 12px;
+  --vs-r-lg: 16px;
+  --vs-r-xl: 22px;
+  --vs-r-pill: 999px;
+
+  /* â”€â”€ shadow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* Tinted with the brand brand rather than neutral black, and a step softer
+     than the template's: on a white page a grey shadow reads as dirt, and a
+     boutique card should look lifted, not dropped. */
+  --vs-shadow-1: 0 1px 2px color-mix(in srgb, var(--brand-primary) 6%, transparent);
+  --vs-shadow-2: 0 8px 24px color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  --vs-shadow-3: 0 16px 40px color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  --vs-shadow-4: 0 0 60px rgba(59, 50, 67, 0.24);
+  --vs-shadow-header: 0 4px 18px color-mix(in srgb, var(--brand-primary) 8%, transparent);
+
+  /* â”€â”€ motion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  --vs-t-fast: 140ms;
+  --vs-t: 200ms;
+  --vs-t-card: 260ms;
+  --vs-t-drawer: 300ms;
+  --vs-t-hero: 600ms;
+  --vs-t-reveal: 440ms;
+  --vs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* â”€â”€ type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  --vs-fs-h1: 28px;
+  --vs-fs-h2: 26px;
+  --vs-fs-h3: 18px;
+  --vs-fs-body: 15px;
+  --vs-fs-sm: 13px;
+  --vs-fs-xs: 11.5px;
+  --vs-fs-nav: 14px;
+  --vs-fs-product: 15px;
+  --vs-fs-price: 15px;
+  --vs-fw-body: 400;
+  --vs-fw-support: 500;
+  --vs-fw-heading: 500;
+  --vs-fw-nav: 600;
+  --vs-fw-product: 500;
+  --vs-fw-price: 600;
+  --vs-fw-button: 600;
+  --vs-lh: 1.6;
+
+  /* â”€â”€ z layers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  --vs-z-rail: 40;
+  --vs-z-header: 60;
+  --vs-z-popover: 70;
+  --vs-z-scrim: 80;
+  --vs-z-drawer: 90;
+  --vs-z-modal: 95;
+  --vs-z-toast: 100;
+
+  /* â”€â”€ aspect ratios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  --vs-ar-product: 1 / 1;
+  --vs-ar-category: 4 / 5;
+  /* Square by default so a package sitting in a mixed catalogue grid lines up
+     with the products around it; the dedicated package grid widens it. */
+  --vs-ar-package: 1 / 1;
+  /* Wide hero artwork. The ratio â€” not a pixel height â€” is what the
+     hero reserves, so the box is correct before the image decodes. The cap
+     stops the same ratio from turning a 1852px-wide band into a 700px wall on
+     a large monitor; the artwork covers, so a shorter box only crops. */
+  --vs-ar-hero: 21 / 8;
+  --vs-hero-max-h: 520px;
+}
+@media (max-width: 1279px) {
+  .vs-public {
+    --vs-cols: 3;
+    --vs-cols-cat: 3;
+    --vs-cols-pkg: 3;
+    --vs-grid-gap: 18px;
+    --vs-fs-h1: 28px;
+    --vs-rail-w: 58px;
+    --vs-ar-hero: 2 / 1;
+    --vs-hero-max-h: 440px;
+  }
+}
+
+/* The shell switches to its mobile form at 900, but the catalogue keeps three
+   columns down to 700: a tablet has the room, and two columns there would leave
+   the cards oversized. */
+@media (max-width: 899px) {
+  .vs-public {
+    --vs-cols-cat: 3;
+    --vs-cols-pkg: 2;
+    --vs-gutter: 18px;
+    --vs-grid-gap: 14px;
+    --vs-section: 40px;
+    --vs-section-tight: 26px;
+    /* The nav band and the category rail leave the sticky header on mobile, so
+       only the 60px action row follows the scroll. */
+    --vs-header-h: 60px;
+    --vs-nav-h: 0px;
+    --vs-sticky-top: 76px;
+    --vs-logo-h: 36px;
+    --vs-logo-w: 42px;
+    --vs-tabbar-h: 64px;
+    --vs-fs-h1: 26px;
+    --vs-fs-h2: 20px;
+    /* A tablet still reads landscape artwork; the portrait crop is for phones
+       only, and starts at 600 (below). At 768 a 5/6 hero was 878px tall â€” most
+       of the screen for one advertisement. */
+    --vs-ar-hero: 16 / 9;
+    /* The fixed rail leaves the layout entirely below 900: its trigger moves
+       into the header, so no width is reserved and nothing is covered. */
+    --vs-rail-w: 0px;
+    --vs-rail-gutter: 0px;
+    --vs-drawer-cat-w: min(92vw, 400px);
+  }
+}
+
+@media (max-width: 699px) {
+  .vs-public {
+    --vs-cols: 2;
+  }
+}
+
+@media (max-width: 599px) {
+  .vs-public {
+    --vs-cols-cat: 2;
+    --vs-cols-pkg: 2;
+    --vs-gutter: 16px;
+    --vs-grid-gap: 12px;
+    --vs-fs-h1: 23px;
+    --vs-fs-h2: 20px;
+    /* A phone shows the whole advertisement, not a slice of it. Hero artwork
+       is landscape (the shipped hero is 1672Ã—941), so a portrait phone box plus
+       `cover` threw away more than half the image width â€” the Arabic promo text
+       and the branding were cropped straight out of the viewport. The box keeps
+       the artwork's own landscape ratio and the media contains rather than
+       covers below 600 (see home.css), so nothing is cut sideways. */
+    --vs-ar-hero: 16 / 9;
+    --vs-hero-max-h: 360px;
+    --vs-section: 30px;
+    --vs-section-tight: 20px;
+  }
+}

@@ -1,0 +1,81 @@
+profile_schema_version: 1
+template_version: "0.3.0-rc.1"
+client_slug: "masri-electronics"
+
+store:
+  name: "Masri Electronics"
+  display_name_ar: "المصري للأدوات الكهربائية"
+  tagline: null
+  locale: "ar-PS"
+  timezone: "Asia/Hebron"
+  currency_code: "ILS"
+  currency_symbol: "₪"
+  seo_title: "المصري للأدوات الكهربائية"
+  seo_description: null
+
+domain:
+  primary: null
+  aliases: []
+
+contact:
+  phone: null
+  whatsapp: null
+  email: null
+  address: null
+  location_url: null
+  working_hours: null
+  instagram_url: null
+  facebook_url: "https://www.facebook.com/people/%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A-%D9%84%D9%84%D8%A7%D8%AF%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A6%D9%8A%D8%A9/61584581612056/"
+  tiktok_url: null
+  youtube_url: null
+  instagram_visible: false
+  facebook_visible: true
+  tiktok_visible: false
+  youtube_visible: false
+
+# Neutral placeholders; replace only with an owner-approved palette.
+theme:
+  primary_color: "#374151"
+  secondary_color: "#6B7280"
+  accent_color: "#0F766E"
+
+features:
+  packages: true
+  silicone_molds: false
+  coupons: true
+
+home_sections:
+  - key: "categories"
+    type: "categories"
+    title: "تسوق حسب التصنيف"
+    sort_order: 1
+  - key: "featured"
+    type: "featured_products"
+    title: "منتجات مختارة"
+    sort_order: 2
+  - key: "new"
+    type: "new_products"
+    title: "وصل حديثاً"
+    sort_order: 3
+
+static_pages:
+  - slug: "about"
+    title: "من نحن"
+    lead: "تُستكمل معلومات المتجر من لوحة الإدارة."
+  - slug: "privacy-policy"
+    title: "سياسة الخصوصية"
+    lead: "تُضاف السياسة المعتمدة من المالك قبل الإطلاق."
+  - slug: "return-policy"
+    title: "سياسة الاستبدال والاسترجاع"
+    lead: "تُضاف السياسة المعتمدة من المالك قبل الإطلاق."
+  - slug: "terms"
+    title: "الشروط والأحكام"
+    lead: "تُضاف الشروط المعتمدة من المالك قبل الإطلاق."
+  - slug: "shipping-policy"
+    title: "سياسة التوصيل"
+    lead: "تُضاف سياسة التوصيل المعتمدة قبل الإطلاق."
+  - slug: "contact"
+    title: "تواصل معنا"
+    lead: "يمكن التواصل عبر صفحة فيسبوك الرسمية."
+
+delivery_areas: []

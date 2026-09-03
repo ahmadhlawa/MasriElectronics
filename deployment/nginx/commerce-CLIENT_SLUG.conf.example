@@ -1,0 +1,18 @@
+server {
+    listen 80;
+    server_name CLIENT_DOMAIN;
+    root PROJECT_PATH/frontend/dist;
+    index index.html;
+
+    location / { try_files $uri $uri/ /index.html; }
+    location /api/ {
+        proxy_pass http://127.0.0.1:BACKEND_PORT;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    location /media/ {
+        alias PROJECT_PATH/backend/data/uploads/;
+        try_files $uri =404;
+    }
+    location = /health { proxy_pass http://127.0.0.1:BACKEND_PORT/health; }
+}
