@@ -1,5 +1,5 @@
 // Store identity, homepage composition and editorial content.
-import { LOGO_URL, STORE_IDENTITY, STORE_NAME_AR, STORE_NAME_LATIN, STORE_TAGLINE } from "../brand.js";
+import { FAVICON_URL, LOGO_URL, STORE_IDENTITY, STORE_NAME_AR, STORE_NAME_LATIN, STORE_TAGLINE } from "../brand.js";
 import { publicApi } from "../api/publicApi.js";
 
 // Instance identity and colours provide safe first-paint fallbacks, so the
@@ -36,7 +36,7 @@ export function normalizeSettings(raw) {
     storeNameLatin: settings.store_name || STORE_NAME_LATIN,
     tagline: settings.store_tagline || STORE_TAGLINE,
     logoUrl: settings.logo_url || LOGO_URL,
-    faviconUrl: settings.favicon_url || null,
+    faviconUrl: settings.favicon_url || FAVICON_URL,
     phone: settings.phone || "",
     whatsapp: settings.whatsapp || "",
     email: settings.email || "",

@@ -3,7 +3,8 @@ import { useStore } from "../../../app/StoreProvider.jsx";
 import { useCategoryNav } from "../../../hooks/useStorefront.js";
 import { useLogoFit } from "../../../hooks/useLogoFit.js";
 import { footerLinks } from "../../../store.js";
-import { whatsappHref } from "../../../utils/format.js";
+import { ltrContactNumberProps, whatsappHref } from "../../../utils/format.js";
+import { FOOTER_LOGO_URL } from "../../../brand.js";
 
 function SocialIcon({ name }) {
   const paths = {
@@ -36,7 +37,7 @@ export default function Footer() {
   // The same viewport as the header's, so the mark is the size of the mark here
   // too — and the file's white box is cropped back to it instead of sitting on
   // the dark footer as a pale slab.
-  const { boxRef: logoBox, style: logoStyle } = useLogoFit(settings.logoUrl);
+  const { boxRef: logoBox, style: logoStyle } = useLogoFit(FOOTER_LOGO_URL);
 
   const socials = [
     { key: "instagram", label: "إنستغرام", href: settings.instagram, visible: settings.instagramVisible },
@@ -46,7 +47,8 @@ export default function Footer() {
   ].map((item) => ({ ...item, href: item.visible ? validExternalUrl(item.href) : null })).filter((item) => item.href);
 
   const contact = [
-    settings.phone && { key: "phone", node: <a href={`tel:${settings.phone}`}>{settings.phone}</a> },
+    settings.phone && { key: "phone", node: <a href={`tel:${settings.phone}`} {...ltrContactNumberProps}>{settings.phone}</a> },
+    settings.whatsapp && { key: "whatsapp", node: <a href={whatsappHref(settings.whatsapp, "")} target="_blank" rel="noopener noreferrer" {...ltrContactNumberProps}>{settings.whatsapp}</a> },
     settings.email && { key: "email", node: <a href={`mailto:${settings.email}`}>{settings.email}</a> },
     settings.address && {
       key: "address",
@@ -64,9 +66,9 @@ export default function Footer() {
     <footer className="vs-footer">
       <div className="vs-container vs-footer__top">
         <div className="vs-footer__brand">
-          {settings.logoUrl ? (
+          {FOOTER_LOGO_URL ? (
             <span className="vs-logo__box vs-footer__logo" ref={logoBox}>
-              <img className="vs-logo__img" src={settings.logoUrl} alt={settings.storeName} style={logoStyle} />
+              <img className="vs-logo__img" src={FOOTER_LOGO_URL} alt={settings.storeName} style={logoStyle} />
             </span>
           ) : (
             <span className="vs-footer__name">{settings.storeName}</span>

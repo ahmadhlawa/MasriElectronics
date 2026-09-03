@@ -57,3 +57,8 @@ export function whatsappHref(number, message) {
   if (!digits) return "#";
   return `https://wa.me/${digits}?text=${encodeURIComponent(message || "")}`;
 }
+
+export const ltrContactNumberProps = Object.freeze({
+  dir: "ltr",
+  className: "vs-contact-number",
+});

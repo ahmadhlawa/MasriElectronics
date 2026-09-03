@@ -269,7 +269,7 @@
   opacity: 0.75;
 }
 
-.vs-btn--primary {
+.vs-public .vs-btn--primary {
   background: var(--vs-primary);
   border-color: var(--vs-primary);
   color: var(--vs-on-primary-action);
@@ -492,6 +492,20 @@
   background: var(--vs-surface);
   border: 1px solid var(--vs-border);
   border-radius: var(--vs-r-lg);
+}
+
+.vs-section--empty-store {
+  padding-block: var(--vs-section-tight);
+}
+
+.vs-section--empty-store .vs-state {
+  padding-block: 36px;
+}
+
+.vs-contact-number {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
 }
 
 /* Empty states are what a freshly-set-up store shows most of, so this well gets

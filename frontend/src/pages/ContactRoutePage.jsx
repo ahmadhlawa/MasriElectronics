@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../app/StoreProvider.jsx";
 import { storefrontService } from "../services/storefront.js";
-import { whatsappHref } from "../utils/format.js";
+import { ltrContactNumberProps, whatsappHref } from "../utils/format.js";
 
 function safeMapUrl(value) {
   try {
@@ -46,7 +46,7 @@ export default function ContactRoutePage() {
               {rows.map((row) => (
                 <div className="vs-specs__row" key={row.label}>
                   <dt>{row.label}</dt>
-                  <dd>{row.href ? <a href={row.href} target={row.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">{row.value}</a> : row.value}</dd>
+                  <dd>{row.href ? <a href={row.href} target={row.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" {...ltrContactNumberProps}>{row.value}</a> : row.value}</dd>
                 </div>
               ))}
             </dl>

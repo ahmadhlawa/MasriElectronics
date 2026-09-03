@@ -13,6 +13,8 @@ describe("buildStorefrontThemeVariables", () => {
       "--brand-primary-hover": "color-mix(in srgb, #FF0000 82%, #000)",
       "--nav-strip-background": "#00FF00",
       "--footer-background": "#0000FF",
+      "--button-primary-text": "#FFFFFF",
+      "--vs-on-primary-action": "#FFFFFF",
     });
   });
 });

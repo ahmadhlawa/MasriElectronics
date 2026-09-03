@@ -980,11 +980,8 @@ img.vs-logo__img {
    margin, which is the breathing room the frame sits outside of. The header
    needs none of this: it is already ivory. */
 .vs-footer__logo {
-  --vs-logo-w: 148px;
-  --vs-logo-h: 148px;
-  background: var(--vs-page);
-  border: 1px solid var(--border-color-strong);
-  border-radius: var(--vs-r-md);
+  --vs-logo-w: 188px;
+  --vs-logo-h: 72px;
 }
 
 .vs-footer__desc {
@@ -1005,7 +1002,7 @@ img.vs-logo__img {
   height: 42px;
   border: 1px solid var(--border-color-strong);
   border-radius: var(--vs-r-md);
-  background: var(--vs-surface);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1189,8 +1186,8 @@ img.vs-logo__img {
   }
 
   .vs-footer__logo {
-    --vs-logo-w: 112px;
-    --vs-logo-h: 112px;
+    --vs-logo-w: 156px;
+    --vs-logo-h: 60px;
   }
 
   .vs-footer__credit-row {

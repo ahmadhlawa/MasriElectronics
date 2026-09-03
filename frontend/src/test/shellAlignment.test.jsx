@@ -363,7 +363,7 @@ describe("store logo", () => {
     await waitFor(() => expect(document.querySelector(".vs-header .vs-logo__img")).not.toBeNull());
     const logo = document.querySelector(".vs-header .vs-logo__img");
     expect(logo.closest(".vs-logo__box")).not.toBeNull();
-    expect(logo).toHaveAttribute("src", "/brand/store-logo.png");
+    expect(logo).toHaveAttribute("src", "/branding/logo-without-name.png");
     // The mark is decorative: the wordmark beside it already names the store, so
     // announcing it twice is what a screen reader would otherwise get.
     expect(logo).toHaveAttribute("alt", "");
@@ -385,12 +385,12 @@ describe("store logo", () => {
     expect(document.querySelector(".vs-header .vs-logo__box")).not.toBeNull();
   });
 
-  it("does not invent a logo when the store has configured none", async () => {
+  it("uses the supplied Masri mark when the store has configured none", async () => {
     stubApi(storefrontRoutes);
     renderApp("/");
 
     await waitFor(() => expect(document.querySelector(".vs-logo")).not.toBeNull());
-    expect(document.querySelector(".vs-header .vs-logo__img")).toBeNull();
+    expect(document.querySelector(".vs-header .vs-logo__img")).not.toBeNull();
     // What the store *has* set still wins over the shipped defaults — the
     // fallback fills gaps, it does not overwrite the owner's identity.
     expect(document.querySelector(".vs-logo__name")).toHaveTextContent("متجر الاختبار");

@@ -18,6 +18,8 @@ export function buildStorefrontThemeVariables(settings = {}) {
   for (const [field, variable] of Object.entries(THEME_VARIABLES)) {
     if (settings[field]) variables[variable] = settings[field];
   }
+  variables["--button-primary-text"] = "#FFFFFF";
+  variables["--vs-on-primary-action"] = "#FFFFFF";
   if (settings.theme_primary_color) variables["--brand-primary-hover"] = `color-mix(in srgb, ${settings.theme_primary_color} 82%, #000)`;
   if (settings.theme_button_primary_background) variables["--button-primary-hover"] = `color-mix(in srgb, ${settings.theme_button_primary_background} 82%, #000)`;
   return variables;

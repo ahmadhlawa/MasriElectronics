@@ -18,10 +18,10 @@ const dialogs = () => screen.queryAllByRole("dialog");
 
 describe("public shell", () => {
   it("uses the settings-managed favicon when configured", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/store/settings": { ...settingsFixture, favicon_url: "/branding/masri-electronics-icon.png" } });
+    stubApi({ ...storefrontRoutes, "/api/v1/store/settings": { ...settingsFixture, favicon_url: "/branding/logo-without-name.png" } });
     renderApp("/");
 
-    await waitFor(() => expect(document.querySelector('link[rel="icon"]')).toHaveAttribute("href", "/branding/masri-electronics-icon.png"));
+    await waitFor(() => expect(document.querySelector('link[rel="icon"]')).toHaveAttribute("href", "/branding/logo-without-name.png"));
   });
 
   it("gives the storefront its landmarks and a skip link", async () => {

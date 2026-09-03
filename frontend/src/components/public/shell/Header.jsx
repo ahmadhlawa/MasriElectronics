@@ -4,20 +4,21 @@ import { useCartCountPulse } from "../../../hooks/useCartCountPulse.js";
 import { useLogoFit } from "../../../hooks/useLogoFit.js";
 import { useMoney } from "../../../hooks/useStorefront.js";
 import { navLinks } from "../../../store.js";
+import { HEADER_LOGO_URL } from "../../../brand.js";
 import SearchBox from "../search/SearchBox.jsx";
 import { CartIcon, GridIcon, MenuIcon, SearchIcon, UserIcon } from "./icons.jsx";
 
 function StoreMark({ settings }) {
   // The file is left exactly as the owner supplied it; only how much of the box
   // its artwork is allowed to fill is decided here. See useLogoFit.
-  const { boxRef, style } = useLogoFit(settings.logoUrl);
+  const { boxRef, style } = useLogoFit(HEADER_LOGO_URL);
   return (
     <Link to="/" className="vs-logo" aria-label={`${settings.storeName} — الصفحة الرئيسية`}>
-      {settings.logoUrl && (
+      {HEADER_LOGO_URL && (
         <span className="vs-logo__box" ref={boxRef}>
           <img
             className="vs-logo__img"
-            src={settings.logoUrl}
+            src={HEADER_LOGO_URL}
             // Decorative here now that the name is written beside it: without
             // this the mark and the wordmark announce the store twice.
             alt=""

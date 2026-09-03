@@ -1,7 +1,10 @@
 // Safe identity fallbacks used until StoreSettings loads. Runtime identity comes
 // from the instance profile via StoreSettings; this is only the client-side
 // fallback for a first paint or unavailable API.
-export const LOGO_URL = "";
+export const HEADER_LOGO_URL = "/branding/logo-without-name.png";
+export const FOOTER_LOGO_URL = "/branding/logo1.png";
+export const FAVICON_URL = HEADER_LOGO_URL;
+export const LOGO_URL = FOOTER_LOGO_URL;
 export const STORE_TAGLINE = "";
 
 export const STORE_IDENTITY = Object.freeze({

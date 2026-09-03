@@ -1,5 +1,6 @@
 import sx from "../sx.js";
-import { whatsappHref } from "../utils/format.js";
+import { ltrContactNumberProps, whatsappHref } from "../utils/format.js";
+import { HEADER_LOGO_URL } from "../brand.js";
 
 /**
  * Shown in place of the whole storefront while the owner has maintenance mode on.
@@ -43,9 +44,9 @@ export default function MaintenanceScreen({ settings }) {
         {/* Mark and name together, as in the header. A configured logo can be square,
             lockup, and a page whose whole job is to reassure a visitor that they
             are in the right place must still say which store this is. */}
-        {settings.logoUrl && (
+        {HEADER_LOGO_URL && (
           <img
-            src={settings.logoUrl}
+            src={HEADER_LOGO_URL}
             alt=""
             aria-hidden="true"
             style={sx`max-width:150px;max-height:150px;margin:0 auto 12px;display:block;object-fit:contain`}
@@ -89,6 +90,7 @@ export default function MaintenanceScreen({ settings }) {
                 {contact.href ? (
                   <a
                     href={contact.href}
+                    {...ltrContactNumberProps}
                     style={sx`color:var(--link-color);text-decoration:none;word-break:break-word`}
                   >
                     {contact.value}

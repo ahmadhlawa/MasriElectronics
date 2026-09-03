@@ -271,7 +271,7 @@ export default function HomePage() {
       {rendered}
 
       {nothingToShow && (
-        <RevealSection className="vs-container vs-section">
+        <RevealSection className="vs-container vs-section vs-section--empty-store">
           <div className="vs-state">
             <h2 className="vs-state__title">المتجر قيد التجهيز</h2>
             <p className="vs-state__body">
