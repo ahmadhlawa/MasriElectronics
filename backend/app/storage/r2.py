@@ -85,7 +85,7 @@ class R2StorageProvider(StorageProvider):
                 from botocore.config import Config
             except ImportError as exc:  # pragma: no cover - depends on the environment
                 raise R2NotConfiguredError(
-                    "STORAGE_PROVIDER=r2 needs boto3. Install it with: pip install -e '.[r2]'"
+                    "STORAGE_PROVIDER=r2 needs boto3, which must be installed with the backend dependencies."
                 ) from exc
             self._client = boto3.client(
                 "s3",

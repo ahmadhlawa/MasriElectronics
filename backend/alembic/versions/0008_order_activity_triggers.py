@@ -31,6 +31,7 @@ def _blocks_legacy_downgrade() -> bool:
 
 _UPDATE_TRIGGER = "trg_order_activities_no_update"
 _DELETE_TRIGGER = "trg_order_activities_no_delete"
+_POSTGRES_FUNCTION = "prevent_order_activity_mutation"
 def _trigger_deployment_error(detail: str) -> RuntimeError:
     return RuntimeError(
         "MySQL trigger deployment preflight failed: "
@@ -99,6 +100,11 @@ def _create_trigger(name: str, operation: str) -> None:
             f"CREATE TRIGGER {name} BEFORE {operation} ON order_activities "
             "FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'order_activity_immutable'"
         )
+    elif dialect == "postgresql":
+        op.execute(
+            f"CREATE TRIGGER {name} BEFORE {operation} ON order_activities "
+            f"FOR EACH ROW EXECUTE FUNCTION {_POSTGRES_FUNCTION}()"
+        )
     else:
         raise RuntimeError(f"Order activity triggers are not implemented for {dialect}.")
 
@@ -109,6 +115,11 @@ def _drop_trigger(name: str) -> None:
 
 def upgrade() -> None:
     _assert_mysql_trigger_preflight(op.get_bind())
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute(
+            f"CREATE FUNCTION {_POSTGRES_FUNCTION}() RETURNS trigger LANGUAGE plpgsql AS $$ "
+            "BEGIN RAISE EXCEPTION 'order_activity_immutable'; END; $$"
+        )
     _create_trigger(_UPDATE_TRIGGER, "UPDATE")
     _create_trigger(_DELETE_TRIGGER, "DELETE")
 
@@ -118,3 +129,5 @@ def downgrade() -> None:
         raise RuntimeError("Cannot downgrade replacement invoice history without deleting invoices.")
     _drop_trigger(_DELETE_TRIGGER)
     _drop_trigger(_UPDATE_TRIGGER)
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute(f"DROP FUNCTION IF EXISTS {_POSTGRES_FUNCTION}()")

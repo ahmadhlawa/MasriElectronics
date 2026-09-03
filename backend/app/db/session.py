@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
@@ -16,6 +17,8 @@ def build_engine(url: str | None = None) -> Engine:
     kwargs: dict[str, object] = {"pool_pre_ping": True, "future": True}
     if url.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}
+    elif settings.DATABASE_USE_NULL_POOL:
+        kwargs["poolclass"] = NullPool
     return create_engine(url, **kwargs)
 
 

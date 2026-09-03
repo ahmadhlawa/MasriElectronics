@@ -24,12 +24,19 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     APP_NAME: str = "Masri Electronics"
     API_V1_PREFIX: str = "/api/v1"
+    # Vercel provides this automatically. It prevents accidental use of ephemeral
+    # local uploads by a deployed serverless function.
+    VERCEL: bool = False
 
     SECRET_KEY: str = "development-only-secret-change-me"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
     JWT_ALGORITHM: str = "HS256"
 
     DATABASE_URL: str = "sqlite+pysqlite:///./data/masri_electronics_dev.db"
+    # Serverless workers must not retain database connections between invocations.
+    # Set this explicitly in the Vercel backend project; local and migration commands
+    # keep SQLAlchemy's normal pooling behaviour.
+    DATABASE_USE_NULL_POOL: bool = False
 
     # NoDecode keeps pydantic-settings from JSON-decoding this inside the env/dotenv
     # source, which would reject the documented comma-separated form before the

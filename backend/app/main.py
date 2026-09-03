@@ -23,6 +23,9 @@ def _error(status_code: int, code: str, message: str, **extra) -> JSONResponse:
 
 
 def create_app() -> FastAPI:
+    if settings.VERCEL and settings.STORAGE_PROVIDER != StorageProviderName.R2.value:
+        raise RuntimeError("Vercel deployments require STORAGE_PROVIDER=r2 for persistent media.")
+
     app = FastAPI(
         title=settings.APP_NAME,
         version="0.1.0",

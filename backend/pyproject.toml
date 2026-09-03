@@ -19,6 +19,8 @@ dependencies = [
     "PyJWT>=2.9",
     "pwdlib[argon2]>=0.2.1",
     "PyMySQL>=1.1.1",
+    "psycopg[binary]>=3.2",
+    "boto3>=1.35",
     "python-dotenv>=1.0",
     "PyYAML>=6.0",
 ]
@@ -37,9 +39,6 @@ catalog-prep = ["openpyxl>=3.1"]
 # the `rsa` extra. Needed by the CI gate and by any MySQL deployment; never by the
 # SQLite development runtime.
 mysql = ["PyMySQL[rsa]>=1.1.1"]
-# Only needed when STORAGE_PROVIDER=r2. Local media storage needs no S3 client, so a
-# default installation stays free of boto3 and its transitive dependencies.
-r2 = ["boto3>=1.35"]
 
 [project.scripts]
 commerce-admin = "app.initial_data:main"
