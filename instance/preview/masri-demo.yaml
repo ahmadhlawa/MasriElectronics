@@ -1,0 +1,355 @@
+preview_schema_version: 1
+batch_key: masri-client-preview
+source_label: Masri Electronics client preview catalogue
+media_prefix: masri-electronics/preview/
+notice: "نسخة تجريبية للمعاينة — المنتجات والأسعار المعروضة حالياً تجريبية"
+
+# Generated locally by the preview importer: deterministic, self-contained media
+# owned by this batch and removed with it. Product copy and prices are demo-only.
+media:
+  - { key: kitchen, alt_text: "أجهزة مطبخ للعرض التجريبي", shape: tile, start_color: "#1B2F52", end_color: "#496A9B" }
+  - { key: coffee, alt_text: "أجهزة قهوة للعرض التجريبي", shape: tile, start_color: "#523A28", end_color: "#B98353" }
+  - { key: cleaning, alt_text: "أجهزة تنظيف للعرض التجريبي", shape: tile, start_color: "#146C72", end_color: "#69A8A8" }
+  - { key: climate, alt_text: "أجهزة تدفئة وتبريد للعرض التجريبي", shape: tile, start_color: "#9B3C2D", end_color: "#E29A61" }
+  - { key: personal, alt_text: "أجهزة عناية شخصية للعرض التجريبي", shape: tile, start_color: "#725277", end_color: "#C38CAB" }
+  - { key: small-home, alt_text: "أجهزة منزلية صغيرة للعرض التجريبي", shape: tile, start_color: "#33444C", end_color: "#78959A" }
+  - { key: hero-home, alt_text: "حلول كهربائية متكاملة للمنزل", shape: wide, start_color: "#10284B", end_color: "#D9232E" }
+  - { key: hero-offers, alt_text: "عروض أجهزة منزلية للعرض التجريبي", shape: wide, start_color: "#523A28", end_color: "#D9232E" }
+
+categories:
+  - { slug: kitchen-appliances, name: "أجهزة المطبخ", description: "أدوات عملية لتحضير الوجبات كل يوم.", image: kitchen, is_featured: true, sort_order: 1, origin: placeholder }
+  - { slug: coffee-and-drinks, name: "القهوة والمشروبات", description: "تجهيزات بسيطة لمشروبك المفضل.", image: coffee, is_featured: true, sort_order: 2, origin: placeholder }
+  - { slug: cleaning-and-home-care, name: "التنظيف والعناية بالمنزل", description: "حلول يومية لمنزل مرتب.", image: cleaning, is_featured: true, sort_order: 3, origin: placeholder }
+  - { slug: heating-and-cooling, name: "التدفئة والتبريد", description: "راحة مناسبة في كل موسم.", image: climate, is_featured: true, sort_order: 4, origin: placeholder }
+  - { slug: personal-care, name: "العناية الشخصية", description: "أجهزة موثوقة للعناية اليومية.", image: personal, is_featured: true, sort_order: 5, origin: placeholder }
+  - { slug: small-home-appliances, name: "الأجهزة المنزلية الصغيرة", description: "أساسيات ذكية للاستخدام اليومي.", image: small-home, is_featured: true, sort_order: 6, origin: placeholder }
+
+products:
+  - slug: stainless-electric-kettle-17l
+    name: "غلاية كهربائية ستانلس 1.7 لتر"
+    sku: DEMO-ME-001
+    category: kitchen-appliances
+    price: 79.00
+    stock_quantity: 18
+    short_description: "غلي سريع بسعة مناسبة للاستخدام اليومي."
+    description: "غلاية ستانلس عملية بقاعدة دوارة وفصل تلقائي عند الغليان."
+    images: [kitchen]
+    is_featured: true
+    is_bestseller: true
+    sort_order: 1
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "1.7 لتر" }, { name: "القدرة", value: "2200 واط" }]
+  - slug: digital-air-fryer-6l
+    name: "قلاية هوائية رقمية 6 لتر"
+    sku: DEMO-ME-002
+    category: kitchen-appliances
+    price: 349.00
+    compare_at_price: 399.00
+    stock_quantity: 11
+    short_description: "سلة واسعة وتحكم رقمي للطبخ اليومي."
+    description: "قلاية هوائية رقمية بسعة 6 لتر مع برامج جاهزة وحرارة قابلة للضبط."
+    images: [kitchen]
+    is_featured: true
+    is_new: true
+    sort_order: 2
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "6 لتر" }, { name: "التحكم", value: "شاشة رقمية" }]
+  - slug: electric-blender-15l
+    name: "خلاط كهربائي 1.5 لتر"
+    sku: DEMO-ME-003
+    category: kitchen-appliances
+    price: 129.00
+    stock_quantity: 21
+    short_description: "خلاط متعدد السرعات للعصائر والصلصات."
+    description: "إبريق متين وسكاكين ستانلس مع مستويات سرعة للاستخدام المنزلي."
+    images: [kitchen]
+    is_bestseller: true
+    sort_order: 3
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "1.5 لتر" }, { name: "القدرة", value: "500 واط" }]
+  - slug: food-processor-compact
+    name: "محضرة طعام متعددة الوظائف"
+    sku: DEMO-ME-004
+    category: kitchen-appliances
+    price: 269.00
+    stock_quantity: 9
+    short_description: "تقطيع وفرم وعجن في جهاز واحد."
+    description: "محضرة طعام عملية مع ملحقات أساسية للمطبخ اليومي."
+    images: [kitchen]
+    is_new: true
+    sort_order: 4
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "800 واط" }, { name: "الملحقات", value: "3 ملحقات" }]
+  - slug: two-slice-toaster
+    name: "توستر شريحتين بتحكم في التحميص"
+    sku: DEMO-ME-005
+    category: kitchen-appliances
+    price: 99.00
+    stock_quantity: 15
+    short_description: "تحميص متساوٍ مع درجات قابلة للضبط."
+    description: "توستر صغير مناسب للفطور اليومي مع صينية فتات قابلة للإزالة."
+    images: [kitchen]
+    sort_order: 5
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "شريحتان" }, { name: "درجات التحميص", value: "7 درجات" }]
+  - slug: compact-microwave-20l
+    name: "ميكروويف 20 لتر بتحكم ميكانيكي"
+    sku: DEMO-ME-006
+    category: kitchen-appliances
+    price: 399.00
+    compare_at_price: 449.00
+    stock_quantity: 7
+    short_description: "حل سريع لتسخين وتحضير الوجبات."
+    description: "ميكروويف مدمج بسعة 20 لتر ومستويات طاقة متعددة."
+    images: [kitchen]
+    is_featured: true
+    sort_order: 6
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "20 لتر" }, { name: "القدرة", value: "700 واط" }]
+  - slug: espresso-coffee-machine
+    name: "ماكينة قهوة إسبريسو منزلية"
+    sku: DEMO-ME-007
+    category: coffee-and-drinks
+    price: 459.00
+    compare_at_price: 529.00
+    stock_quantity: 6
+    short_description: "قهوة مركزة مع ذراع بخار للحليب."
+    description: "ماكينة قهوة منزلية بحامل فلتر وخزان ماء قابل للإزالة."
+    images: [coffee]
+    is_featured: true
+    is_bestseller: true
+    sort_order: 7
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "1350 واط" }, { name: "الخزان", value: "1.2 لتر" }]
+  - slug: electric-coffee-grinder
+    name: "طاحونة قهوة كهربائية صغيرة"
+    sku: DEMO-ME-008
+    category: coffee-and-drinks
+    price: 119.00
+    stock_quantity: 14
+    short_description: "طحن سريع للحبوب والتوابل الجافة."
+    description: "طاحونة مدمجة بشفرات ستانلس وغطاء شفاف للاستخدام المنزلي."
+    images: [coffee]
+    is_new: true
+    sort_order: 8
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "60 غرام" }, { name: "القدرة", value: "180 واط" }]
+  - slug: citrus-juicer
+    name: "عصارة حمضيات كهربائية"
+    sku: DEMO-ME-009
+    category: coffee-and-drinks
+    price: 89.00
+    stock_quantity: 20
+    short_description: "عصير طازج بلمسة واحدة."
+    description: "عصارة عملية بفوهة مانعة للتنقيط وقطعتين للعصر."
+    images: [coffee]
+    sort_order: 9
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "0.7 لتر" }, { name: "القدرة", value: "40 واط" }]
+  - slug: bagless-vacuum-cleaner
+    name: "مكنسة كهربائية بدون كيس"
+    sku: DEMO-ME-010
+    category: cleaning-and-home-care
+    price: 379.00
+    compare_at_price: 429.00
+    stock_quantity: 8
+    short_description: "قوة شفط للاستخدام المنزلي مع حاوية سهلة التفريغ."
+    description: "مكنسة بدون كيس مع فلتر قابل للغسل وملحق للزوايا."
+    images: [cleaning]
+    is_featured: true
+    is_bestseller: true
+    sort_order: 10
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "1800 واط" }, { name: "السلك", value: "5 متر" }]
+  - slug: cordless-handheld-vacuum
+    name: "مكنسة يدوية لاسلكية"
+    sku: DEMO-ME-011
+    category: cleaning-and-home-care
+    price: 219.00
+    stock_quantity: 10
+    short_description: "خفيفة للسيارة والزوايا السريعة."
+    description: "مكنسة محمولة قابلة للشحن مع رأس دقيق للأماكن الضيقة."
+    images: [cleaning]
+    is_new: true
+    sort_order: 11
+    origin: placeholder
+    specifications: [{ name: "وقت التشغيل", value: "حتى 25 دقيقة" }, { name: "الشحن", value: "لاسلكي" }]
+  - slug: steam-mop
+    name: "ممسحة بخارية للأرضيات"
+    sku: DEMO-ME-012
+    category: cleaning-and-home-care
+    price: 289.00
+    stock_quantity: 5
+    short_description: "تنظيف بالبخار للأرضيات الصلبة."
+    description: "ممسحة بخارية بخزان سريع التسخين وممسحة قابلة للغسل."
+    images: [cleaning]
+    sort_order: 12
+    origin: placeholder
+    specifications: [{ name: "الخزان", value: "350 مل" }, { name: "التسخين", value: "30 ثانية" }]
+  - slug: steam-iron-ceramic
+    name: "مكواة بخار بقاعدة سيراميك"
+    sku: DEMO-ME-013
+    category: cleaning-and-home-care
+    price: 109.00
+    stock_quantity: 17
+    short_description: "كي مريح مع بخار مستمر."
+    description: "مكواة بخار بقاعدة انسيابية وتحكم بدرجة الحرارة."
+    images: [cleaning]
+    sort_order: 13
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "2400 واط" }, { name: "الخزان", value: "280 مل" }]
+  - slug: standing-fan-16inch
+    name: "مروحة ستاند 16 إنش"
+    sku: DEMO-ME-014
+    category: heating-and-cooling
+    price: 159.00
+    stock_quantity: 13
+    short_description: "تهوية يومية مع ارتفاع قابل للتعديل."
+    description: "مروحة ستاند بثلاث سرعات ورأس متذبذب لتوزيع الهواء."
+    images: [climate]
+    is_bestseller: true
+    sort_order: 14
+    origin: placeholder
+    specifications: [{ name: "المقاس", value: "16 إنش" }, { name: "السرعات", value: "3 سرعات" }]
+  - slug: electric-convector-heater
+    name: "مدفأة كهربائية كونفكتور"
+    sku: DEMO-ME-015
+    category: heating-and-cooling
+    price: 329.00
+    compare_at_price: 379.00
+    stock_quantity: 6
+    short_description: "تدفئة هادئة للغرف المتوسطة."
+    description: "مدفأة كهربائية بتحكم حراري وحماية من ارتفاع الحرارة."
+    images: [climate]
+    is_featured: true
+    sort_order: 15
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "2000 واط" }, { name: "التحكم", value: "ثرموستات" }]
+  - slug: fan-heater-portable
+    name: "دفاية مروحة محمولة"
+    sku: DEMO-ME-016
+    category: heating-and-cooling
+    price: 139.00
+    stock_quantity: 12
+    short_description: "تدفئة سريعة بحجم مناسب للمكتب والغرفة."
+    description: "دفاية مروحة صغيرة بخيار هواء دافئ وحماية من الانقلاب."
+    images: [climate]
+    is_new: true
+    sort_order: 16
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "2000 واط" }, { name: "الحماية", value: "فصل عند الانقلاب" }]
+  - slug: hair-dryer-ionic
+    name: "مجفف شعر أيوني 2200 واط"
+    sku: DEMO-ME-017
+    category: personal-care
+    price: 109.00
+    stock_quantity: 19
+    short_description: "تجفيف عملي مع سرعتين وملحق تركيز."
+    description: "مجفف شعر خفيف مع إعدادات حرارة وهواء بارد للتثبيت."
+    images: [personal]
+    is_bestseller: true
+    sort_order: 17
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "2200 واط" }, { name: "الإعدادات", value: "3 حرارة / سرعتان" }]
+  - slug: rechargeable-shaver
+    name: "ماكينة حلاقة قابلة للشحن"
+    sku: DEMO-ME-018
+    category: personal-care
+    price: 149.00
+    compare_at_price: 169.00
+    stock_quantity: 9
+    short_description: "حلاقة دقيقة للاستخدام الجاف."
+    description: "ماكينة حلاقة برؤوس متحركة ومؤشر شحن واضح."
+    images: [personal]
+    is_featured: true
+    sort_order: 18
+    origin: placeholder
+    specifications: [{ name: "التشغيل", value: "حتى 45 دقيقة" }, { name: "الشحن", value: "USB" }]
+  - slug: ceramic-hair-straightener
+    name: "مكواة شعر سيراميك"
+    sku: DEMO-ME-019
+    category: personal-care
+    price: 99.00
+    stock_quantity: 16
+    short_description: "ألواح ناعمة وحرارة قابلة للضبط."
+    description: "مكواة شعر للاستخدام المنزلي مع تسخين سريع."
+    images: [personal]
+    sort_order: 19
+    origin: placeholder
+    specifications: [{ name: "الحرارة", value: "حتى 230°" }, { name: "الألواح", value: "سيراميك" }]
+  - slug: hand-blender-set
+    name: "خلاط يدوي مع ملحقات"
+    sku: DEMO-ME-020
+    category: small-home-appliances
+    price: 139.00
+    stock_quantity: 14
+    short_description: "خلط وفرم سريع للمطبخ الصغير."
+    description: "خلاط يدوي مع مضرب وكأس قياس ووعاء فرم."
+    images: [small-home]
+    is_new: true
+    sort_order: 20
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "600 واط" }, { name: "الملحقات", value: "3 قطع" }]
+  - slug: digital-kitchen-scale
+    name: "ميزان مطبخ رقمي"
+    sku: DEMO-ME-021
+    category: small-home-appliances
+    price: 49.00
+    stock_quantity: 25
+    short_description: "قياس دقيق للمكونات حتى 5 كغم."
+    description: "ميزان مطبخ بشاشة رقمية ووظيفة تصفير الوعاء."
+    images: [small-home]
+    sort_order: 21
+    origin: placeholder
+    specifications: [{ name: "الحمولة", value: "5 كغم" }, { name: "الدقة", value: "1 غرام" }]
+  - slug: sandwich-maker
+    name: "ساندويتش ميكر بألواح غير لاصقة"
+    sku: DEMO-ME-022
+    category: small-home-appliances
+    price: 89.00
+    stock_quantity: 18
+    short_description: "وجبات سريعة بمؤشر تسخين واضح."
+    description: "جهاز ساندويتش عملي بألواح غير لاصقة وسهل التخزين."
+    images: [small-home]
+    is_bestseller: true
+    sort_order: 22
+    origin: placeholder
+    specifications: [{ name: "القدرة", value: "750 واط" }, { name: "السعة", value: "ساندويتشان" }]
+  - slug: compact-water-heater
+    name: "سخان ماء صغير للمطبخ"
+    sku: DEMO-ME-023
+    category: small-home-appliances
+    price: 249.00
+    compare_at_price: 289.00
+    stock_quantity: 4
+    short_description: "تسخين سريع للمياه في الاستخدام اليومي."
+    description: "سخان ماء صغير مع تحكم بالحرارة وتصميم مدمج."
+    images: [small-home]
+    is_featured: true
+    sort_order: 23
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "10 لتر" }, { name: "القدرة", value: "1500 واط" }]
+  - slug: electric-chopper
+    name: "فرامة كهربائية متعددة الاستخدام"
+    sku: DEMO-ME-024
+    category: small-home-appliances
+    price: 79.00
+    stock_quantity: 22
+    short_description: "فرم سريع للخضار والأعشاب والمكسرات."
+    description: "فرامة مدمجة بوعاء شفاف وسكاكين ستانلس قابلة للفك."
+    images: [small-home]
+    is_new: true
+    sort_order: 24
+    origin: placeholder
+    specifications: [{ name: "السعة", value: "1 لتر" }, { name: "القدرة", value: "400 واط" }]
+
+hero_slides:
+  - { key: home-solutions, title: "حلول كهربائية متكاملة لبيتك ومشروعك", subtitle: "أجهزة عملية لكل تفاصيل يومك", description: "تعرّف إلى تشكيلتنا التجريبية من الأجهزة المنزلية والكهربائية.", button_label: "تسوق المنتجات", button_url: "/shop", image: hero-home, sort_order: 1, origin: placeholder }
+  - { key: demo-offers, title: "اختيارات مميزة بأسعار تجريبية", subtitle: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "تصفح المنتجات المخفضة ضمن نسخة المعاينة.", button_label: "عرض التخفيضات", button_url: "/offers", image: hero-offers, sort_order: 2, origin: placeholder }
+
+home_sections:
+  - { key: masri-categories, section_type: categories, title: "تسوّق حسب التصنيف", description: "كل ما تحتاجه لبيتك في مكان واحد.", sort_order: 1 }
+  - { key: masri-featured, section_type: featured_products, title: "منتجات مختارة", description: "اختيارات عملية للاستخدام اليومي.", sort_order: 2 }
+  - { key: masri-bestsellers, section_type: bestsellers, title: "الأكثر طلباً", description: "أجهزة يحبها عملاؤنا في العرض التجريبي.", sort_order: 3 }
+  - { key: masri-new, section_type: new_products, title: "وصل حديثاً", description: "تشكيلة حديثة تواكب احتياجات المنزل.", sort_order: 4 }
+  - { key: masri-service, section_type: custom_text, title: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "شحن سريع | خدمة عملاء على مدار الساعة", sort_order: 5 }
