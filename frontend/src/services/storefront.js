@@ -1,6 +1,7 @@
 // Store identity, homepage composition and editorial content.
 import { FAVICON_URL, LOGO_URL, STORE_IDENTITY, STORE_NAME_AR, STORE_NAME_LATIN, STORE_TAGLINE } from "../brand.js";
 import { publicApi } from "../api/publicApi.js";
+import { isStaticPreview, previewData } from "../preview/staticPreview.js";
 
 // Instance identity and colours provide safe first-paint fallbacks, so the
 // storefront has a stable first paint. The API's StoreSettings still
@@ -120,16 +121,20 @@ export function normalizeHomeSections(rows) {
 
 export const storefrontService = {
   async settings() {
+    if (isStaticPreview) return normalizeSettings(previewData.settings);
     return normalizeSettings(await publicApi.settings());
   },
   async heroSlides() {
+    if (isStaticPreview) return previewData.heroSlides.map(normalizeHeroSlide);
     const rows = await publicApi.heroSlides();
     return rows.filter((row) => row.image_url).map(normalizeHeroSlide);
   },
   async homeSections() {
+    if (isStaticPreview) return normalizeHomeSections(previewData.homeSections);
     return normalizeHomeSections(await publicApi.homeSections());
   },
   async deliveryAreas() {
+    if (isStaticPreview) return previewData.deliveryAreas.map(normalizeDeliveryArea);
     const rows = await publicApi.deliveryAreas();
     return rows.map(normalizeDeliveryArea);
   },

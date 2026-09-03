@@ -3,6 +3,7 @@
 // `price` (what is charged) and `compare_at_price` (the reference price).
 import { publicApi } from "../api/publicApi.js";
 import { backgroundFor, galleryFor } from "../utils/placeholder.js";
+import { isStaticPreview, previewData, previewProducts } from "../preview/staticPreview.js";
 
 export function normalizeProduct(raw) {
   if (!raw) return null;
@@ -82,29 +83,40 @@ const page = (response) => ({
 
 export const catalogService = {
   async list(params) {
+    if (isStaticPreview) return page(previewProducts(params));
     return page(await publicApi.products(params));
   },
   async bySlug(slug) {
+    if (isStaticPreview) return normalizeProduct(previewData.products.find((item) => item.slug === slug));
     return normalizeProduct(await publicApi.product(slug));
   },
   async related(slug, limit = 4) {
+    if (isStaticPreview) {
+      const product = previewData.products.find((item) => item.slug === slug);
+      return previewData.products.filter((item) => item.slug !== slug && item.category_slug === product?.category_slug).slice(0, limit).map(normalizeProduct);
+    }
     const rows = await publicApi.relatedProducts(slug, limit);
     return rows.map(normalizeProduct);
   },
   async categories() {
+    if (isStaticPreview) return previewData.categories.map(normalizeCategory);
     const rows = await publicApi.categories();
     return rows.map(normalizeCategory);
   },
   async category(slug) {
+    if (isStaticPreview) return normalizeCategory(previewData.categories.find((item) => item.slug === slug));
     return normalizeCategory(await publicApi.category(slug));
   },
   async featured(limit = 8) {
+    if (isStaticPreview) return page({ ...previewProducts(), items: previewData.products.filter((item) => item.is_featured).slice(0, limit) });
     return page(await publicApi.featuredProducts({ page_size: limit }));
   },
   async newest(limit = 8) {
+    if (isStaticPreview) return page({ ...previewProducts(), items: previewData.products.filter((item) => item.is_new).slice(0, limit) });
     return page(await publicApi.newProducts({ page_size: limit }));
   },
   async bestsellers(limit = 8) {
+    if (isStaticPreview) return page({ ...previewProducts(), items: previewData.products.filter((item) => item.is_bestseller).slice(0, limit) });
     return page(await publicApi.bestsellers({ page_size: limit }));
   },
   async packages(params) {
