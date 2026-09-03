@@ -1,5 +1,5 @@
 // Store identity, homepage composition and editorial content.
-import { LOGO_URL, STORE_NAME_AR, STORE_NAME_LATIN, STORE_TAGLINE } from "../brand.js";
+import { LOGO_URL, STORE_IDENTITY, STORE_NAME_AR, STORE_NAME_LATIN, STORE_TAGLINE } from "../brand.js";
 import { publicApi } from "../api/publicApi.js";
 
 // Instance identity and colours provide safe first-paint fallbacks, so the
@@ -14,6 +14,9 @@ import { publicApi } from "../api/publicApi.js";
 // where they can be applied without being claimed.
 export const FALLBACK_SETTINGS = {
   store_name: STORE_NAME_LATIN,
+  store_name_ar: STORE_NAME_AR,
+  facebook_url: STORE_IDENTITY.facebookUrl,
+  facebook_visible: true,
   currency_symbol: "₪",
   maintenance_mode: false,
 };
