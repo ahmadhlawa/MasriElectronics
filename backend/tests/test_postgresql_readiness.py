@@ -55,3 +55,21 @@ def test_serverless_postgresql_engine_uses_null_pool(monkeypatch) -> None:
 
     assert captured["poolclass"] is NullPool
     assert captured["pool_pre_ping"] is True
+    assert captured["connect_args"] == {"prepare_threshold": None}
+
+
+def test_normal_postgresql_engine_keeps_default_connect_options(monkeypatch) -> None:
+    import app.db.session as session_module
+
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(session_module.settings, "DATABASE_USE_NULL_POOL", False)
+    monkeypatch.setattr(
+        session_module,
+        "create_engine",
+        lambda url, **kwargs: captured.update(url=url, **kwargs),
+    )
+
+    session_module.build_engine("postgresql+psycopg://example")
+
+    assert "poolclass" not in captured
+    assert "connect_args" not in captured

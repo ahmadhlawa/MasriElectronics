@@ -6,6 +6,7 @@ from collections.abc import Iterator
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -19,6 +20,10 @@ def build_engine(url: str | None = None) -> Engine:
         kwargs["connect_args"] = {"check_same_thread": False}
     elif settings.DATABASE_USE_NULL_POOL:
         kwargs["poolclass"] = NullPool
+        # Supabase transaction pooling can hand a later request a different backend
+        # session. Psycopg prepared statements are therefore unsafe in this mode.
+        if make_url(url).get_backend_name() == "postgresql":
+            kwargs["connect_args"] = {"prepare_threshold": None}
     return create_engine(url, **kwargs)
 
 
