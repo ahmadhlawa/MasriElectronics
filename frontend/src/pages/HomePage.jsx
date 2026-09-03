@@ -254,13 +254,15 @@ export default function HomePage() {
       {/* Deliberately outside `.vs-container`: the advertising band runs the full
           storefront width, stopping only where the category rail's gutter
           begins. Every section below it stays inside the container. */}
-      <div className="vs-herorow">
-        {hero.status === "loading" ? (
+      {hero.status === "loading" ? (
+        <div className="vs-herorow">
           <div className="vs-skel vs-hero--skel" />
-        ) : (
+        </div>
+      ) : hero.slides.length > 0 ? (
+        <div className="vs-herorow">
           <Hero slides={hero.slides} />
-        )}
-      </div>
+        </div>
+      ) : null}
 
       {sections.status === "loading" && (
         <RevealSection className="vs-container vs-section">
