@@ -6,6 +6,7 @@ import {
   page,
   productFixture,
   renderApp,
+  settingsFixture,
   storefrontRoutes,
   stubApi,
 } from "./utils.jsx";
@@ -16,6 +17,13 @@ const cartButton = () => screen.getByRole("button", { name: "عربة التسو
 const dialogs = () => screen.queryAllByRole("dialog");
 
 describe("public shell", () => {
+  it("uses the settings-managed favicon when configured", async () => {
+    stubApi({ ...storefrontRoutes, "/api/v1/store/settings": { ...settingsFixture, favicon_url: "/branding/masri-electronics-icon.png" } });
+    renderApp("/");
+
+    await waitFor(() => expect(document.querySelector('link[rel="icon"]')).toHaveAttribute("href", "/branding/masri-electronics-icon.png"));
+  });
+
   it("gives the storefront its landmarks and a skip link", async () => {
     stubApi(storefrontRoutes);
     renderApp("/");

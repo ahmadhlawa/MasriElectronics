@@ -185,6 +185,8 @@ class StoreProfile(_Strict):
     timezone: str = "UTC"
     currency_code: str = "ILS"
     currency_symbol: str = Field(default="₪", max_length=8)
+    logo_url: str | None = Field(default=None, max_length=500)
+    favicon_url: str | None = Field(default=None, max_length=500)
     seo_title: str | None = Field(default=None, max_length=200)
     seo_description: str | None = None
 

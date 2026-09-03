@@ -363,9 +363,9 @@ def test_a_fresh_instance_uses_the_masri_profile_without_a_manual_edit(db: Sessi
 
     row = db.execute(select(StoreSettings)).scalar_one()
     assert (row.primary_color, row.secondary_color, row.accent_color) == (
-        "#374151",
-        "#6B7280",
-        "#0F766E",
+        "#1B2F52",
+        "#D9232E",
+        "#D9232E",
     )
     assert "#1F4E4A" not in (row.primary_color, row.secondary_color, row.accent_color)
 
@@ -380,12 +380,16 @@ def test_the_shipped_profile_carries_the_clients_confirmed_store_data(db: Sessio
     assert row.store_name_ar == "المصري للأدوات الكهربائية"
     assert row.currency_code == "ILS"
     assert row.currency_symbol == "₪"
-    # Unverified contact values stay empty.
-    assert row.phone is None
-    assert row.whatsapp is None
+    assert row.phone == "+970 597 344 680"
+    assert row.whatsapp == "+970 597 449 106"
     # Nothing was invented for what the client has not supplied.
     assert row.email is None
-    assert row.address is None
+    assert row.address == "نابلس، أول شارع القدس، فلسطين"
+    assert row.working_hours == "مفتوح 24 ساعة / مفتوح دائماً"
+    assert row.currency_code == "ILS"
+    assert row.currency_symbol == "₪"
+    assert row.logo_url == "/branding/masri-electronics-logo.png"
+    assert row.favicon_url == "/branding/masri-electronics-icon.png"
     assert (row.instagram_url, row.facebook_url, row.tiktok_url, row.youtube_url) == (
         None,
         "https://www.facebook.com/people/%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A-%D9%84%D9%84%D8%A7%D8%AF%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A6%D9%8A%D8%A9/61584581612056/",

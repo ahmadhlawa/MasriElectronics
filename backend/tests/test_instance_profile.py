@@ -67,9 +67,9 @@ def test_the_shipped_masri_profile_carries_the_masri_palette() -> None:
     fresh bootstrap wrote #1F4E4A into store settings and the storefront came up in
     the source project's colours with nothing in the frontend able to stop it."""
     profile = load_profile(MASRI_PROFILE)
-    assert profile.theme.primary_color == "#374151"
-    assert profile.theme.secondary_color == "#6B7280"
-    assert profile.theme.accent_color == "#0F766E"
+    assert profile.theme.primary_color == "#1B2F52"
+    assert profile.theme.secondary_color == "#D9232E"
+    assert profile.theme.accent_color == "#D9232E"
 
     text = MASRI_PROFILE.read_text(encoding="utf-8").upper()
     for retired in ("#1F4E4A", "#C9A24B", "#2E7D5B"):

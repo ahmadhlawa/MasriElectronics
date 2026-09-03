@@ -15,9 +15,9 @@ STORE_SETTINGS_DEFAULTS: dict[str, object] = {
     "currency_code": "ILS",
     "currency_symbol": "₪",
     # Neutral, accessible placeholders until the owner supplies a verified palette.
-    "primary_color": "#374151",
-    "secondary_color": "#6B7280",
-    "accent_color": "#0F766E",
+    "primary_color": "#1B2F52",
+    "secondary_color": "#D9232E",
+    "accent_color": "#D9232E",
     "maintenance_mode": False,
     "instagram_visible": True,
     "facebook_visible": True,
@@ -62,9 +62,9 @@ class StoreSettings(TimestampMixin, Base):
     currency_code: Mapped[str] = mapped_column(String(8), default="ILS", nullable=False)
     currency_symbol: Mapped[str] = mapped_column(String(8), default="₪", nullable=False)
 
-    primary_color: Mapped[str] = mapped_column(String(16), default="#374151", nullable=False)
-    secondary_color: Mapped[str] = mapped_column(String(16), default="#6B7280", nullable=False)
-    accent_color: Mapped[str] = mapped_column(String(16), default="#0F766E", nullable=False)
+    primary_color: Mapped[str] = mapped_column(String(16), default="#1B2F52", nullable=False)
+    secondary_color: Mapped[str] = mapped_column(String(16), default="#D9232E", nullable=False)
+    accent_color: Mapped[str] = mapped_column(String(16), default="#D9232E", nullable=False)
 
     # Storefront-only optional overrides. Null deliberately means the CSS theme owns
     # the effective value; legacy identity colors above remain backward compatible.

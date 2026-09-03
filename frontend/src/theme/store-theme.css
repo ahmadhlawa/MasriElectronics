@@ -4,24 +4,24 @@
      EDIT THESE VALUES TO REBRAND THE STORE
      ======================================== */
 
-  --brand-primary: #374151;
-  --brand-primary-hover: #1F2937;
+  --brand-primary: #1B2F52;
+  --brand-primary-hover: #13233D;
 
-  --brand-secondary: #6B7280;
-  --brand-secondary-hover: #4B5563;
+  --brand-secondary: #D9232E;
+  --brand-secondary-hover: #B91C26;
 
   --brand-on-primary: #FFFFFF;
-  --brand-on-secondary: #181818;
+  --brand-on-secondary: #FFFFFF;
 
-  --brand-soft: #FAF9FC;
-  --brand-soft-hover: #F6F6F8;
+  --brand-soft: #F5F7FB;
+  --brand-soft-hover: #EAF0F8;
 
   /* ========================================
      BRAND SURFACES
      ======================================== */
 
-  --brand-primary-light: #6B7280;
-  --brand-primary-pale: #E5E7EB;
+  --brand-primary-light: #4D668B;
+  --brand-primary-pale: #E7EDF7;
 
   --brand-primary-16: color-mix(
     in srgb,
@@ -62,24 +62,24 @@
 
   /* NAVIGATION STRIP */
 
-  --nav-strip-background: #E5E7EB;
-  --nav-strip-text: #181818;
+  --nav-strip-background: #E7EDF7;
+  --nav-strip-text: #1B2F52;
   --nav-strip-hover: var(--brand-primary);
   --nav-strip-active: var(--brand-primary);
 
 
   /* FOOTER */
 
-  --footer-background: #F6F6F8;
-  --footer-text: #181818;
-  --footer-muted-text: #666666;
+  --footer-background: #1B2F52;
+  --footer-text: #FFFFFF;
+  --footer-muted-text: #C9D4E4;
 
 
   /* BUTTONS */
 
   --button-primary-background: var(--brand-primary);
   --button-primary-hover: var(--brand-primary-hover);
-  --button-primary-text: #181818;
+  --button-primary-text: #FFFFFF;
 
   --button-secondary-background: var(--brand-secondary);
   --button-secondary-hover: var(--brand-secondary-hover);
@@ -91,7 +91,7 @@
   --link-color: var(--brand-primary);
   --link-hover-color: var(--brand-primary-hover);
 
-  --focus-ring: var(--brand-primary);
+  --focus-ring: var(--brand-secondary);
 
 
   /* SELECTION */

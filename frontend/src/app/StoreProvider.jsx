@@ -105,6 +105,24 @@ export function StoreProvider({ children }) {
   }, [settings.seoTitle]);
 
   useEffect(() => {
+    if (!settings.faviconUrl) return undefined;
+    let icon = document.querySelector('link[rel="icon"]');
+    const created = !icon;
+    if (!icon) {
+      icon = document.createElement("link");
+      icon.rel = "icon";
+      document.head.appendChild(icon);
+    }
+    const previousHref = icon.getAttribute("href");
+    icon.href = settings.faviconUrl;
+    return () => {
+      if (created) icon.remove();
+      else if (previousHref === null) icon.removeAttribute("href");
+      else icon.href = previousHref;
+    };
+  }, [settings.faviconUrl]);
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);

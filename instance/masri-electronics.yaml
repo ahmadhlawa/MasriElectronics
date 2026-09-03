@@ -10,20 +10,22 @@ store:
   timezone: "Asia/Hebron"
   currency_code: "ILS"
   currency_symbol: "₪"
+  logo_url: "/branding/masri-electronics-logo.png"
+  favicon_url: "/branding/masri-electronics-icon.png"
   seo_title: "المصري للأدوات الكهربائية"
-  seo_description: null
+  seo_description: "حلول كهربائية متكاملة لبيتك ومشروعك. أجهزة أصلية + كفالة + أسعار تنافسية. شحن سريع | خدمة عملاء على مدار الساعة"
 
 domain:
   primary: null
   aliases: []
 
 contact:
-  phone: null
-  whatsapp: null
+  phone: "+970 597 344 680"
+  whatsapp: "+970 597 449 106"
   email: null
-  address: null
+  address: "نابلس، أول شارع القدس، فلسطين"
   location_url: null
-  working_hours: null
+  working_hours: "مفتوح 24 ساعة / مفتوح دائماً"
   instagram_url: null
   facebook_url: "https://www.facebook.com/people/%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A-%D9%84%D9%84%D8%A7%D8%AF%D9%88%D8%A7%D8%AA-%D8%A7%D9%84%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A6%D9%8A%D8%A9/61584581612056/"
   tiktok_url: null
@@ -33,11 +35,10 @@ contact:
   tiktok_visible: false
   youtube_visible: false
 
-# Neutral placeholders; replace only with an owner-approved palette.
 theme:
-  primary_color: "#374151"
-  secondary_color: "#6B7280"
-  accent_color: "#0F766E"
+  primary_color: "#1B2F52"
+  secondary_color: "#D9232E"
+  accent_color: "#D9232E"
 
 features:
   packages: true
