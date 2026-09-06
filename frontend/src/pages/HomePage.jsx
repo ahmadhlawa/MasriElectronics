@@ -7,6 +7,8 @@ import { storefrontService } from "../services/storefront.js";
 import { productView } from "../utils/productView.js";
 import Hero from "../components/public/home/Hero.jsx";
 import TrustStrip from "../components/public/home/TrustStrip.jsx";
+import BrandMosaic from "../components/public/home/BrandMosaic.jsx";
+import { homeBrands } from "../homeBrands.js";
 import SectionHead from "../components/public/shell/SectionHead.jsx";
 import CategoryCard from "../components/public/catalog/CategoryCard.jsx";
 import ProductGrid, { GridSkeleton } from "../components/public/catalog/ProductGrid.jsx";
@@ -165,7 +167,7 @@ export default function HomePage() {
             />
             <div className="vs-grid vs-grid--cats">
               {categories.slice(0, limit).map((category, index) => (
-                <CategoryCard key={category.slug} category={category} eager={index < 4} revealDelay={Math.min(index * 70, 280)} />
+                <CategoryCard key={category.slug} category={category} compact eager={index < 6} revealDelay={Math.min(index * 70, 280)} />
               ))}
             </div>
           </section>
@@ -271,6 +273,8 @@ export default function HomePage() {
       )}
 
       {rendered}
+
+      <BrandMosaic brands={homeBrands} />
 
       {nothingToShow && (
         <RevealSection className="vs-container vs-section vs-section--empty-store">

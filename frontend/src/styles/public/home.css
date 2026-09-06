@@ -1,3 +1,65 @@
+/* Homepage-only density preserves shared catalog sizing. */
+.vs-home .vs-grid--cats {
+  --vs-ar-category: 3 / 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.vs-home .vs-grid--cats .vs-cat__center { padding: 6px; }
+.vs-home .vs-grid--cats .vs-cat__plate { padding: 6px 8px; }
+.vs-home .vs-grid--cats .vs-cat__name { font-size: 14px; }
+@media (min-width: 600px) {
+  .vs-home .vs-grid--cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .vs-home .vs-grid--cats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .vs-home .vs-grid--cats { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+/* Eight-slot repeating composition: large anchors, small marks and wide tiles. */
+.vs-brand-mosaic {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: clamp(64px, 8vw, 88px);
+  grid-auto-flow: row dense;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.vs-brand-mosaic__tile {
+  grid-column: span 2;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px clamp(16px, 3vw, 32px);
+  border: 1px solid var(--vs-border);
+  border-radius: var(--vs-r-md);
+  background: var(--vs-surface);
+}
+.vs-brand-mosaic__tile:nth-child(8n + 1),
+.vs-brand-mosaic__tile:nth-child(8n + 4) {
+  grid-row: span 2;
+  background: var(--vs-surface-2);
+}
+.vs-brand-mosaic__tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 240px;
+  max-height: 100px;
+  object-fit: contain;
+}
+@media (min-width: 1024px) {
+  .vs-brand-mosaic { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .vs-brand-mosaic__tile:nth-child(8n + 4),
+  .vs-brand-mosaic__tile:nth-child(8n + 7) { grid-column: span 1; }
+  .vs-brand-mosaic__tile:nth-child(8n + 5) { grid-column: span 3; }
+}
+
 /* Hero, promotional bands and the homepage section compositions.
    Only the hero's framing, controls and typography are themed here â€” its sizing
    and responsive behaviour are deliberately left exactly as they were. */
