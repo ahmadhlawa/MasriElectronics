@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from datetime import timedelta
 from decimal import Decimal
 
@@ -414,6 +416,98 @@ def test_placing_an_order_decrements_inventory_once(client: TestClient, db: Sess
 
     db.expire_all()
     assert db.get(Product, product.id).stock_quantity == 8
+
+
+def test_checkout_aggregates_duplicate_lines_before_decrementing(db: Session) -> None:
+    product = make_product(db, stock=3)
+
+    with pytest.raises(DomainError, match="Insufficient product stock"):
+        orders_service.create_order(
+            db,
+            orders_service.OrderDraft(
+                client_reference="aggregate-stock-lines",
+                customer_name="Stock Customer",
+                customer_phone="0591234567",
+                address="Stock Address",
+                items=[(product.id, None, 2), (product.id, None, 2)],
+            ),
+        )
+
+    db.rollback()
+    db.expire_all()
+    assert db.get(Product, product.id).stock_quantity == 3
+    assert db.query(Order).count() == 0
+
+
+def test_concurrent_checkout_allows_only_one_last_unit(
+    db: Session, session_factory
+) -> None:
+    product = make_product(db, stock=1)
+    start = Barrier(2)
+
+    def place(index: int) -> bool:
+        with session_factory() as session:
+            start.wait()
+            try:
+                orders_service.create_order(
+                    session,
+                    orders_service.OrderDraft(
+                        client_reference=f"concurrent-stock-{index}",
+                        customer_name="Concurrent Customer",
+                        customer_phone="0591234567",
+                        address="Concurrent Address",
+                        items=[(product.id, None, 1)],
+                    ),
+                )
+                session.commit()
+                return True
+            except DomainError as error:
+                session.rollback()
+                assert error.code == "insufficient_stock"
+                return False
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(place, range(2)))
+
+    db.expire_all()
+    assert results.count(True) == 1
+    assert db.get(Product, product.id).stock_quantity == 0
+    assert db.query(Order).count() == 1
+
+
+def test_variant_checkout_uses_only_variant_inventory(
+    client: TestClient, db: Session, admin_token: str
+) -> None:
+    from app.models import ProductVariant
+
+    product = make_product(db, stock=0)
+    variant = ProductVariant(product_id=product.id, title="Variant", stock_quantity=1)
+    db.add(variant)
+    db.commit()
+
+    response = client.post(
+        "/api/v1/orders",
+        json=_order_payload(
+            product,
+            client_reference="variant-only-stock",
+            items=[{"product_id": product.id, "variant_id": variant.id, "quantity": 1}],
+        ),
+    )
+
+    assert response.status_code == 201, response.text
+    db.expire_all()
+    assert db.get(Product, product.id).stock_quantity == 0
+    assert db.get(ProductVariant, variant.id).stock_quantity == 0
+
+    cancelled = client.post(
+        f"/api/v1/admin/orders/{response.json()['id']}/status",
+        headers=auth(admin_token),
+        json={"status": "cancelled"},
+    )
+    assert cancelled.status_code == 200, cancelled.text
+    db.expire_all()
+    assert db.get(Product, product.id).stock_quantity == 0
+    assert db.get(ProductVariant, variant.id).stock_quantity == 1
 
 
 def test_coupon_usage_is_counted_once_per_order(client: TestClient, db: Session) -> None:

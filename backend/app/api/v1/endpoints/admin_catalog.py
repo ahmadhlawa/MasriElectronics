@@ -267,7 +267,11 @@ def create_product(payload: ProductCreate, db: DbSession, admin: CurrentAdmin):
 
 @router.patch("/products/{product_id}", response_model=ProductAdminOut)
 def update_product(product_id: int, payload: ProductUpdate, db: DbSession, admin: CurrentAdmin):
-    product = _load_product(db, product_id)
+    product = db.execute(
+        select(Product).where(Product.id == product_id).with_for_update()
+    ).scalar_one_or_none()
+    if product is None:
+        get_or_404(db, Product, product_id, "Product not found.")
     if "brand_id" in payload.model_fields_set and payload.brand_id is not None:
         get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
     data = payload.model_dump(exclude_unset=True)
@@ -593,6 +597,9 @@ def update_variant(
     variant = get_or_404(db, ProductVariant, variant_id, "الخيار غير موجود.")
     if variant.product_id != product.id:
         raise DomainError("الخيار لا ينتمي لهذا المنتج.", code="variant_mismatch")
+    variant = db.execute(
+        select(ProductVariant).where(ProductVariant.id == variant_id).with_for_update()
+    ).scalar_one()
     apply_updates(variant, payload, exclude={"option_value_ids"})
     _attach_option_values(db, product, variant, payload.option_value_ids)
     audit_service.record(

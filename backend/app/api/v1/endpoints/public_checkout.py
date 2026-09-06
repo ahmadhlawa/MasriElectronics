@@ -99,6 +99,9 @@ def create_order(payload: OrderCreate, db: DbSession) -> OrderCreatedOut:
         order = orders_service.get_by_client_reference(db, payload.client_reference)
         if order is None:
             raise
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(order)
     return OrderCreatedOut.model_validate(order)
 

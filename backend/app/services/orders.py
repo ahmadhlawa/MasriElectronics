@@ -311,6 +311,9 @@ def create_manual_order(db: Session, *, draft: ManualOrderDraft, admin: AdminUse
     catalog_keys = [(item.product_id, item.variant_id) for item in catalog_drafts]
     if len(catalog_keys) != len(set(catalog_keys)):
         raise DomainError("Duplicate catalog items are not allowed.", code="duplicate_order_item")
+    _lock_inventory_rows(
+        db, [(item.product_id, item.variant_id) for item in catalog_drafts]
+    )
     priced_catalog = price_lines(
         db, [(item.product_id, item.variant_id, item.quantity) for item in catalog_drafts]
     )
@@ -419,13 +422,7 @@ def create_manual_order(db: Session, *, draft: ManualOrderDraft, admin: AdminUse
 
 def _apply_stock_delta(lines: Sequence[PricedLine], sign: int) -> None:
     """sign=-1 reserves stock, sign=+1 gives it back."""
-    for line in lines:
-        if not line.product.track_inventory:
-            continue
-        delta = sign * line.quantity
-        if line.variant is not None:
-            line.variant.stock_quantity = max(0, line.variant.stock_quantity + delta)
-        line.product.stock_quantity = max(0, line.product.stock_quantity + delta)
+    _validate_and_apply_stock(lines, sign)
 
 
 def _package_component_snapshots(priced_lines: Sequence[PricedLine]) -> dict[int, list[OrderItemPackageComponent]]:
@@ -462,38 +459,77 @@ def _package_component_snapshots(priced_lines: Sequence[PricedLine]) -> dict[int
 
 def _validate_and_apply_stock(lines: Sequence[PricedLine], sign: int) -> None:
     """Aggregate all inventory deltas before checking or mutating any source."""
-    totals: dict[tuple[int, int | None], tuple[Product, ProductVariant | None, int]] = {}
-    parent_totals: dict[int, tuple[Product, int]] = {}
+    product_totals: dict[int, tuple[Product, int]] = {}
+    variant_totals: dict[int, tuple[ProductVariant, int]] = {}
     for line in lines:
         if not line.product.track_inventory:
             continue
-        key = (line.product.id, line.variant.id if line.variant else None)
-        product, variant, quantity = totals.get(key, (line.product, line.variant, 0))
-        totals[key] = (product, variant, quantity + line.quantity)
-        parent, parent_quantity = parent_totals.get(line.product.id, (line.product, 0))
-        parent_totals[line.product.id] = (parent, parent_quantity + line.quantity)
+        if line.variant is not None:
+            variant, quantity = variant_totals.get(line.variant.id, (line.variant, 0))
+            variant_totals[line.variant.id] = (variant, quantity + line.quantity)
+        else:
+            product, quantity = product_totals.get(line.product.id, (line.product, 0))
+            product_totals[line.product.id] = (product, quantity + line.quantity)
     if sign < 0:
-        for product, quantity in parent_totals.values():
+        for product, quantity in product_totals.values():
             if product.stock_quantity < quantity:
                 raise DomainError("Insufficient product stock.", code="insufficient_stock")
-        for product, variant, quantity in totals.values():
-            if variant is not None and variant.stock_quantity < quantity:
+        for variant, quantity in variant_totals.values():
+            if variant.stock_quantity < quantity:
                 raise DomainError("Insufficient variant stock.", code="insufficient_stock")
-    for product, variant, quantity in totals.values():
+    for product, quantity in product_totals.values():
         delta = sign * quantity
-        if variant is not None:
-            variant.stock_quantity = max(0, variant.stock_quantity + delta)
-        product.stock_quantity = max(0, product.stock_quantity + delta)
+        product.stock_quantity += delta
+    for variant, quantity in variant_totals.values():
+        variant.stock_quantity += sign * quantity
+
+
+def _begin_sqlite_write_transaction(db: Session) -> None:
+    """Acquire SQLite's write lock before inventory is read."""
+    if db.get_bind().dialect.name != "sqlite":
+        return
+    connection = db.connection()
+    raw_connection = connection.connection.driver_connection
+    if not raw_connection.in_transaction:
+        connection.exec_driver_sql("BEGIN IMMEDIATE")
+
+
+def _lock_inventory_rows(
+    db: Session, requested: Sequence[tuple[int, int | None]]
+) -> None:
+    """Lock inventory sources in a stable order before validation or mutation."""
+    if not requested:
+        return
+    _begin_sqlite_write_transaction(db)
+    product_ids = sorted({product_id for product_id, _ in requested})
+    variant_ids = sorted({variant_id for _, variant_id in requested if variant_id is not None})
+    if product_ids:
+        db.execute(
+            select(Product)
+            .where(Product.id.in_(product_ids))
+            .order_by(Product.id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        ).scalars().all()
+    if variant_ids:
+        db.execute(
+            select(ProductVariant)
+            .where(ProductVariant.id.in_(variant_ids))
+            .order_by(ProductVariant.id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        ).scalars().all()
 
 
 def create_order(db: Session, draft: OrderDraft) -> Order:
+    if not draft.items:
+        raise DomainError("العربة فارغة.", code="empty_cart")
+
+    _lock_inventory_rows(db, [(product_id, variant_id) for product_id, variant_id, _ in draft.items])
     if draft.client_reference:
         existing = get_by_client_reference(db, draft.client_reference)
         if existing is not None:
             return existing
-
-    if not draft.items:
-        raise DomainError("العربة فارغة.", code="empty_cart")
 
     priced = price_cart(
         db,
@@ -582,6 +618,14 @@ def get_by_client_reference(db: Session, client_reference: str) -> Order | None:
 
 
 def _restore_stock(db: Session, order: Order) -> None:
+    _lock_inventory_rows(
+        db,
+        [
+            (item.product_id, item.variant_id)
+            for item in order.items
+            if item.product_id is not None
+        ],
+    )
     for item in order.items:
         product = db.get(Product, item.product_id) if item.product_id is not None else None
         if product is not None and product.track_inventory:
@@ -589,7 +633,8 @@ def _restore_stock(db: Session, order: Order) -> None:
                 variant = db.get(ProductVariant, item.variant_id)
                 if variant is not None:
                     variant.stock_quantity += item.quantity
-            product.stock_quantity += item.quantity
+            else:
+                product.stock_quantity += item.quantity
 
 
 def change_status(
@@ -600,6 +645,15 @@ def change_status(
     admin: AdminUser | None = None,
     note: str | None = None,
 ) -> Order:
+    order = db.execute(
+        select(Order)
+        .options(selectinload(Order.items))
+        .where(Order.id == order.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).scalar_one_or_none()
+    if order is None:
+        raise NotFoundError("Order not found.", code="order_not_found")
     if new_status not in {s.value for s in OrderStatus}:
         raise DomainError("حالة الطلب غير معروفة.", code="invalid_status")
 
@@ -1166,6 +1220,21 @@ def edit_incomplete_order(
     if material_change and reason is None:
         raise DomainError("Ø³Ø¨Ø¨ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ù…Ø·Ù„ÙˆØ¨.", code="edit_reason_required")
 
+    _lock_inventory_rows(
+        db,
+        [
+            *[
+                (item.product_id, item.variant_id)
+                for item in order.items
+                if item.product_id is not None
+            ],
+            *[
+                (item.product_id, item.variant_id)
+                for item in draft.items
+                if item.kind == "catalog" and item.product_id is not None
+            ],
+        ],
+    )
     # Return the existing reservation before validating the replacement against stock;
     # the same order's previously reserved units remain available to its new draft.
     _restore_stock(db, order)
