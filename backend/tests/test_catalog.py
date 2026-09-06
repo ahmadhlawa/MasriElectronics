@@ -49,6 +49,56 @@ def test_category_with_products_cannot_be_deleted(
     assert response.json()["error"]["code"] == "category_has_products"
 
 
+def test_category_hierarchy_rejects_invalid_parents_and_cycles(
+    client: TestClient, admin_token: str
+) -> None:
+    headers = auth(admin_token)
+    root = client.post("/api/v1/admin/categories", headers=headers, json={"name": "root"}).json()
+    child = client.post(
+        "/api/v1/admin/categories", headers=headers, json={"name": "child", "parent_id": root["id"]}
+    ).json()
+    grandchild = client.post(
+        "/api/v1/admin/categories", headers=headers, json={"name": "grandchild", "parent_id": child["id"]}
+    ).json()
+
+    self_parent = client.patch(
+        f"/api/v1/admin/categories/{root['id']}", headers=headers, json={"parent_id": root["id"]}
+    )
+    assert self_parent.status_code == 400
+    assert self_parent.json()["error"]["code"] == "category_self_parent"
+
+    cycle = client.patch(
+        f"/api/v1/admin/categories/{root['id']}", headers=headers, json={"parent_id": grandchild["id"]}
+    )
+    assert cycle.status_code == 400
+    assert cycle.json()["error"]["code"] == "category_parent_cycle"
+
+    missing = client.post(
+        "/api/v1/admin/categories", headers=headers, json={"name": "missing", "parent_id": 999999}
+    )
+    assert missing.status_code == 400
+    assert missing.json()["error"]["code"] == "category_parent_not_found"
+
+    reparented = client.patch(
+        f"/api/v1/admin/categories/{grandchild['id']}", headers=headers, json={"parent_id": root["id"]}
+    )
+    assert reparented.status_code == 200
+    assert reparented.json()["parent_id"] == root["id"]
+
+
+def test_category_with_children_cannot_be_deleted(
+    client: TestClient, admin_token: str
+) -> None:
+    headers = auth(admin_token)
+    root = client.post("/api/v1/admin/categories", headers=headers, json={"name": "root"}).json()
+    client.post(
+        "/api/v1/admin/categories", headers=headers, json={"name": "child", "parent_id": root["id"]}
+    )
+    response = client.delete(f"/api/v1/admin/categories/{root['id']}", headers=headers)
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "category_has_children"
+
+
 def test_product_crud_and_slug_uniqueness(
     client: TestClient, admin_token: str, category: Category
 ) -> None:

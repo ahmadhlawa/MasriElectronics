@@ -136,6 +136,7 @@ export default function ResourceScreen({
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(null);
   const feedback = useFeedback();
+  const activeFields = typeof fields === "function" ? fields(editing?.row) : fields;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -163,19 +164,19 @@ export default function ResourceScreen({
 
   const openCreate = () => {
     setEditing({ mode: "create" });
-    setValues(initialValues(fields, null));
+    setValues(initialValues(typeof fields === "function" ? fields() : fields, null));
   };
   const openEdit = (row) => {
     setEditing({ mode: "edit", row });
-    setValues(initialValues(fields, row));
+    setValues(initialValues(typeof fields === "function" ? fields(row) : fields, row));
   };
 
   const save = async () => {
     setSaving(true);
     try {
       const payload = preparePayload
-        ? preparePayload(serialize(fields, values), editing.mode === "edit" ? editing.row : undefined)
-        : serialize(fields, values);
+        ? preparePayload(serialize(activeFields, values), editing.mode === "edit" ? editing.row : undefined)
+        : serialize(activeFields, values);
       if (editing.mode === "create") {
         await createItem(payload);
         feedback.success("تمت الإضافة بنجاح.");
@@ -245,7 +246,7 @@ export default function ResourceScreen({
             </>
           }
         >
-          {fields.map((field) => (
+          {activeFields.map((field) => (
             <FieldControl
               key={field.name}
               field={field}

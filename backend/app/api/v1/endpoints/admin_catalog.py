@@ -50,6 +50,30 @@ from app.services.slugs import unique_slug
 router = APIRouter(prefix="/admin", tags=["admin-catalog"])
 
 
+def _validate_category_parent(
+    db: DbSession, *, category_id: int | None, parent_id: int | None
+) -> None:
+    """Reject missing parents and any edge that would make the tree cyclic."""
+    if parent_id is None:
+        return
+    if category_id == parent_id:
+        raise DomainError("القسم لا يمكن أن يكون أباً لنفسه.", code="category_self_parent")
+
+    parent = db.get(Category, parent_id)
+    if parent is None:
+        raise DomainError("القسم الأب المحدد غير موجود.", code="category_parent_not_found")
+
+    visited: set[int] = set()
+    while parent is not None:
+        if parent.id in visited or parent.id == category_id:
+            raise DomainError(
+                "لا يمكن نقل القسم إلى أحد فروعه.",
+                code="category_parent_cycle",
+            )
+        visited.add(parent.id)
+        parent = db.get(Category, parent.parent_id) if parent.parent_id is not None else None
+
+
 # ── Categories ────────────────────────────────────────────────────────────────
 @router.get("/categories", response_model=Page[CategoryAdminOut])
 def list_categories(
@@ -84,6 +108,7 @@ def list_categories(
 
 @router.post("/categories", response_model=CategoryAdminOut, status_code=status.HTTP_201_CREATED)
 def create_category(payload: CategoryCreate, db: DbSession, admin: CurrentAdmin):
+    _validate_category_parent(db, category_id=None, parent_id=payload.parent_id)
     category = Category(
         **payload.model_dump(exclude={"slug"}),
         slug=unique_slug(db, Category, payload.slug or payload.name),
@@ -106,9 +131,9 @@ def create_category(payload: CategoryCreate, db: DbSession, admin: CurrentAdmin)
 @router.patch("/categories/{category_id}", response_model=CategoryAdminOut)
 def update_category(category_id: int, payload: CategoryUpdate, db: DbSession, admin: CurrentAdmin):
     category = get_or_404(db, Category, category_id, "القسم غير موجود.")
-    if payload.parent_id is not None and payload.parent_id == category.id:
-        raise DomainError("لا يمكن أن يكون القسم أباً لنفسه.", code="category_self_parent")
     data = payload.model_dump(exclude_unset=True)
+    if "parent_id" in data:
+        _validate_category_parent(db, category_id=category.id, parent_id=data["parent_id"])
     if data.get("slug"):
         data["slug"] = unique_slug(db, Category, data["slug"], exclude_id=category.id)
     changed: list[str] = []
@@ -139,6 +164,14 @@ def delete_category(category_id: int, db: DbSession, admin: CurrentAdmin):
         raise ConflictError(
             "لا يمكن حذف قسم يحتوي على منتجات. انقل المنتجات أولاً.",
             code="category_has_products",
+        )
+    child = db.execute(
+        select(Category.id).where(Category.parent_id == category.id).limit(1)
+    ).first()
+    if child is not None:
+        raise ConflictError(
+            "لا يمكن حذف قسم له أقسام فرعية. انقلها أولاً.",
+            code="category_has_children",
         )
     audit_service.record(
         db,
