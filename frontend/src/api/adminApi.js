@@ -39,6 +39,11 @@ export const adminApi = {
   updateCategory: (id, payload) => api.patch(`/admin/categories/${id}`, payload, authed),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`, authed),
 
+  listBrands: (params) => api.get("/admin/brands", withParams(params)),
+  createBrand: (payload) => api.post("/admin/brands", payload, authed),
+  updateBrand: (id, payload) => api.patch(`/admin/brands/${id}`, payload, authed),
+  deleteBrand: (id) => api.delete(`/admin/brands/${id}`, authed),
+
   listHeroSlides: () => api.get("/admin/hero-slides", authed),
   createHeroSlide: (payload) => api.post("/admin/hero-slides", payload, authed),
   updateHeroSlide: (id, payload) => api.patch(`/admin/hero-slides/${id}`, payload, authed),

@@ -20,7 +20,6 @@ from app.instance.profile import load_profile, parse_profile
 from app.models import (
     Coupon,
     DeliveryArea,
-    HomeSection,
     InstanceMetadata,
     Order,
     Product,
@@ -44,23 +43,6 @@ PROFILE = {
     "contact": {"phone": "0591234567", "email": "hello@example.com"},
     "theme": {"primary_color": "#112233"},
     "features": {"packages": True, "silicone_molds": False, "coupons": True},
-    "home_sections": [
-        {"key": "categories", "type": "categories", "title": "Categories", "sort_order": 1},
-        {
-            "key": "packages",
-            "type": "packages",
-            "title": "Packages",
-            "sort_order": 2,
-            "requires_feature": "packages",
-        },
-        {
-            "key": "molds",
-            "type": "silicone_molds",
-            "title": "Moulds",
-            "sort_order": 3,
-            "requires_feature": "silicone_molds",
-        },
-    ],
     "static_pages": [
         {"slug": "about", "title": "About us", "lead": "Who we are.", "content": "Founded 2019.\n\nStill here."},
         {"slug": "terms", "title": "Terms", "lead": "The rules."},
@@ -98,15 +80,8 @@ def test_plan_writes_nothing(db: Session, profile) -> None:
     assert all(action.outcome == "create" for action in plan.actions)
     assert db.execute(select(InstanceMetadata)).scalars().all() == []
     assert db.execute(select(StoreSettings)).scalars().all() == []
-    assert db.execute(select(HomeSection)).scalars().all() == []
     assert db.execute(select(StaticPage)).scalars().all() == []
     assert db.execute(select(DeliveryArea)).scalars().all() == []
-
-
-def test_plan_skips_sections_whose_feature_is_disabled(db: Session, profile) -> None:
-    targets = [action.target for action in build_plan(db, profile).actions]
-    assert "home_section:packages" in targets
-    assert "home_section:molds" not in targets  # silicone_molds is disabled
 
 
 # ── first apply ──────────────────────────────────────────────────────────────
@@ -124,9 +99,6 @@ def test_first_apply_initializes_the_instance(db: Session, profile) -> None:
     assert settings_row.currency_code == "EUR"
     assert settings_row.primary_color == "#112233"
     assert settings_row.phone == "0591234567"
-
-    sections = {row.section_key for row in db.execute(select(HomeSection)).scalars()}
-    assert sections == {"categories", "packages"}
 
     pages = {row.slug for row in db.execute(select(StaticPage)).scalars()}
     assert pages == {"about", "terms"}
@@ -203,7 +175,6 @@ def test_bootstrap_creates_no_admin_account(db: Session, profile) -> None:
 def test_repeated_apply_is_idempotent(db: Session, profile) -> None:
     apply_profile(db, profile)
     first = {
-        "sections": sorted(r.section_key for r in db.execute(select(HomeSection)).scalars()),
         "pages": sorted(r.slug for r in db.execute(select(StaticPage)).scalars()),
         "settings": db.execute(select(StoreSettings)).scalar_one().store_name,
         "metadata": db.execute(select(InstanceMetadata)).scalar_one().instance_slug,
@@ -212,7 +183,6 @@ def test_repeated_apply_is_idempotent(db: Session, profile) -> None:
     plan = apply_profile(db, profile)
 
     second = {
-        "sections": sorted(r.section_key for r in db.execute(select(HomeSection)).scalars()),
         "pages": sorted(r.slug for r in db.execute(select(StaticPage)).scalars()),
         "settings": db.execute(select(StoreSettings)).scalar_one().store_name,
         "metadata": db.execute(select(InstanceMetadata)).scalar_one().instance_slug,
@@ -232,12 +202,6 @@ def test_repeated_apply_preserves_admin_edited_content(db: Session, profile) -> 
     settings_row.primary_color = "#ABCDEF"
     settings_row.phone = "0599999999"
 
-    section = db.execute(
-        select(HomeSection).where(HomeSection.section_key == "categories")
-    ).scalar_one()
-    section.title = "Our own heading"
-    section.is_visible = False
-
     page = db.execute(select(StaticPage).where(StaticPage.slug == "about")).scalar_one()
     page.title = "Our story"
     page.content = "Written by the owner."
@@ -249,12 +213,6 @@ def test_repeated_apply_preserves_admin_edited_content(db: Session, profile) -> 
     assert settings_row.store_name == "Acme — renamed by the owner"
     assert settings_row.primary_color == "#ABCDEF"
     assert settings_row.phone == "0599999999"
-
-    section = db.execute(
-        select(HomeSection).where(HomeSection.section_key == "categories")
-    ).scalar_one()
-    assert section.title == "Our own heading"
-    assert section.is_visible is False
 
     page = db.execute(select(StaticPage).where(StaticPage.slug == "about")).scalar_one()
     assert page.title == "Our story"

@@ -18,10 +18,6 @@ const EMPTY_CATALOG = {
   "/api/v1/products/packages": page([]),
   "/api/v1/products/molds": page([]),
   "/api/v1/products": page([]),
-  "/api/v1/home-sections": [
-    { id: 1, section_key: "categories", section_type: "categories", title: "تسوّق حسب القسم", description: "", sort_order: 1, config: {} },
-    { id: 2, section_key: "featured", section_type: "featured_products", title: "منتجات مختارة", description: "", sort_order: 2, config: {} },
-  ],
 };
 
 describe("storefront with no catalog", () => {
@@ -33,8 +29,7 @@ describe("storefront with no catalog", () => {
     // The gap the dropped sections leave is filled by an honest empty state rather
     // than by invented content. Waiting on it also means every list has resolved.
     expect(await screen.findByText("المتجر قيد التجهيز")).toBeInTheDocument();
-    // The sections exist in the database but have nothing to show, so they are
-    // absent rather than rendered as empty headings.
+    // Empty catalog blocks are absent rather than rendered as empty headings.
     expect(screen.queryByText("تسوّق حسب القسم")).not.toBeInTheDocument();
     expect(screen.queryByText("منتجات مختارة")).not.toBeInTheDocument();
     // The shell is still whole: the store did not fail to load.
@@ -50,8 +45,7 @@ describe("storefront with no catalog", () => {
   });
 
   it("never claims a stocked store is being prepared", async () => {
-    // The baseline fixture has a category and a product but no home sections at
-    // all: an unarranged homepage, not an empty store.
+    // The baseline fixture has a category and a product, so it is not an empty store.
     stubApi(storefrontRoutes);
     renderApp("/");
 

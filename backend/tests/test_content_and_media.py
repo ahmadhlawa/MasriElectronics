@@ -164,12 +164,6 @@ def test_only_published_static_pages_are_public(client: TestClient, db: Session)
 
 
 # ── homepage composition ─────────────────────────────────────────────────────
-def test_home_sections_are_not_an_admin_builder(client: TestClient, admin_token: str) -> None:
-    headers = auth(admin_token)
-    assert client.get("/api/v1/admin/home-sections", headers=headers).status_code == 404
-    assert client.post("/api/v1/admin/home-sections", headers=headers, json={}).status_code == 404
-
-
 def test_hero_slides_respect_their_schedule(
     client: TestClient, admin_token: str
 ) -> None:

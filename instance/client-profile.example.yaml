@@ -33,6 +33,5 @@ features:
   packages: true
   silicone_molds: true
   coupons: true
-home_sections: []
 static_pages: []
 delivery_areas: []

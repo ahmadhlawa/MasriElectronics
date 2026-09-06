@@ -36,7 +36,6 @@ from app.models import (
     Coupon,
     DeliveryArea,
     HeroSlide,
-    HomeSection,
     ImportBatch,
     ImportBatchRecord,
     MediaAsset,
@@ -57,7 +56,6 @@ from app.preview.references import (  # noqa: F401  (re-exported: the entity voc
     CREATION_ORDER,
     DELIVERY_AREA,
     HERO_SLIDE,
-    HOME_SECTION,
     MEDIA,
     MODEL_FOR_TYPE,
     PRODUCT,
@@ -462,7 +460,6 @@ class PreviewImporter:
         self._seed_products(plan, batch, index, categories, media_urls, apply=apply, force=force)
         self._seed_delivery_areas(plan, batch, index, apply=apply, force=force)
         self._seed_hero_slides(plan, batch, index, media_urls, apply=apply, force=force)
-        self._seed_home_sections(plan, batch, index, apply=apply, force=force)
         self._seed_coupons(plan, batch, index, apply=apply, force=force)
 
         if apply and batch is not None:
@@ -1005,32 +1002,6 @@ class PreviewImporter:
             create=lambda item: HeroSlide(title=item.title),
             write=write,
             image_for=lambda item: item.image_url or (media_urls.get(item.image) if item.image else None),
-            apply=apply,
-            force=force,
-        )
-
-    def _seed_home_sections(self, plan, batch, index, *, apply: bool, force: bool) -> None:
-        def write(row: HomeSection, item: Any) -> None:
-            row.section_type = item.section_type
-            row.title = item.title
-            row.description = item.description
-            row.is_visible = item.is_visible
-            row.sort_order = item.sort_order
-
-        self._seed_simple(
-            plan,
-            batch,
-            index,
-            entity_type=HOME_SECTION,
-            model=HomeSection,
-            lookup_column=HomeSection.section_key,
-            items=self.dataset.home_sections,
-            natural_key=lambda item: item.key,
-            label=lambda item: item.section_type,
-            create=lambda item: HomeSection(
-                section_key=item.key, section_type=item.section_type, config={}
-            ),
-            write=write,
             apply=apply,
             force=force,
         )

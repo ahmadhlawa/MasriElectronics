@@ -17,6 +17,9 @@ export function normalizeProduct(raw) {
     categoryId: raw.category_id ?? null,
     categoryName: raw.category_name || "",
     categorySlug: raw.category_slug || "",
+    brandId: raw.brand_id ?? null,
+    brandName: raw.brand_name || "",
+    brandLogoUrl: raw.brand_logo_url || null,
     // list price (struck through) and the discounted price actually charged
     price: hasCompare ? Number(raw.compare_at_price) : Number(raw.price),
     sale: hasCompare ? Number(raw.price) : null,

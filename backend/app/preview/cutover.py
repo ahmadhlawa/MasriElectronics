@@ -35,7 +35,6 @@ from app.models import (
     Coupon,
     DeliveryArea,
     HeroSlide,
-    HomeSection,
     ImportBatch,
     ImportBatchRecord,
     InstanceMetadata,
@@ -148,7 +147,6 @@ def _surviving_counts(db: Session, batch: ImportBatch | None) -> dict[str, int]:
         ("product", Product),
         ("delivery_area", DeliveryArea),
         ("hero_slide", HeroSlide),
-        ("home_section", HomeSection),
         ("coupon", Coupon),
         ("media_asset", MediaAsset),
     ):
@@ -433,9 +431,6 @@ def verify_state(db: Session, *, media_base_url: str | None = None) -> list[Chec
         Check("static pages present", counts["static_page"] >= 1,
               f"{counts['static_page']} page(s)")
     )
-    sections = db.execute(select(func.count()).select_from(HomeSection)).scalar_one()
-    checks.append(Check("home sections present", sections >= 1, f"{sections} section(s)"))
-
     dangling = [
         f"{record.entity_type}:{record.natural_key}"
         for record in db.execute(select(ImportBatchRecord)).scalars()

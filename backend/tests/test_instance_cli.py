@@ -33,7 +33,6 @@ def profile_path(tmp_path: Path) -> Path:
         "template_version": template_version(),
         "client_slug": "cli-store",
         "store": {"name": "CLI Store"},
-        "home_sections": [{"key": "categories", "type": "categories", "sort_order": 1}],
         "static_pages": [{"slug": "about", "title": "About"}],
     }
     path = tmp_path / "profile.yaml"

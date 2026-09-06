@@ -37,7 +37,11 @@ export default function BrandMosaic({ brands = [], title = "العلامات ا�
           <ul className="vs-brand-mosaic" aria-label={`${title} ${index + 1} / ${panels.length}`} key={panel[0].id}>
             {panel.map((brand) => (
               <li className="vs-brand-mosaic__tile" key={brand.id}>
-                <img src={brand.logo} alt={brand.name} loading="lazy" decoding="async" />
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.name} loading="lazy" decoding="async" />
+                ) : (
+                  <span>{brand.name}</span>
+                )}
               </li>
             ))}
           </ul>

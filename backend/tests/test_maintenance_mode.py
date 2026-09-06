@@ -19,7 +19,6 @@ PUBLIC_STOREFRONT_PATHS = [
     "/api/v1/products/featured",
     "/api/v1/categories",
     "/api/v1/hero-slides",
-    "/api/v1/home-sections",
     "/api/v1/delivery-areas",
 ]
 

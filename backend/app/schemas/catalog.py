@@ -6,6 +6,30 @@ from app.core.enums import ProductType
 from app.schemas.common import APIModel, Money, UTCDateTime
 
 
+# ── Brands ───────────────────────────────────────────────────────────────────
+class BrandBase(APIModel):
+    name: str = Field(min_length=1, max_length=150)
+    logo_url: str | None = Field(default=None, max_length=500)
+
+
+class BrandCreate(BrandBase):
+    pass
+
+
+class BrandUpdate(APIModel):
+    name: str | None = Field(default=None, min_length=1, max_length=150)
+    logo_url: str | None = Field(default=None, max_length=500)
+
+
+class BrandOut(BrandBase):
+    id: int
+
+
+class BrandAdminOut(BrandOut):
+    created_at: UTCDateTime
+    updated_at: UTCDateTime
+
+
 # ── Categories ────────────────────────────────────────────────────────────────
 class CategoryBase(APIModel):
     name: str = Field(min_length=1, max_length=150)
@@ -162,6 +186,7 @@ class PackageItemOut(APIModel):
 class ProductBase(APIModel):
     name: str = Field(min_length=1, max_length=250)
     category_id: int | None = None
+    brand_id: int | None = None
     short_description: str | None = None
     description: str | None = None
     sku: str | None = Field(default=None, max_length=64)
@@ -198,6 +223,7 @@ class ProductUpdate(APIModel):
     name: str | None = Field(default=None, min_length=1, max_length=250)
     slug: str | None = Field(default=None, max_length=260)
     category_id: int | None = None
+    brand_id: int | None = None
     short_description: str | None = None
     description: str | None = None
     sku: str | None = Field(default=None, max_length=64)
@@ -229,6 +255,9 @@ class ProductPublicOut(APIModel):
     category_id: int | None = None
     category_name: str | None = None
     category_slug: str | None = None
+    brand_id: int | None = None
+    brand_name: str | None = None
+    brand_logo_url: str | None = None
     price: Money
     compare_at_price: Money | None = None
     stock_quantity: int
@@ -279,6 +308,8 @@ class ProductAdminListOut(APIModel):
     product_type: ProductType
     category_id: int | None = None
     category_name: str | None = None
+    brand_id: int | None = None
+    brand_name: str | None = None
     price: Money
     compare_at_price: Money | None = None
     cost_price: Money | None = None

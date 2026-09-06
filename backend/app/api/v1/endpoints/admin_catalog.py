@@ -12,6 +12,7 @@ from app.api.deps import CurrentAdmin, DbSession, PageParams
 from app.core.enums import ProductType
 from app.models import (
     Category,
+    Brand,
     PackageItem,
     Product,
     ProductImage,
@@ -205,6 +206,8 @@ def get_product(product_id: int, db: DbSession, admin: CurrentAdmin):
 
 @router.post("/products", response_model=ProductAdminOut, status_code=status.HTTP_201_CREATED)
 def create_product(payload: ProductCreate, db: DbSession, admin: CurrentAdmin):
+    if payload.brand_id is not None:
+        get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
     data = payload.model_dump(exclude={"slug", "images", "specifications"})
     data["product_type"] = payload.product_type.value
     product = Product(**data, slug=unique_slug(db, Product, payload.slug or payload.name))
@@ -232,6 +235,8 @@ def create_product(payload: ProductCreate, db: DbSession, admin: CurrentAdmin):
 @router.patch("/products/{product_id}", response_model=ProductAdminOut)
 def update_product(product_id: int, payload: ProductUpdate, db: DbSession, admin: CurrentAdmin):
     product = _load_product(db, product_id)
+    if "brand_id" in payload.model_fields_set and payload.brand_id is not None:
+        get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
     data = payload.model_dump(exclude_unset=True)
     if data.get("slug"):
         data["slug"] = unique_slug(db, Product, data["slug"], exclude_id=product.id)

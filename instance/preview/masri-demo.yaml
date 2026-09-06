@@ -346,10 +346,3 @@ products:
 hero_slides:
   - { key: home-solutions, title: "حلول كهربائية متكاملة لبيتك ومشروعك", subtitle: "أجهزة عملية لكل تفاصيل يومك", description: "تعرّف إلى تشكيلتنا التجريبية من الأجهزة المنزلية والكهربائية.", button_label: "تسوق المنتجات", button_url: "/shop", image_url: "/branding/hero.png", sort_order: 1, origin: placeholder }
   - { key: demo-offers, title: "اختيارات مميزة بأسعار تجريبية", subtitle: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "تصفح المنتجات المخفضة ضمن نسخة المعاينة.", button_label: "عرض التخفيضات", button_url: "/offers", image: hero-offers, sort_order: 2, origin: placeholder }
-
-home_sections:
-  - { key: masri-categories, section_type: categories, title: "تسوّق حسب التصنيف", description: "كل ما تحتاجه لبيتك في مكان واحد.", sort_order: 1 }
-  - { key: masri-featured, section_type: featured_products, title: "منتجات مختارة", description: "اختيارات عملية للاستخدام اليومي.", sort_order: 2 }
-  - { key: masri-bestsellers, section_type: bestsellers, title: "الأكثر طلباً", description: "أجهزة يحبها عملاؤنا في العرض التجريبي.", sort_order: 3 }
-  - { key: masri-new, section_type: new_products, title: "وصل حديثاً", description: "تشكيلة حديثة تواكب احتياجات المنزل.", sort_order: 4 }
-  - { key: masri-service, section_type: custom_text, title: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "شحن سريع | خدمة عملاء على مدار الساعة", sort_order: 5 }

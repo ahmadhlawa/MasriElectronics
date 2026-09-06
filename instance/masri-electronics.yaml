@@ -45,20 +45,6 @@ features:
   silicone_molds: false
   coupons: true
 
-home_sections:
-  - key: "categories"
-    type: "categories"
-    title: "تسوق حسب التصنيف"
-    sort_order: 1
-  - key: "featured"
-    type: "featured_products"
-    title: "منتجات مختارة"
-    sort_order: 2
-  - key: "new"
-    type: "new_products"
-    title: "وصل حديثاً"
-    sort_order: 3
-
 static_pages:
   - slug: "about"
     title: "من نحن"

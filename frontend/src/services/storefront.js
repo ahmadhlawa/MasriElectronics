@@ -1,4 +1,4 @@
-// Store identity, homepage composition and editorial content.
+// Store identity and editorial content.
 import { FAVICON_URL, LOGO_URL, STORE_IDENTITY, STORE_NAME_AR, STORE_NAME_LATIN, STORE_TAGLINE } from "../brand.js";
 import { publicApi } from "../api/publicApi.js";
 import { isStaticPreview, previewData } from "../preview/staticPreview.js";
@@ -102,38 +102,6 @@ export function normalizeDeliveryArea(raw) {
   };
 }
 
-export function normalizeHomeSections(rows) {
-  // Instance defaults and the demo import use different keys for the same
-  // sections. Prefer the imported replacement, without deduplicating by title
-  // or type (other editorial sections may legitimately share either).
-  const replacements = {
-    categories: "masri-categories",
-    featured: "masri-featured",
-    new: "masri-new",
-    bestsellers: "masri-bestsellers",
-  };
-  const source = rows || [];
-  const sections = source.filter((row) => !source.some((other) =>
-    replacements[row.section_key] &&
-    other.section_key === replacements[row.section_key] &&
-    other.section_type === row.section_type &&
-    JSON.stringify(other.config || {}) === JSON.stringify(row.config || {}),
-  )).map((row) => ({
-    id: row.id,
-    key: row.section_key,
-    type: row.section_type,
-    title: row.title || "",
-    description: row.description || "",
-    sortOrder: row.sort_order,
-    config: row.config || {},
-  }));
-  const byType = {};
-  sections.forEach((section) => {
-    if (!byType[section.type]) byType[section.type] = section;
-  });
-  return { sections, byType };
-}
-
 export const storefrontService = {
   async settings() {
     if (isStaticPreview) return normalizeSettings(previewData.settings);
@@ -143,10 +111,6 @@ export const storefrontService = {
     if (isStaticPreview) return previewData.heroSlides.map(normalizeHeroSlide);
     const rows = await publicApi.heroSlides();
     return rows.filter((row) => row.image_url).map(normalizeHeroSlide);
-  },
-  async homeSections() {
-    if (isStaticPreview) return normalizeHomeSections(previewData.homeSections);
-    return normalizeHomeSections(await publicApi.homeSections());
   },
   async deliveryAreas() {
     if (isStaticPreview) return previewData.deliveryAreas.map(normalizeDeliveryArea);

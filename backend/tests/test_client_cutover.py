@@ -19,7 +19,6 @@ from app.models import (
     Coupon,
     DeliveryArea,
     HeroSlide,
-    HomeSection,
     ImportBatchRecord,
     InstanceMetadata,
     MediaAsset,
@@ -107,7 +106,6 @@ def bootstrapped(db: Session) -> None:
     )
     db.add(StoreSettings(store_name="متجر الاختبار"))
     db.add(StaticPage(slug="about", title="من نحن", content="..."))
-    db.add(HomeSection(section_key="featured", section_type="featured_products", config={}))
     db.commit()
 
 
@@ -554,7 +552,6 @@ def test_owner_and_bootstrap_content_survives_the_purge(
     assert db.query(StoreSettings).count() == 1
     assert db.query(StaticPage).count() == 1
     assert db.query(InstanceMetadata).count() == 1
-    assert db.query(HomeSection).filter_by(section_key="featured").count() == 1
 
 
 # ── verify ───────────────────────────────────────────────────────────────────

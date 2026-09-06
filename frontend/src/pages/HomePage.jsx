@@ -4,6 +4,8 @@ import { useStore } from "../app/StoreProvider.jsx";
 import { useCategoryNav, useMoney } from "../hooks/useStorefront.js";
 import { catalogService } from "../services/catalog.js";
 import { storefrontService } from "../services/storefront.js";
+import { publicApi } from "../api/publicApi.js";
+import { isStaticPreview } from "../preview/staticPreview.js";
 import { productView } from "../utils/productView.js";
 import Hero from "../components/public/home/Hero.jsx";
 import TrustStrip from "../components/public/home/TrustStrip.jsx";
@@ -16,9 +18,8 @@ import { ArrowForward } from "../components/public/shell/icons.jsx";
 import { useViewportReveal } from "../hooks/useViewportReveal.js";
 
 /**
- * Each admin-managed section type is rendered by exactly one composition, and
- * every composition is different — a grid, a rail, a package grid, or a
- * split editorial block — so the page has rhythm instead of eight identical rows.
+ * Fixed homepage composition. Product data remains live, while section order and
+ * copy are deliberately part of the approved storefront rather than Admin content.
  */
 const SECTIONS = {
   categories: { kind: "categories", fallbackTitle: "تسوّق حسب القسم", more: "/shop" },
@@ -73,6 +74,14 @@ const LOADERS = {
   molds: (limit) => catalogService.molds({ page_size: limit }),
 };
 
+const HOME_SECTIONS = [
+  { id: "categories", type: "categories", title: "تسوّق حسب التصنيف", description: "كل ما تحتاجه لبيتك في مكان واحد.", config: {} },
+  { id: "featured", type: "featured_products", title: "منتجات مختارة", description: "اختيارات عملية للاستخدام اليومي.", config: {} },
+  { id: "bestsellers", type: "bestsellers", title: "الأكثر طلباً", description: "أجهزة يحبها عملاؤنا.", config: {} },
+  { id: "new", type: "new_products", title: "وصل حديثاً", description: "تشكيلة حديثة تواكب احتياجات المنزل.", config: {} },
+  { id: "service", type: "custom_text", title: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "شحن سريع | خدمة عملاء على مدار الساعة", config: {} },
+];
+
 function RevealSection({ className, children }) {
   const revealProps = useViewportReveal();
   return <section className={className} {...revealProps}>{children}</section>;
@@ -84,41 +93,48 @@ export default function HomePage() {
   const categories = useCategoryNav();
 
   const [hero, setHero] = useState({ slides: [], status: "loading" });
-  const [sections, setSections] = useState({ list: [], status: "loading" });
   const [lists, setLists] = useState({});
+  const [brands, setBrands] = useState([]);
 
-  // Sections first: only the product lists an enabled section actually needs are
-  // fetched, so a store with three sections makes three requests, not six.
   useEffect(() => {
     let cancelled = false;
-    Promise.allSettled([storefrontService.heroSlides(), storefrontService.homeSections()]).then(
-      ([heroResult, sectionResult]) => {
+    storefrontService.heroSlides().then(
+      (slides) => {
         if (cancelled) return;
         setHero({
-          slides: heroResult.status === "fulfilled" ? heroResult.value : [],
-          status: heroResult.status === "fulfilled" ? "ready" : "error",
-        });
-        setSections({
-          list: sectionResult.status === "fulfilled" ? sectionResult.value.sections : [],
-          status: sectionResult.status === "fulfilled" ? "ready" : "error",
+          slides,
+          status: "ready",
         });
       },
+      () => !cancelled && setHero({ slides: [], status: "error" }),
     );
     return () => {
       cancelled = true;
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (isStaticPreview) {
+      setBrands(homeBrands);
+      return undefined;
+    }
+    publicApi.brands()
+      .then((rows) => !cancelled && setBrands(rows.map((brand) => ({ id: brand.id, name: brand.name, logo: brand.logo_url }))))
+      .catch(() => !cancelled && setBrands([]));
+    return () => { cancelled = true; };
+  }, []);
+
   const needed = useMemo(() => {
     const wanted = new Map();
-    sections.list.forEach((section) => {
+    HOME_SECTIONS.forEach((section) => {
       const spec = SECTIONS[section.type];
       if (spec?.kind === "products") {
         wanted.set(spec.source, Math.max(wanted.get(spec.source) || 0, spec.limit));
       }
     });
     return [...wanted.entries()];
-  }, [sections.list]);
+  }, []);
 
   useEffect(() => {
     if (!needed.length) return undefined;
@@ -149,7 +165,7 @@ export default function HomePage() {
   const views = (source) =>
     (lists[source]?.items || []).map((product) => productView(product, money));
 
-  const rendered = sections.list
+  const rendered = HOME_SECTIONS
     .map((section) => {
       const spec = SECTIONS[section.type];
       if (!spec) return null;
@@ -238,16 +254,12 @@ export default function HomePage() {
     })
     .filter(Boolean);
 
-  // Before the catalog arrives there is no hero and every section drops out, which
+  // Before the catalog arrives there is no hero and every fixed section drops out, which
   // would leave the header sitting straight on top of the trust strip. Say so
   // instead: the store is real and reachable, it just has nothing to show yet.
   const stillLoading =
     hero.status === "loading" ||
-    sections.status === "loading" ||
     needed.some(([source]) => (lists[source]?.status ?? "loading") === "loading");
-  // Categories are checked too: a store that has a catalog but no configured home
-  // sections is not "being prepared", it is merely unarranged, and telling its
-  // customers otherwise would be the misleading version of this message.
   const nothingToShow =
     !stillLoading && !hero.slides.length && !rendered.length && !categories.length;
 
@@ -266,15 +278,9 @@ export default function HomePage() {
         </div>
       ) : null}
 
-      {sections.status === "loading" && (
-        <RevealSection className="vs-container vs-section">
-          <GridSkeleton count={4} />
-        </RevealSection>
-      )}
-
       {rendered}
 
-      <BrandMosaic brands={homeBrands} />
+      <BrandMosaic brands={brands} />
 
       {nothingToShow && (
         <RevealSection className="vs-container vs-section vs-section--empty-store">

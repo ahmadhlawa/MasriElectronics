@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.deps import StorefrontOpen
 from app.api.v1.endpoints import (
     admin_catalog,
+    admin_brands,
     admin_commerce,
     admin_content,
     admin_invoices,
@@ -29,6 +30,7 @@ api_router.include_router(public_checkout.router, dependencies=_storefront)
 # Authenticated admin surface
 api_router.include_router(auth.router)
 api_router.include_router(admin_catalog.router)
+api_router.include_router(admin_brands.router)
 api_router.include_router(admin_content.router)
 api_router.include_router(admin_commerce.router)
 api_router.include_router(admin_invoices.router)

@@ -9,10 +9,11 @@ from sqlalchemy import select
 
 from app.api.deps import DbSession, PageParams
 from app.core.enums import ProductType
-from app.models import Category, Product
+from app.models import Brand, Category, Product
 from app.schemas.catalog import (
     CategoryOut,
     CategoryTreeOut,
+    BrandOut,
     ProductPublicDetail,
     ProductPublicOut,
 )
@@ -25,6 +26,11 @@ _NOT_FOUND = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
     detail={"code": "not_found", "message": "العنصر غير موجود."},
 )
+
+
+@router.get("/brands", response_model=list[BrandOut])
+def list_brands(db: DbSession) -> list[Brand]:
+    return list(db.execute(select(Brand).order_by(Brand.name.asc(), Brand.id.asc())).scalars().all())
 
 
 @router.get("/categories", response_model=list[CategoryTreeOut])

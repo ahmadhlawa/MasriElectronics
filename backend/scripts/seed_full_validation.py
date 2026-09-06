@@ -356,11 +356,7 @@ def seed_media(db: Session) -> None:
 
 
 def seed_content(db: Session) -> None:
-    from app.models import HeroSlide, HomeSection, StaticPage
-
-    # The copied development database can carry obsolete homepage rows. The
-    # disposable acceptance fixture owns its deterministic current section set.
-    db.execute(delete(HomeSection))
+    from app.models import HeroSlide, StaticPage
 
     db.add_all(
         [
@@ -406,13 +402,6 @@ def seed_content(db: Session) -> None:
                 content="<p>يجب ألا تظهر</p>",
                 is_published=False,
             ),
-        ]
-    )
-    db.add_all(
-        [
-            HomeSection(section_key="featured", section_type="featured_products", is_visible=True, sort_order=1, config={}),
-            HomeSection(section_key="packages", section_type="packages", is_visible=True, sort_order=2, config={}),
-            HomeSection(section_key="categories", section_type="categories", is_visible=True, sort_order=3, config={}),
         ]
     )
     db.commit()

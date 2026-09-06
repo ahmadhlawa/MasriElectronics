@@ -57,3 +57,27 @@ export function CategoriesPage() {
     />
   );
 }
+
+export function BrandsPage() {
+  const fetchList = useCallback((params) => adminApi.listBrands(params), []);
+  return (
+    <ResourceScreen
+      title="العلامات التجارية"
+      description="العلامات المرتبطة بالمنتجات والشعارات المعروضة في المتجر."
+      paginated
+      createLabel="إضافة علامة"
+      fetchList={fetchList}
+      createItem={adminApi.createBrand}
+      updateItem={adminApi.updateBrand}
+      deleteItem={adminApi.deleteBrand}
+      columns={[
+        { key: "logo_url", title: "الشعار", render: (row) => row.logo_url ? <img src={row.logo_url} alt="" style={{ width: 48, height: 32, objectFit: "contain" }} /> : "—" },
+        { key: "name", title: "الاسم" },
+      ]}
+      fields={[
+        { name: "name", title: "اسم العلامة", required: true },
+        { name: "logo_url", title: "الشعار", type: "media", emptyAsNull: true },
+      ]}
+    />
+  );
+}

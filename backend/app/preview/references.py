@@ -24,7 +24,6 @@ from app.models import (
     Coupon,
     DeliveryArea,
     HeroSlide,
-    HomeSection,
     MediaAsset,
     Product,
     ProductImage,
@@ -39,7 +38,6 @@ CATEGORY = "category"
 PRODUCT = "product"
 DELIVERY_AREA = "delivery_area"
 HERO_SLIDE = "hero_slide"
-HOME_SECTION = "home_section"
 COUPON = "coupon"
 
 CREATION_ORDER = (
@@ -48,7 +46,6 @@ CREATION_ORDER = (
     PRODUCT,
     DELIVERY_AREA,
     HERO_SLIDE,
-    HOME_SECTION,
     COUPON,
 )
 
@@ -58,7 +55,6 @@ MODEL_FOR_TYPE: dict[str, Any] = {
     PRODUCT: Product,
     DELIVERY_AREA: DeliveryArea,
     HERO_SLIDE: HeroSlide,
-    HOME_SECTION: HomeSection,
     COUPON: Coupon,
 }
 
@@ -69,7 +65,6 @@ LABEL_FIELD_FOR_TYPE: dict[str, str] = {
     PRODUCT: "name",
     DELIVERY_AREA: "name",
     HERO_SLIDE: "title",
-    HOME_SECTION: "title",
     COUPON: "code",
 }
 

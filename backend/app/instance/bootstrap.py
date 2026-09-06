@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 from app.core.template_version import template_version
 from app.db.base import utcnow
 from app.instance.profile import InstanceProfile, StaticPageProfile
-from app.models import DeliveryArea, HomeSection, InstanceMetadata, StaticPage, StoreSettings
+from app.models import DeliveryArea, InstanceMetadata, StaticPage, StoreSettings
 from app.models.store import STORE_SETTINGS_DEFAULTS
 from app.services import store_settings as settings_service
 
@@ -142,15 +142,6 @@ def _page_updates(row: StaticPage, page: StaticPageProfile) -> dict[str, object]
     }
 
 
-def _wanted_sections(profile: InstanceProfile) -> list:
-    enabled = set(profile.enabled_features())
-    return [
-        section
-        for section in sorted(profile.home_sections, key=lambda s: (s.sort_order, s.key))
-        if section.requires_feature is None or section.requires_feature in enabled
-    ]
-
-
 def build_plan(db: Session, profile: InstanceProfile) -> Plan:
     """Compute the intended actions. Deterministic, and writes nothing."""
     plan = Plan()
@@ -192,16 +183,6 @@ def build_plan(db: Session, profile: InstanceProfile) -> Plan:
                 PlannedAction("skip", "store_settings", "already configured by the owner")
             )
 
-    existing_sections = {
-        key for (key,) in db.execute(select(HomeSection.section_key)).all()
-    }
-    for section in _wanted_sections(profile):
-        target = f"home_section:{section.key}"
-        if section.key in existing_sections:
-            plan.actions.append(PlannedAction("skip", target, "exists; owner content preserved"))
-        else:
-            plan.actions.append(PlannedAction("create", target, section.type))
-
     existing_pages = {row.slug: row for row in db.execute(select(StaticPage)).scalars()}
     for page in sorted(profile.static_pages, key=lambda p: p.slug):
         target = f"static_page:{page.slug}"
@@ -241,24 +222,6 @@ def apply_profile(db: Session, profile: InstanceProfile) -> Plan:
     settings_row = settings_service.get_or_create_settings(db)
     for attribute, value in _settings_updates(settings_row, profile).items():
         setattr(settings_row, attribute, value)
-
-    existing_sections = {
-        key for (key,) in db.execute(select(HomeSection.section_key)).all()
-    }
-    for section in _wanted_sections(profile):
-        if section.key in existing_sections:
-            continue
-        db.add(
-            HomeSection(
-                section_key=section.key,
-                section_type=section.type,
-                title=section.title,
-                description=section.description,
-                sort_order=section.sort_order,
-                is_visible=section.is_visible,
-                config={},
-            )
-        )
 
     existing_pages = {row.slug: row for row in db.execute(select(StaticPage)).scalars()}
     for page in sorted(profile.static_pages, key=lambda p: p.slug):

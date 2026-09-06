@@ -26,7 +26,7 @@ describe("public storefront", () => {
     expect(screen.queryByText("من الساعة العاشرة صباحاً حتى السابعة مساءً")).not.toBeInTheDocument();
   });
 
-  it("renders the homepage sections the admin has made visible", async () => {
+  it("renders the approved fixed homepage sections", async () => {
     stubApi({
       ...storefrontRoutes,
       "/api/v1/hero-slides": [
@@ -41,10 +41,6 @@ describe("public storefront", () => {
           sort_order: 0,
         },
       ],
-      "/api/v1/home-sections": [
-        { id: 1, section_key: "categories", section_type: "categories", title: "أقسامنا", description: "تسوّق", sort_order: 1, config: {} },
-        { id: 2, section_key: "featured", section_type: "featured_products", title: "مختارات", description: "", sort_order: 2, config: {} },
-      ],
     });
     renderApp("/");
 
@@ -52,7 +48,6 @@ describe("public storefront", () => {
       expect(document.querySelector(".vs-hero img")).toHaveAttribute("src", "/media/hero.png"),
     );
     expect(screen.queryByText("عنوان الشريحة")).not.toBeInTheDocument();
-    expect(await screen.findByText("أقسامنا")).toBeInTheDocument();
     expect(await screen.findAllByText(categoryFixture.name)).not.toHaveLength(0);
   });
 

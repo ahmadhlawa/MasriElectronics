@@ -40,6 +40,7 @@ def product_loaders():
         selectinload(Product.variants),
         selectinload(Product.package_items).selectinload(PackageItem.included_product),
         selectinload(Product.category),
+        selectinload(Product.brand),
     )
 
 
@@ -140,6 +141,9 @@ def product_payload(product: Product, *, include_relations: bool) -> dict[str, A
         "category_id": product.category_id,
         "category_name": product.category.name if product.category else None,
         "category_slug": product.category.slug if product.category else None,
+        "brand_id": product.brand_id,
+        "brand_name": product.brand.name if product.brand else None,
+        "brand_logo_url": product.brand.logo_url if product.brand else None,
         "price": product.price,
         "compare_at_price": product.compare_at_price,
         "stock_quantity": product.stock_quantity,
@@ -213,6 +217,8 @@ def admin_product_list_payload(product: Product) -> dict[str, Any]:
         "product_type": product.product_type,
         "category_id": product.category_id,
         "category_name": product.category.name if product.category else None,
+        "brand_id": product.brand_id,
+        "brand_name": product.brand.name if product.brand else None,
         "price": product.price,
         "compare_at_price": product.compare_at_price,
         "cost_price": product.cost_price,

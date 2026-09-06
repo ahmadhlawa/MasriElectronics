@@ -91,10 +91,6 @@ def main() -> None:
             {"id": index + 1, "image_url": item.image_url or media_urls.get(item.image)}
             for index, item in enumerate(dataset.hero_slides)
         ],
-        "homeSections": [
-            {"id": index + 1, "section_key": item.key, "section_type": item.section_type, "title": item.title, "description": item.description, "sort_order": item.sort_order, "config": {}}
-            for index, item in enumerate(dataset.home_sections)
-        ],
         "deliveryAreas": [],
     }
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

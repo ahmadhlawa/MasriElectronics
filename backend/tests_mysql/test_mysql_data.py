@@ -21,7 +21,6 @@ from app.models import (
     AdminUser,
     Category,
     DeliveryArea,
-    HomeSection,
     Order,
     OrderItem,
     Product,
@@ -117,34 +116,6 @@ def test_decimal_prices_round_trip_exactly(db: Session) -> None:
     assert reloaded.cost_price == Decimal("0.01")
     # NUMERIC(12,2), not a float: the classic 0.1 + 0.2 failure cannot happen.
     assert str(reloaded.price) == "1234.56"
-
-
-def test_json_configuration_fields_round_trip(db: Session) -> None:
-    config = {
-        "limit": 8,
-        "enabled": True,
-        "ratio": 1.5,
-        "labels": ["أول", "ثانٍ"],
-        "nested": {"title": "قسم", "tags": []},
-        "empty": None,
-    }
-    section = HomeSection(
-        section_key=unique("section"),
-        section_type="featured_products",
-        title="قسم JSON",
-        sort_order=99,
-        is_visible=True,
-        config=config,
-    )
-    db.add(section)
-    db.commit()
-    section_id = section.id
-    db.expunge_all()
-
-    reloaded = db.get(HomeSection, section_id)
-    assert reloaded.config == config
-    assert reloaded.config["nested"]["title"] == "قسم"
-    assert reloaded.config["labels"] == ["أول", "ثانٍ"]
 
 
 # ── constraints MySQL actually enforces ──────────────────────────────────────

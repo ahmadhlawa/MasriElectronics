@@ -19,6 +19,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_TABLES = {
     "admin_users",
     "audit_logs",
+    "brands",
     "categories",
     "coupons",
     "delivery_areas",
@@ -85,7 +86,7 @@ def test_alembic_upgrade_builds_the_whole_schema(tmp_path, monkeypatch) -> None:
 
 
 def test_models_and_expected_tables_agree() -> None:
-    assert set(metadata_with_models().tables) == EXPECTED_TABLES
+    assert set(metadata_with_models().tables) == EXPECTED_TABLES - {"home_sections"}
 
 
 # Alembic creates alembic_version.version_num as VARCHAR(32). SQLite ignores that

@@ -156,20 +156,6 @@ def test_missing_required_value_is_rejected() -> None:
         parse_profile(document)
 
 
-def test_unknown_home_section_type_is_rejected() -> None:
-    with pytest.raises(ProfileError, match="unknown home section type"):
-        parse_profile(minimal(home_sections=[{"key": "x", "type": "carousel_of_doom"}]))
-
-
-def test_duplicate_home_section_keys_are_rejected() -> None:
-    sections = [
-        {"key": "featured", "type": "featured_products"},
-        {"key": "featured", "type": "bestsellers"},
-    ]
-    with pytest.raises(ProfileError, match="duplicate home section"):
-        parse_profile(minimal(home_sections=sections))
-
-
 def test_bad_currency_code_is_rejected() -> None:
     with pytest.raises(ProfileError, match="currency"):
         parse_profile(minimal(store={"name": "Acme", "currency_code": "shekel"}))
@@ -213,12 +199,6 @@ def test_secret_like_top_level_keys_are_rejected(secret_field: dict) -> None:
 def test_secret_like_keys_are_rejected_at_any_depth() -> None:
     with pytest.raises(ProfileError, match="looks like a secret"):
         parse_profile(minimal(contact={"phone": "1", "smtp_password": "x"}))
-
-    with pytest.raises(ProfileError, match="looks like a secret"):
-        parse_profile(
-            minimal(home_sections=[{"key": "a", "type": "categories", "access_token": "x"}])
-        )
-
 
 def test_shipped_profiles_contain_no_secret_like_keys() -> None:
     """Belt and braces: the files we tell operators to copy must stay non-secret."""

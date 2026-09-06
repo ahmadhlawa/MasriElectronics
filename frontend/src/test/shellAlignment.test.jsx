@@ -161,7 +161,6 @@ describe("homepage hero", () => {
   const heroRoutes = {
     ...storefrontRoutes,
     "/api/v1/hero-slides": heroSlides,
-    "/api/v1/home-sections": [],
   };
 
   it("shows exactly one advertising image at a time", async () => {
@@ -248,7 +247,6 @@ describe("hero advertisement copy", () => {
   const routesFor = (slides) => ({
     ...storefrontRoutes,
     "/api/v1/hero-slides": slides,
-    "/api/v1/home-sections": [],
   });
 
   it("shows an image-only advertisement with nothing printed over it", async () => {
@@ -403,17 +401,6 @@ describe("homepage category grid", () => {
     stubApi({
       ...storefrontRoutes,
       "/api/v1/categories": [categoryFixture, parentCategory],
-      "/api/v1/home-sections": [
-        {
-          id: 1,
-          section_key: "categories",
-          section_type: "categories",
-          title: "تسوّق حسب القسم",
-          description: "",
-          sort_order: 0,
-          config: {},
-        },
-      ],
     });
     renderApp("/");
 

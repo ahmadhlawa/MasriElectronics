@@ -72,16 +72,6 @@ class DiscountType(StrEnum):
     FIXED = "fixed"
 
 
-class HomeSectionType(StrEnum):
-    FEATURED_PRODUCTS = "featured_products"
-    NEW_PRODUCTS = "new_products"
-    BESTSELLERS = "bestsellers"
-    PACKAGES = "packages"
-    SILICONE_MOLDS = "silicone_molds"
-    CATEGORIES = "categories"
-    CUSTOM_TEXT = "custom_text"
-
-
 class StorageProviderName(StrEnum):
     LOCAL = "local"
     R2 = "r2"

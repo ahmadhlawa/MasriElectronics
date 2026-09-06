@@ -40,12 +40,25 @@ class Category(TimestampMixin, Base):
     products: Mapped[list["Product"]] = relationship(back_populates="category")
 
 
+class Brand(TimestampMixin, Base):
+    __tablename__ = "brands"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(150), unique=True, index=True, nullable=False)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    products: Mapped[list["Product"]] = relationship(back_populates="brand")
+
+
 class Product(TimestampMixin, Base):
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    brand_id: Mapped[int | None] = mapped_column(
+        ForeignKey("brands.id", ondelete="RESTRICT"), nullable=True, index=True
     )
 
     name: Mapped[str] = mapped_column(String(250), nullable=False)
@@ -79,6 +92,7 @@ class Product(TimestampMixin, Base):
     search_text: Mapped[str] = mapped_column(String(800), default="", nullable=False)
 
     category: Mapped[Category | None] = relationship(back_populates="products")
+    brand: Mapped[Brand | None] = relationship(back_populates="products")
     images: Mapped[list["ProductImage"]] = relationship(
         back_populates="product",
         cascade="all, delete-orphan",

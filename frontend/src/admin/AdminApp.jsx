@@ -5,7 +5,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ProductsPage from "./pages/ProductsPage.jsx";
 import ProductEditorPage from "./pages/ProductEditorPage.jsx";
-import { CategoriesPage } from "./pages/CatalogScreens.jsx";
+import { BrandsPage, CategoriesPage } from "./pages/CatalogScreens.jsx";
 import { CouponsPage, DeliveryAreasPage } from "./pages/CommerceScreens.jsx";
 import { HeroSlidesPage } from "./pages/ContentScreens.jsx";
 import { OrderDetailPage, OrdersPage } from "./pages/OrdersPages.jsx";
@@ -57,6 +57,7 @@ export default function AdminApp() {
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productId" element={<ProductEditorPage />} />
           <Route path="categories" element={<CategoriesPage />} />
+          <Route path="brands" element={<BrandsPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/manual" element={<RequireSuperAdmin><ManualOrderPage /></RequireSuperAdmin>} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />

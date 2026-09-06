@@ -18,8 +18,6 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
 
-from app.core.enums import HomeSectionType
-
 # Profile schema versions this build understands. Bump when the shape changes.
 SUPPORTED_PROFILE_SCHEMA_VERSIONS = frozenset({1})
 
@@ -110,33 +108,6 @@ class ThemeProfile(_Strict):
         return value.upper()
 
 
-class HomeSectionProfile(_Strict):
-    key: str = Field(max_length=64)
-    type: str
-    title: str | None = Field(default=None, max_length=200)
-    description: str | None = None
-    sort_order: int = 0
-    is_visible: bool = True
-    requires_feature: str | None = None
-
-    @field_validator("type")
-    @classmethod
-    def _check_type(cls, value: str) -> str:
-        allowed = {member.value for member in HomeSectionType}
-        if value not in allowed:
-            raise ValueError(f"unknown home section type {value!r}; allowed: {sorted(allowed)}")
-        return value
-
-    @field_validator("requires_feature")
-    @classmethod
-    def _check_feature(cls, value: str | None) -> str | None:
-        if value is not None and value not in SUPPORTED_FEATURES:
-            raise ValueError(
-                f"unknown feature {value!r}; supported: {list(SUPPORTED_FEATURES)}"
-            )
-        return value
-
-
 class DeliveryAreaProfile(_Strict):
     """One row of the store's delivery table.
 
@@ -223,7 +194,6 @@ class InstanceProfile(_Strict):
     contact: ContactProfile = Field(default_factory=ContactProfile)
     theme: ThemeProfile = Field(default_factory=ThemeProfile)
     features: dict[str, bool] = Field(default_factory=dict)
-    home_sections: list[HomeSectionProfile] = Field(default_factory=list)
     static_pages: list[StaticPageProfile] = Field(default_factory=list)
     delivery_areas: list[DeliveryAreaProfile] = Field(default_factory=list)
 
@@ -255,15 +225,6 @@ class InstanceProfile(_Strict):
             raise ValueError(
                 f"unknown feature flag(s) {unknown}; supported: {list(SUPPORTED_FEATURES)}"
             )
-        return value
-
-    @field_validator("home_sections")
-    @classmethod
-    def _unique_section_keys(cls, value: list[HomeSectionProfile]) -> list[HomeSectionProfile]:
-        keys = [section.key for section in value]
-        duplicates = sorted({key for key in keys if keys.count(key) > 1})
-        if duplicates:
-            raise ValueError(f"duplicate home section key(s): {duplicates}")
         return value
 
     @field_validator("static_pages")

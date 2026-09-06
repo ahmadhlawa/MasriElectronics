@@ -25,6 +25,7 @@ const EMPTY = {
   name: "",
   slug: "",
   category_id: "",
+  brand_id: "",
   product_type: "standard",
   sku: "",
   short_description: "",
@@ -67,6 +68,7 @@ export default function ProductEditorPage() {
   const [form, setForm] = useState(EMPTY);
   const [product, setProduct] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -93,6 +95,7 @@ export default function ProductEditorPage() {
           Object.keys(EMPTY).map((key) => [key, row[key] ?? EMPTY[key]]),
         ),
         category_id: row.category_id ?? "",
+        brand_id: row.brand_id ?? "",
       });
       setSpecs(row.specifications.map((spec) => ({ name: spec.name, value: spec.value })));
       setOptions(
@@ -117,6 +120,7 @@ export default function ProductEditorPage() {
 
   useEffect(() => {
     adminApi.listCategories({ page_size: 100 }).then((r) => setCategories(r.items || [])).catch(() => {});
+    adminApi.listBrands({ page_size: 100 }).then((r) => setBrands(r.items || [])).catch(() => {});
     adminApi.listProducts({ page_size: 100 }).then((r) => setAllProducts(r.items || [])).catch(() => {});
   }, []);
 
@@ -166,6 +170,7 @@ export default function ProductEditorPage() {
       const payload = {
         name: form.name.trim(),
         category_id: form.category_id === "" ? null : Number(form.category_id),
+        brand_id: form.brand_id === "" ? null : Number(form.brand_id),
         product_type: form.product_type,
         sku: form.sku.trim() || null,
         short_description: form.short_description,
@@ -276,6 +281,12 @@ export default function ProductEditorPage() {
             <select value={form.category_id} onChange={(e) => update({ category_id: e.target.value })} style={input}>
               <option value="">بدون قسم</option>
               {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+            </select>
+          </Field>
+          <Field title="العلامة التجارية">
+            <select value={form.brand_id} onChange={(e) => update({ brand_id: e.target.value })} style={input}>
+              <option value="">—</option>
+              {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
             </select>
           </Field>
           <Field title="نوع المنتج">

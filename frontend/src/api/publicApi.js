@@ -5,6 +5,7 @@ export const publicApi = {
   settings: () => api.get("/store/settings"),
   categories: (params) => api.get("/categories", { params }),
   category: (slug) => api.get(`/categories/${encodeURIComponent(slug)}`),
+  brands: () => api.get("/brands"),
 
   products: (params) => api.get("/products", { params }),
   product: (slug) => api.get(`/products/${encodeURIComponent(slug)}`),
@@ -17,7 +18,6 @@ export const publicApi = {
   molds: (params) => api.get("/products/molds", { params }),
 
   heroSlides: () => api.get("/hero-slides"),
-  homeSections: () => api.get("/home-sections"),
   deliveryAreas: () => api.get("/delivery-areas"),
 
   page: (slug) => api.get(`/pages/${encodeURIComponent(slug)}`),

@@ -111,9 +111,9 @@ def test_the_full_client_lifecycle_on_mysql(lifecycle_url: str) -> None:
     assert "[create" not in again.stdout, again.stdout
     assert again.stdout.count("[skip") >= 1
 
-    counts_before = _row_counts(lifecycle_url, ["store_settings", "home_sections", "static_pages"])
+    counts_before = _row_counts(lifecycle_url, ["store_settings", "static_pages"])
     ok(run(["-m", "scripts.instance_cli", "apply", "--profile", str(EXAMPLE_PROFILE)], url=lifecycle_url))
-    assert _row_counts(lifecycle_url, ["store_settings", "home_sections", "static_pages"]) == counts_before
+    assert _row_counts(lifecycle_url, ["store_settings", "static_pages"]) == counts_before
 
 
 def test_instance_metadata_is_recorded_and_manifest_has_no_secrets(lifecycle_url: str) -> None:

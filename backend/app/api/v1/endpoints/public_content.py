@@ -6,12 +6,10 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import Select, or_, select
 
 from app.api.deps import DbSession
-from app.core.enums import HomeSectionType
 from app.db.base import utcnow
-from app.models import DeliveryArea, HeroSlide, HomeSection, StaticPage
+from app.models import DeliveryArea, HeroSlide, StaticPage
 from app.schemas.content import (
     HeroSlideOut,
-    HomeSectionOut,
     StaticPageOut,
 )
 from app.schemas.marketing import DeliveryAreaOut
@@ -49,19 +47,6 @@ def store_settings(db: DbSession):
 def hero_slides(db: DbSession):
     stmt = _within_window(select(HeroSlide), HeroSlide).order_by(
         HeroSlide.sort_order.asc(), HeroSlide.id.asc()
-    )
-    return list(db.execute(stmt).scalars().all())
-
-
-@router.get("/home-sections", response_model=list[HomeSectionOut])
-def home_sections(db: DbSession):
-    stmt = (
-        select(HomeSection)
-        .where(
-            HomeSection.is_visible.is_(True),
-            HomeSection.section_type.in_([section.value for section in HomeSectionType]),
-        )
-        .order_by(HomeSection.sort_order.asc(), HomeSection.id.asc())
     )
     return list(db.execute(stmt).scalars().all())
 

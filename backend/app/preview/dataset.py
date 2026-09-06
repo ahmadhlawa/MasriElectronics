@@ -21,7 +21,7 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from app.core.enums import DiscountType, HomeSectionType, ProductType
+from app.core.enums import DiscountType, ProductType
 from app.instance.profile import ProfileError, assert_no_secret_like_keys
 
 SUPPORTED_PREVIEW_SCHEMA_VERSIONS = frozenset({1})
@@ -281,23 +281,6 @@ class PreviewHeroSlide(_Strict):
         return _slug(value)
 
 
-class PreviewHomeSection(_Strict):
-    key: str = Field(max_length=64)
-    section_type: str
-    title: str | None = Field(default=None, max_length=200)
-    description: str | None = None
-    sort_order: int = 0
-    is_visible: bool = True
-
-    @field_validator("section_type")
-    @classmethod
-    def _check_type(cls, value: str) -> str:
-        allowed = {member.value for member in HomeSectionType}
-        if value not in allowed:
-            raise ValueError(f"unknown home section type {value!r}; allowed: {sorted(allowed)}")
-        return value
-
-
 class PreviewCoupon(_Strict):
     code: str = Field(min_length=2, max_length=64)
     description: str | None = Field(default=None, max_length=250)
@@ -331,7 +314,6 @@ class PreviewDataset(_Strict):
     products: list[PreviewProduct] = Field(default_factory=list)
     delivery_areas: list[PreviewDeliveryArea] = Field(default_factory=list)
     hero_slides: list[PreviewHeroSlide] = Field(default_factory=list)
-    home_sections: list[PreviewHomeSection] = Field(default_factory=list)
     coupons: list[PreviewCoupon] = Field(default_factory=list)
 
     @field_validator("preview_schema_version")
@@ -376,7 +358,6 @@ class PreviewDataset(_Strict):
             ("product slug", [item.slug for item in self.products]),
             ("delivery area key", [item.key for item in self.delivery_areas]),
             ("hero slide key", [item.key for item in self.hero_slides]),
-            ("home section key", [item.key for item in self.home_sections]),
             ("coupon code", [item.code for item in self.coupons]),
         ):
             duplicates = sorted({key for key in keys if keys.count(key) > 1})
@@ -484,7 +465,6 @@ class PreviewDataset(_Strict):
             "products": len(self.products),
             "delivery_areas": len(self.delivery_areas),
             "hero_slides": len(self.hero_slides),
-            "home_sections": len(self.home_sections),
             "coupons": len(self.coupons),
         }
 

@@ -1,6 +1,7 @@
 from app.models.admin import AdminUser
 from app.models.audit import AuditLog
 from app.models.catalog import (
+    Brand,
     Category,
     PackageItem,
     Product,
@@ -11,7 +12,7 @@ from app.models.catalog import (
     ProductVariant,
     ProductVariantOptionValue,
 )
-from app.models.content import HomeSection, StaticPage
+from app.models.content import StaticPage
 from app.models.imports import ImportBatch, ImportBatchRecord
 from app.models.instance import InstanceMetadata
 from app.models.invoices import Invoice, InvoiceItem, InvoiceSequence
@@ -23,11 +24,11 @@ from app.models.store import StoreSettings
 __all__ = [
     "AdminUser",
     "AuditLog",
+    "Brand",
     "Category",
     "Coupon",
     "DeliveryArea",
     "HeroSlide",
-    "HomeSection",
     "ImportBatch",
     "ImportBatchRecord",
     "InstanceMetadata",
