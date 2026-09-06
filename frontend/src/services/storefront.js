@@ -103,7 +103,22 @@ export function normalizeDeliveryArea(raw) {
 }
 
 export function normalizeHomeSections(rows) {
-  const sections = (rows || []).map((row) => ({
+  // Instance defaults and the demo import use different keys for the same
+  // sections. Prefer the imported replacement, without deduplicating by title
+  // or type (other editorial sections may legitimately share either).
+  const replacements = {
+    categories: "masri-categories",
+    featured: "masri-featured",
+    new: "masri-new",
+    bestsellers: "masri-bestsellers",
+  };
+  const source = rows || [];
+  const sections = source.filter((row) => !source.some((other) =>
+    replacements[row.section_key] &&
+    other.section_key === replacements[row.section_key] &&
+    other.section_type === row.section_type &&
+    JSON.stringify(other.config || {}) === JSON.stringify(row.config || {}),
+  )).map((row) => ({
     id: row.id,
     key: row.section_key,
     type: row.section_type,
