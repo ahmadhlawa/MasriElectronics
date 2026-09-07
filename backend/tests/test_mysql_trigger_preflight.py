@@ -84,6 +84,14 @@ def test_preflight_allows_readable_combined_global_and_schema_grants(migration) 
     migration._assert_mysql_trigger_preflight(bind)
 
 
+def test_schema_all_privileges_includes_trigger(migration) -> None:
+    assert migration._has_privilege(
+        ["GRANT ALL PRIVILEGES ON `masri_migr_audit`.* TO `app`@`%`"],
+        "TRIGGER",
+        "masri_migr_audit",
+    )
+
+
 def test_preflight_allows_triggers_when_binary_logging_is_disabled(migration) -> None:
     bind = Bind({"SELECT DATABASE()": "masri_migr_audit", "@@GLOBAL.log_bin": (0, 0)})
 

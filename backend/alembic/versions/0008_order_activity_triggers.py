@@ -45,7 +45,10 @@ def _has_privilege(grants: list[str], privilege: str, schema: str) -> bool:
     for grant in grants:
         normalized = grant.upper().replace("`", "")
         privileges, _, scope = normalized.partition(" ON ")
-        if privileges == "GRANT ALL PRIVILEGES" and scope.startswith("*.*"):
+        if privileges == "GRANT ALL PRIVILEGES" and (
+            scope.startswith("*.*")
+            or (privilege == "TRIGGER" and scope.startswith(f"{schema.upper()}.*"))
+        ):
             return True
         if privilege == "SUPER" and "SUPER" in privileges and scope.startswith("*.*"):
             return True
