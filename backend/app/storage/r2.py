@@ -24,6 +24,7 @@ installed. Install it with the `r2` extra.
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 from app.core.enums import StorageProviderName
 from app.storage.base import StorageProvider, StoredFile, build_stored_key, normalize_prefix
@@ -67,7 +68,7 @@ class R2StorageProvider(StorageProvider):
             raise R2NotConfiguredError(
                 "R2 storage is selected but not configured. Missing: " + ", ".join(missing)
             )
-        self.endpoint_url = endpoint_url.rstrip("/")
+        self.endpoint_url = self._canonical_endpoint_url(endpoint_url, bucket_name)
         self.access_key_id = access_key_id
         self.secret_access_key = secret_access_key
         self.bucket_name = bucket_name
@@ -75,6 +76,24 @@ class R2StorageProvider(StorageProvider):
         self.region_name = region_name or "auto"
         self.object_prefix = normalize_prefix(object_prefix)
         self._client = client
+
+    @staticmethod
+    def _canonical_endpoint_url(endpoint_url: str, bucket_name: str) -> str:
+        """Keep the S3 endpoint account-scoped; ``Bucket`` is sent separately.
+
+        A common R2 dashboard copy/paste shape ends with ``/<bucket>``. Passing that
+        to boto3 as an endpoint makes its path-style request contain the bucket twice,
+        which effectively writes the bucket name into the object key. Accept that
+        legacy shape by stripping exactly this terminal bucket segment; reject any
+        other path because it would be an ambiguous object namespace.
+        """
+        parsed = urlsplit(endpoint_url.strip())
+        path = parsed.path.strip("/")
+        if path and path != bucket_name:
+            raise R2NotConfiguredError(
+                "R2_ENDPOINT_URL must be account-scoped or end with exactly R2_BUCKET_NAME."
+            )
+        return urlunsplit((parsed.scheme, parsed.netloc, "", "", "")).rstrip("/")
 
     @property
     def client(self) -> Any:

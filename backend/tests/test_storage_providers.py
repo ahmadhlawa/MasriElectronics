@@ -273,6 +273,26 @@ def test_endpoint_and_region_are_configurable(r2: R2StorageProvider) -> None:
     assert r2.region_name == "auto"
 
 
+def test_bucket_segment_in_endpoint_is_not_added_to_object_keys(stub: StubS3Client) -> None:
+    provider = R2StorageProvider(
+        endpoint_url="https://account.r2.cloudflarestorage.com/bucket",
+        access_key_id="key-id",
+        secret_access_key="secret",
+        bucket_name="bucket",
+        public_base_url="https://media.example.test",
+        object_prefix="media/",
+        client=stub,
+    )
+
+    stored = provider.save(b"png", content_type="image/png", extension=".png")
+
+    assert provider.endpoint_url == "https://account.r2.cloudflarestorage.com"
+    assert stored.key.startswith("media/")
+    assert not stored.key.startswith("bucket/")
+    assert stub.puts[0]["Key"] == stored.key
+    assert stored.url == f"https://media.example.test/{stored.key}"
+
+
 # ── local storage keeps working ──────────────────────────────────────────────
 def test_local_storage_still_saves_reads_and_deletes(tmp_path: Path) -> None:
     provider = LocalStorageProvider(tmp_path / "media", "/media")
