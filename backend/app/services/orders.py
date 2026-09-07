@@ -18,7 +18,7 @@ from typing import Any, Literal, Protocol
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.core.enums import AdminRole, OrderSource, OrderStatus, PaymentMethod, ProductType
+from app.core.enums import AdminRole, DeliveryMethod, OrderSource, OrderStatus, PaymentMethod, ProductType
 from app.db.base import utcnow
 from app.models import (
     AdminUser,
@@ -203,6 +203,7 @@ class OrderDraft:
     client_reference: str | None = None
     customer_email: str | None = None
     delivery_area_id: int | None = None
+    delivery_method: str = DeliveryMethod.PICKUP.value
     coupon_code: str | None = None
     payment_method: str = PaymentMethod.CASH_ON_DELIVERY.value
     customer_notes: str | None = None
@@ -531,11 +532,17 @@ def create_order(db: Session, draft: OrderDraft) -> Order:
         if existing is not None:
             return existing
 
+    if draft.delivery_method not in {DeliveryMethod.DELIVERY.value, DeliveryMethod.PICKUP.value}:
+        raise DomainError("طريقة الاستلام غير صالحة.", code="invalid_delivery_method")
+    if draft.delivery_method == DeliveryMethod.DELIVERY.value and draft.delivery_area_id is None:
+        raise DomainError("يجب اختيار مدينة التوصيل.", code="delivery_area_required")
+
     priced = price_cart(
         db,
         draft.items,
         coupon_code=draft.coupon_code,
         delivery_area_id=draft.delivery_area_id,
+        delivery_method=draft.delivery_method,
     )
     package_snapshots = _package_component_snapshots(priced.lines)
     _validate_and_apply_stock(priced.lines, sign=-1)
@@ -557,6 +564,7 @@ def create_order(db: Session, draft: OrderDraft) -> Order:
         address=draft.address.strip(),
         delivery_area_id=priced.delivery_area.id if priced.delivery_area else None,
         delivery_area_name=priced.delivery_area.name if priced.delivery_area else None,
+        delivery_method=draft.delivery_method,
         delivery_fee=totals.delivery_fee,
         subtotal=totals.subtotal,
         discount=totals.discount_amount,

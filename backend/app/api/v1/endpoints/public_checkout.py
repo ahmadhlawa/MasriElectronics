@@ -52,6 +52,7 @@ def price_cart(payload: CartPricingRequest, db: DbSession) -> CartPricingRespons
         [(item.product_id, item.variant_id, item.quantity) for item in payload.items],
         coupon_code=payload.coupon_code,
         delivery_area_id=payload.delivery_area_id,
+        delivery_method=payload.delivery_method.value,
     )
     return CartPricingResponse(
         lines=[
@@ -74,6 +75,8 @@ def price_cart(payload: CartPricingRequest, db: DbSession) -> CartPricingRespons
         total=priced.total,
         coupon_code=priced.coupon.code if priced.coupon else None,
         delivery_area_name=priced.delivery_area.name if priced.delivery_area else None,
+        delivery_method=payload.delivery_method,
+        free_delivery_applied=priced.free_delivery_applied,
     )
 
 
@@ -86,6 +89,7 @@ def create_order(payload: OrderCreate, db: DbSession) -> OrderCreatedOut:
         customer_email=payload.customer_email,
         address=payload.address,
         delivery_area_id=payload.delivery_area_id,
+        delivery_method=payload.delivery_method.value,
         coupon_code=payload.coupon_code,
         payment_method=payload.payment_method.value,
         customer_notes=payload.customer_notes,

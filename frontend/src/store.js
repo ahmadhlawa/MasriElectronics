@@ -49,10 +49,17 @@ export const paymentMethods = [
     label: "الدفع عند الاستلام",
     desc: "ادفع نقداً للمندوب عند التسليم",
   },
+  {
+    key: "electronic",
+    label: "الدفع الإلكتروني",
+    desc: "قريبًا",
+    disabled: true,
+  },
 ];
 
 export const paymentMethodLabels = {
   cash_on_delivery: "الدفع عند الاستلام",
+  electronic: "الدفع الإلكتروني — قريبًا",
   bank_transfer: "تحويل بنكي / يدوي",
 };
 

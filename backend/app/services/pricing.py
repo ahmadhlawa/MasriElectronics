@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.enums import DiscountType, ProductType
 from app.db.base import utcnow
 from app.models import Coupon, DeliveryArea, Product, ProductVariant
+from app.services import store_settings
 from app.services.errors import DomainError, NotFoundError
 
 CENTS = Decimal("0.01")
@@ -54,6 +55,7 @@ class PricedCart:
     total: Decimal
     coupon: Coupon | None
     delivery_area: DeliveryArea | None
+    free_delivery_applied: bool
 
 
 def available_stock(product: Product, variant: ProductVariant | None) -> int | None:
@@ -152,10 +154,12 @@ def compute_discount(coupon: Coupon | None, subtotal: Decimal) -> Decimal:
     return min(discount, subtotal)
 
 
-def compute_delivery_fee(area: DeliveryArea | None, subtotal: Decimal) -> Decimal:
+def compute_delivery_fee(
+    area: DeliveryArea | None, subtotal: Decimal, free_delivery_threshold: Decimal | None
+) -> Decimal:
     if area is None:
         return ZERO
-    if area.free_delivery_threshold is not None and subtotal >= money(area.free_delivery_threshold):
+    if free_delivery_threshold is not None and subtotal >= money(free_delivery_threshold):
         return ZERO
     return money(area.delivery_fee)
 
@@ -177,20 +181,17 @@ def price_cart(
     *,
     coupon_code: str | None = None,
     delivery_area_id: int | None = None,
+    delivery_method: str = "delivery",
 ) -> PricedCart:
     lines = price_lines(db, requested)
     subtotal = money(sum((line.line_total for line in lines), ZERO))
 
-    area = resolve_delivery_area(db, delivery_area_id)
-    if area is not None and area.min_order_amount is not None and subtotal < money(area.min_order_amount):
-        raise DomainError(
-            "قيمة الطلب أقل من الحد الأدنى للتوصيل في هذه المنطقة.",
-            code="delivery_min_order",
-        )
-
+    area = resolve_delivery_area(db, delivery_area_id) if delivery_method == "delivery" else None
     coupon = find_valid_coupon(db, coupon_code, subtotal)
     discount = compute_discount(coupon, subtotal)
-    delivery_fee = compute_delivery_fee(area, subtotal)
+    settings = store_settings.get_settings_row(db)
+    free_delivery_threshold = settings.free_delivery_threshold if settings else None
+    delivery_fee = compute_delivery_fee(area, subtotal, free_delivery_threshold)
     total = money(max(ZERO, subtotal - discount + delivery_fee))
 
     return PricedCart(
@@ -201,4 +202,5 @@ def price_cart(
         total=total,
         coupon=coupon,
         delivery_area=area,
+        free_delivery_applied=(area is not None and free_delivery_threshold is not None and delivery_fee == ZERO),
     )

@@ -1,8 +1,43 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../../api/adminApi.js";
 import ResourceScreen from "../ResourceScreen.jsx";
-import { Badge } from "../ui.jsx";
+import sx from "../../sx.js";
+import { Badge, Button, Field, card, input, useFeedback } from "../ui.jsx";
 import { formatDate } from "../../utils/format.js";
+
+function FreeDeliveryThreshold() {
+  const feedback = useFeedback();
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    adminApi.getSettings().then((settings) => setValue(settings.free_delivery_threshold ?? ""))
+      .catch((error) => feedback.error(error.message || "تعذّر تحميل إعداد التوصيل."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await adminApi.updateSettings({ free_delivery_threshold: value === "" ? null : Number(value) });
+      feedback.success("تم حفظ إعداد التوصيل المجاني.");
+    } catch (error) {
+      feedback.error(error.message || "تعذّر حفظ إعداد التوصيل.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return <section style={{ ...card, ...sx`margin-top:16px` }}>
+    {feedback.node}
+    <h2 style={sx`margin:0 0 6px;font-size:16px`}>التوصيل المجاني</h2>
+    <p style={sx`margin:0 0 12px;font-size:13px;color:#766669`}>اتركه فارغًا لتعطيل التوصيل المجاني. يطبّق على المجموع الفرعي لجميع المدن.</p>
+    <div style={sx`display:flex;gap:12px;align-items:end;flex-wrap:wrap`}>
+      <Field title="التوصيل مجانًا عند مبلغ (ILS)"><input type="number" min="0.01" step="0.01" value={value} onChange={(event) => setValue(event.target.value)} style={input} /></Field>
+      <Button onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ…" : "حفظ"}</Button>
+    </div>
+  </section>;
+}
 
 export function CouponsPage() {
   const fetchList = useCallback((params) => adminApi.listCoupons(params), []);
@@ -69,6 +104,7 @@ export function CouponsPage() {
 export function DeliveryAreasPage() {
   const fetchList = useCallback(() => adminApi.listDeliveryAreas(), []);
   return (
+    <>
     <ResourceScreen
       title="مناطق التوصيل"
       description="رسوم التوصيل تُطبَّق حسب المنطقة التي يختارها العميل."
@@ -80,11 +116,6 @@ export function DeliveryAreasPage() {
       columns={[
         { key: "name", title: "المنطقة" },
         { key: "delivery_fee", title: "رسوم التوصيل" },
-        {
-          key: "free_delivery_threshold",
-          title: "توصيل مجاني فوق",
-          render: (row) => row.free_delivery_threshold ?? "—",
-        },
         { key: "estimated_days", title: "المدة المتوقعة", render: (row) => row.estimated_days || "—" },
         { key: "sort_order", title: "الترتيب" },
         {
@@ -98,12 +129,12 @@ export function DeliveryAreasPage() {
       fields={[
         { name: "name", title: "اسم المنطقة", required: true },
         { name: "delivery_fee", title: "رسوم التوصيل", type: "number", step: "0.01", defaultValue: 0 },
-        { name: "min_order_amount", title: "حد أدنى للطلب (اختياري)", type: "number", step: "0.01", emptyAsNull: true },
-        { name: "free_delivery_threshold", title: "توصيل مجاني فوق (اختياري)", type: "number", step: "0.01", emptyAsNull: true },
         { name: "estimated_days", title: "المدة المتوقعة", placeholder: "١–٢ أيام عمل" },
         { name: "sort_order", title: "الترتيب", type: "number", defaultValue: 0 },
         { name: "is_active", title: "فعّالة", type: "checkbox", defaultValue: true },
       ]}
     />
+    <FreeDeliveryThreshold />
+    </>
   );
 }

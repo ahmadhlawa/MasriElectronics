@@ -67,6 +67,7 @@ export function StoreProvider({ children }) {
     name: "",
     phone: "",
     email: "",
+    deliveryMethod: "delivery",
     areaId: null,
     address: "",
     notes: "",

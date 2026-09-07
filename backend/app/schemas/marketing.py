@@ -78,8 +78,6 @@ class CouponValidateResponse(APIModel):
 class DeliveryAreaBase(APIModel):
     name: str = Field(min_length=1, max_length=150)
     delivery_fee: Money = Field(ge=0)
-    min_order_amount: Money | None = Field(default=None, ge=0)
-    free_delivery_threshold: Money | None = Field(default=None, ge=0)
     estimated_days: str | None = Field(default=None, max_length=100)
     is_active: bool = True
     sort_order: int = 0
@@ -92,8 +90,6 @@ class DeliveryAreaCreate(DeliveryAreaBase):
 class DeliveryAreaUpdate(APIModel):
     name: str | None = Field(default=None, min_length=1, max_length=150)
     delivery_fee: Money | None = Field(default=None, ge=0)
-    min_order_amount: Money | None = Field(default=None, ge=0)
-    free_delivery_threshold: Money | None = Field(default=None, ge=0)
     estimated_days: str | None = Field(default=None, max_length=100)
     is_active: bool | None = None
     sort_order: int | None = None
@@ -103,8 +99,6 @@ class DeliveryAreaOut(APIModel):
     id: int
     name: str
     delivery_fee: Money
-    min_order_amount: Money | None = None
-    free_delivery_threshold: Money | None = None
     estimated_days: str | None = None
     sort_order: int
 

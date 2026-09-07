@@ -61,6 +61,7 @@ class StoreSettingsPublic(APIModel):
     seo_title: str | None = None
     seo_description: str | None = None
     maintenance_mode: bool
+    free_delivery_threshold: Money | None = None
     # Shown to a customer who picks the manual/transfer method. Empty until the owner
     # supplies real account details, and the storefront shows nothing while it is empty.
     manual_payment_instructions: str | None = None
@@ -121,6 +122,7 @@ class StoreSettingsUpdate(APIModel):
     seo_title: str | None = Field(default=None, max_length=200)
     seo_description: str | None = None
     maintenance_mode: bool | None = None
+    free_delivery_threshold: Decimal | None = Field(default=None, gt=0)
     order_notifications_email: EmailStr | None = None
     manual_payment_instructions: str | None = Field(default=None, max_length=2000)
 

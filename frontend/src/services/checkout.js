@@ -39,12 +39,13 @@ export function buildOrderWhatsAppMessage(order) {
 
 export const checkoutService = {
   /** Re-price the cart server-side. Returns null for an empty cart. */
-  async price(cart, { couponCode = null, deliveryAreaId = null } = {}) {
+  async price(cart, { couponCode = null, deliveryAreaId = null, deliveryMethod = "delivery" } = {}) {
     if (!cart.length) return null;
     const response = await publicApi.priceCart({
       items: toItems(cart),
       coupon_code: couponCode || null,
       delivery_area_id: deliveryAreaId ?? null,
+      delivery_method: deliveryMethod,
     });
     return {
       lines: response.lines,
@@ -54,6 +55,8 @@ export const checkoutService = {
       total: response.total,
       couponCode: response.coupon_code,
       areaName: response.delivery_area_name,
+      deliveryMethod: response.delivery_method,
+      freeDeliveryApplied: response.free_delivery_applied,
     };
   },
 
@@ -67,6 +70,7 @@ export const checkoutService = {
       customer_email: customer.email || null,
       address: customer.address,
       delivery_area_id: customer.deliveryAreaId ?? null,
+      delivery_method: customer.deliveryMethod || "delivery",
       coupon_code: customer.couponCode || null,
       payment_method: customer.paymentMethod,
       customer_notes: customer.notes || null,

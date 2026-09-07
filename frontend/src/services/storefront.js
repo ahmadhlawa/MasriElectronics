@@ -61,6 +61,7 @@ export function normalizeSettings(raw) {
     // Blank until the owner supplies real account details. The checkout shows nothing
     // rather than inventing transfer instructions.
     manualPaymentInstructions: settings.manual_payment_instructions || "",
+    freeDeliveryThreshold: settings.free_delivery_threshold == null ? null : Number(settings.free_delivery_threshold),
   };
 }
 
@@ -96,8 +97,6 @@ export function normalizeDeliveryArea(raw) {
     id: raw.id,
     name: raw.name,
     price: Number(raw.delivery_fee) || 0,
-    freeOver: raw.free_delivery_threshold == null ? null : Number(raw.free_delivery_threshold),
-    minOrder: raw.min_order_amount == null ? null : Number(raw.min_order_amount),
     eta: raw.estimated_days || "",
   };
 }

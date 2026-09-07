@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.enums import OrderSource, OrderStatus, PaymentMethod
+from app.core.enums import DeliveryMethod, OrderSource, OrderStatus, PaymentMethod
 from app.db.base import Base, TimestampMixin, utcnow
 from app.services.errors import ImmutableActivityError
 
@@ -66,6 +66,10 @@ class Order(TimestampMixin, Base):
         ForeignKey("delivery_areas.id", ondelete="SET NULL"), nullable=True
     )
     delivery_area_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    delivery_method: Mapped[str] = mapped_column(
+        String(16), default=DeliveryMethod.DELIVERY.value,
+        server_default=DeliveryMethod.DELIVERY.value, nullable=False,
+    )
     delivery_fee: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), default=Decimal("0.00"), nullable=False
     )

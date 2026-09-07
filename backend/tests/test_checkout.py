@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.v1.endpoints import public_checkout
 from app.core.enums import DiscountType, OrderStatus
 from app.db.base import utcnow
-from app.models import Coupon, DeliveryArea, Order, PackageItem, Product
+from app.models import Coupon, DeliveryArea, Order, PackageItem, Product, StoreSettings
 from app.schemas.orders import OrderCreate
 from app.services import orders as orders_service
 from app.services import pricing
@@ -43,9 +43,12 @@ def _order_payload(product: Product, **overrides) -> dict:
         "customer_name": "سارة أحمد",
         "customer_phone": "0591234567",
         "address": "رام الله، شارع الإرسال، بناية ٥",
+        "delivery_method": "pickup",
         "items": [{"product_id": product.id, "quantity": 2}],
     }
     payload.update(overrides)
+    if payload.get("delivery_area_id") is not None:
+        payload["delivery_method"] = "delivery"
     return payload
 
 
@@ -245,8 +248,8 @@ def test_expired_and_inactive_coupons_are_rejected(client: TestClient, db: Sessi
 def test_delivery_fee_applies_and_becomes_free_over_the_threshold(
     db: Session, delivery_area: DeliveryArea
 ) -> None:
-    assert pricing.compute_delivery_fee(delivery_area, Decimal("100.00")) == Decimal("20.00")
-    assert pricing.compute_delivery_fee(delivery_area, Decimal("500.00")) == Decimal("0.00")
+    assert pricing.compute_delivery_fee(delivery_area, Decimal("100.00"), Decimal("500.00")) == Decimal("20.00")
+    assert pricing.compute_delivery_fee(delivery_area, Decimal("500.00"), Decimal("500.00")) == Decimal("0.00")
 
 
 def test_an_order_at_the_threshold_is_delivered_free(
@@ -259,7 +262,7 @@ def test_an_order_at_the_threshold_is_delivered_free(
     boundary itself is the case worth pinning: "220 or more" is free, not "over 220".
     """
     delivery_area.delivery_fee = Decimal("25.00")
-    delivery_area.free_delivery_threshold = Decimal("220.00")
+    db.add(StoreSettings(store_name="Test", free_delivery_threshold=Decimal("220.00")))
     db.commit()
 
     product = make_product(db, price="110.00", stock=10)  # 2 × 110 == exactly 220

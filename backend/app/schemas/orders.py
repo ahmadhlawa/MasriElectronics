@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import ConfigDict, EmailStr, Field, field_validator, model_validator
 
-from app.core.enums import OrderSource, OrderStatus, PaymentMethod, PaymentStatus
+from app.core.enums import DeliveryMethod, OrderSource, OrderStatus, PaymentMethod, PaymentStatus
 from app.schemas.common import APIModel, Money, UTCDateTime
 from app.schemas.invoices import InvoiceSummary
 
@@ -26,8 +26,9 @@ class OrderCreate(APIModel):
     customer_name: str = Field(min_length=3, max_length=150)
     customer_phone: str = Field(min_length=7, max_length=40)
     customer_email: EmailStr | None = None
-    address: str = Field(min_length=6, max_length=1000)
+    address: str = Field(default="", max_length=1000)
     delivery_area_id: int | None = None
+    delivery_method: DeliveryMethod = DeliveryMethod.DELIVERY
     coupon_code: str | None = Field(default=None, max_length=64)
     payment_method: PaymentMethod = PaymentMethod.CASH_ON_DELIVERY
     customer_notes: str | None = Field(default=None, max_length=1000)
@@ -41,6 +42,17 @@ class OrderCreate(APIModel):
             raise ValueError("phone number must contain 7 to 15 digits")
         return cleaned
 
+    @model_validator(mode="after")
+    def _validate_checkout_method(self) -> "OrderCreate":
+        if self.payment_method is not PaymentMethod.CASH_ON_DELIVERY:
+            raise ValueError("only cash on delivery is currently available")
+        if self.delivery_method is DeliveryMethod.DELIVERY:
+            if self.delivery_area_id is None:
+                raise ValueError("delivery_area_id is required for delivery")
+            if len(self.address.strip()) < 6:
+                raise ValueError("address is required for delivery")
+        return self
+
 
 class CartPricingRequest(APIModel):
     """Re-price a cart before checkout without creating anything."""
@@ -48,6 +60,7 @@ class CartPricingRequest(APIModel):
     items: list[OrderItemIn] = Field(min_length=1, max_length=100)
     coupon_code: str | None = Field(default=None, max_length=64)
     delivery_area_id: int | None = None
+    delivery_method: DeliveryMethod = DeliveryMethod.DELIVERY
 
 
 class CartPricingLine(APIModel):
@@ -70,6 +83,8 @@ class CartPricingResponse(APIModel):
     total: Money
     coupon_code: str | None = None
     delivery_area_name: str | None = None
+    delivery_method: DeliveryMethod
+    free_delivery_applied: bool = False
 
 
 class OrderItemOut(APIModel):
@@ -122,6 +137,7 @@ class OrderPublicOut(APIModel):
     status: OrderStatus
     customer_name: str
     delivery_area_name: str | None = None
+    delivery_method: DeliveryMethod
     delivery_fee: Money
     subtotal: Money
     discount: Money
@@ -181,6 +197,7 @@ class OrderAdminOut(APIModel):
     address: str
     delivery_area_id: int | None = None
     delivery_area_name: str | None = None
+    delivery_method: DeliveryMethod
     delivery_fee: Money
     subtotal: Money
     discount: Money

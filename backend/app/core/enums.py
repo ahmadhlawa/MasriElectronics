@@ -57,6 +57,11 @@ class PaymentMethod(StrEnum):
     BANK_TRANSFER = "bank_transfer"
 
 
+class DeliveryMethod(StrEnum):
+    DELIVERY = "delivery"
+    PICKUP = "pickup"
+
+
 class InvoiceStatus(StrEnum):
     """Internal invoice lifecycle; rows are never deleted."""
 

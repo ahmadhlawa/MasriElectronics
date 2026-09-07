@@ -84,6 +84,7 @@ class StoreSettings(TimestampMixin, Base):
 
     maintenance_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     order_notifications_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    free_delivery_threshold: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
 
     # ── Arabic display name ──────────────────────────────────────────────────
     # The storefront is Arabic and RTL, but the registered/latin name is often what the

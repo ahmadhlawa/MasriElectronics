@@ -35,6 +35,7 @@ describe("checkout confirmation", () => {
       customer_email: null,
       address: "A valid address",
       delivery_area_id: null,
+      delivery_method: "delivery",
       coupon_code: null,
       payment_method: "cash_on_delivery",
       customer_notes: null,
@@ -75,10 +76,10 @@ describe("checkout confirmation", () => {
  * after they have already filled the whole form.
  */
 describe("checkout payment methods", () => {
-  const CANONICAL = ["cash_on_delivery", "card", "bank_transfer"];
+  const CANONICAL = ["cash_on_delivery"];
 
   it("offers only payment values the orders API accepts", () => {
-    for (const method of paymentMethods) {
+    for (const method of paymentMethods.filter((method) => !method.disabled)) {
       expect(CANONICAL, `unsupported payment key "${method.key}"`).toContain(method.key);
     }
   });
@@ -87,5 +88,9 @@ describe("checkout payment methods", () => {
     for (const method of paymentMethods) {
       expect(paymentMethodLabels[method.key], `no label for "${method.key}"`).toBeTruthy();
     }
+  });
+
+  it("shows electronic payment as unavailable", () => {
+    expect(paymentMethods.find((method) => method.key === "electronic")?.disabled).toBe(true);
   });
 });

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "../app/StoreProvider.jsx";
 import { useCartLines } from "../components/public/cart/useCartLines.js";
-import FreeDeliveryNotice from "../components/public/cart/FreeDeliveryNotice.jsx";
 import Media from "../components/public/shell/Media.jsx";
 import { buildOrderWhatsAppMessage, checkoutService } from "../services/checkout.js";
 import { orderTokenStorage } from "../storage/authStorage.js";
@@ -27,8 +26,8 @@ function validate(form) {
   if (!/^\+?\d{7,15}$/.test(String(form.phone).replace(/[\s-()]/g, ""))) {
     errors.phone = "رقم هاتف غير صالح — مثال 0591234567";
   }
-  if (!form.areaId) errors.area = "اختر منطقة التوصيل";
-  if (!form.address || form.address.trim().length < 6) errors.address = "الرجاء إدخال عنوان واضح";
+  if (form.deliveryMethod === "delivery" && !form.areaId) errors.area = "اختر مدينة التوصيل";
+  if (form.deliveryMethod === "delivery" && (!form.address || form.address.trim().length < 6)) errors.address = "الرجاء إدخال عنوان واضح";
   if (!form.terms) errors.terms = "يجب الموافقة على الشروط قبل إتمام الطلب";
   return errors;
 }
@@ -65,7 +64,7 @@ export default function CheckoutRoutePage() {
       return undefined;
     }
     checkoutService
-      .price(cart, { couponCode: coupon.applied || null, deliveryAreaId: form.areaId })
+      .price(cart, { couponCode: coupon.applied || null, deliveryAreaId: form.areaId, deliveryMethod: form.deliveryMethod })
       .then((result) => {
         if (cancelled) return;
         setPriced(result);
@@ -79,7 +78,7 @@ export default function CheckoutRoutePage() {
     return () => {
       cancelled = true;
     };
-  }, [cart, coupon.applied, form.areaId]);
+  }, [cart, coupon.applied, form.areaId, form.deliveryMethod]);
 
   const update = (patch) => {
     const next = { ...form, ...patch };
@@ -110,6 +109,7 @@ export default function CheckoutRoutePage() {
         email: form.email.trim() || null,
         address: form.address.trim(),
         deliveryAreaId: form.areaId,
+        deliveryMethod: form.deliveryMethod,
         couponCode: coupon.applied || null,
         paymentMethod: "cash_on_delivery",
         notes: form.notes.trim() || null,
@@ -133,7 +133,7 @@ export default function CheckoutRoutePage() {
     }
   };
 
-  const totals = priced || { subtotal: 0, discount: 0, shipping: 0, total: 0, areaName: "" };
+  const totals = priced || { subtotal: 0, discount: 0, shipping: 0, total: 0, areaName: "", freeDeliveryApplied: false };
 
   if (!cart.length) {
     return (
@@ -208,10 +208,23 @@ export default function CheckoutRoutePage() {
               />
             </label>
 
-            <label className="vs-field">
-              منطقة التوصيل
+            <div className="vs-field" role="group" aria-label="طريقة الاستلام">
+              <span>طريقة الاستلام</span>
+              <label className="vs-payopt" data-selected={form.deliveryMethod === "delivery"}>
+                <input type="radio" name="delivery-method" checked={form.deliveryMethod === "delivery"} onChange={() => update({ deliveryMethod: "delivery" })} />
+                <span><strong>توصيل</strong></span>
+              </label>
+              <label className="vs-payopt" data-selected={form.deliveryMethod === "pickup"}>
+                <input type="radio" name="delivery-method" checked={form.deliveryMethod === "pickup"} onChange={() => update({ deliveryMethod: "pickup", areaId: null })} />
+                <span><strong>استلام من المحل</strong></span>
+              </label>
+            </div>
+
+            <label className="vs-field" hidden={form.deliveryMethod === "pickup"}>
+              مدينة التوصيل
               <select
                 className="vs-input"
+                disabled={form.deliveryMethod === "pickup"}
                 value={form.areaId ?? ""}
                 onChange={(event) =>
                   update({ areaId: event.target.value ? Number(event.target.value) : null })
@@ -233,10 +246,11 @@ export default function CheckoutRoutePage() {
               )}
             </label>
 
-            <label className="vs-field">
+            <label className="vs-field" hidden={form.deliveryMethod === "pickup"}>
               العنوان بالتفصيل
               <textarea
                 className="vs-input vs-textarea"
+                disabled={form.deliveryMethod === "pickup"}
                 rows="3"
                 value={form.address}
                 onChange={(event) => update({ address: event.target.value })}
@@ -274,7 +288,8 @@ export default function CheckoutRoutePage() {
                   type="radio"
                   name="pay"
                   checked={form.payment === method.key}
-                  onChange={() => update({ payment: method.key })}
+                  disabled={method.disabled}
+                  onChange={() => !method.disabled && update({ payment: method.key })}
                 />
                 <span>
                   <strong>{method.label}</strong>
@@ -353,12 +368,19 @@ export default function CheckoutRoutePage() {
           )}
           <div className="vs-summary__row">
             <span>التوصيل {totals.areaName ? `(${totals.areaName})` : ""}</span>
-            <strong>{totals.shipping ? money(totals.shipping) : "—"}</strong>
+            <strong>{priced ? (totals.freeDeliveryApplied || form.deliveryMethod === "pickup" ? "مجاني" : money(totals.shipping)) : "—"}</strong>
           </div>
 
-          {/* Priced by the server above; this only explains the rule behind that
-              number, and narrows to the chosen area once there is one. */}
-          <FreeDeliveryNotice subtotal={totals.subtotal} areaId={form.areaId} />
+          {/* The server is authoritative; this only presents its configured rule. */}
+          {form.deliveryMethod === "delivery" && store.settings.freeDeliveryThreshold && !totals.freeDeliveryApplied && (
+            <p className="vs-summary__note">التوصيل مجاني للطلبات من {money(store.settings.freeDeliveryThreshold)}.</p>
+          )}
+          {priced && (form.deliveryMethod === "pickup" || totals.freeDeliveryApplied) && (
+            <div className="vs-summary__row vs-summary__row--good">
+              <span>{form.deliveryMethod === "pickup" ? "استلام من المحل" : "تم تطبيق التوصيل المجاني"}</span>
+              <strong>مجاني</strong>
+            </div>
+          )}
           <div className="vs-summary__total">
             <span>الإجمالي</span>
             <strong>{money(totals.total)}</strong>
