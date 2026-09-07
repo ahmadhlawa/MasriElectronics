@@ -202,14 +202,6 @@ def managed_values(entity_type: str, row: Any) -> dict[str, Any]:
             "is_active": row.is_active,
             "sort_order": row.sort_order,
         }
-    if entity_type == HOME_SECTION:
-        return {
-            "section_type": row.section_type,
-            "title": row.title,
-            "description": row.description,
-            "is_visible": row.is_visible,
-            "sort_order": row.sort_order,
-        }
     if entity_type == COUPON:
         return {
             "description": row.description,
@@ -289,14 +281,6 @@ def desired_values(
             "button_label": item.button_label,
             "button_url": item.button_url,
             "is_active": True,
-            "sort_order": item.sort_order,
-        }
-    if entity_type == HOME_SECTION:
-        return {
-            "section_type": item.section_type,
-            "title": item.title,
-            "description": item.description,
-            "is_visible": item.is_visible,
             "sort_order": item.sort_order,
         }
     if entity_type == COUPON:

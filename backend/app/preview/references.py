@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     Category,
+    Brand,
     Coupon,
     DeliveryArea,
     HeroSlide,
@@ -97,6 +98,7 @@ def media_urls_of(entity_type: str, row: Any) -> list[str]:
 # (model, column, entity type this row belongs to for deletion purposes)
 _REFERENCE_COLUMNS: tuple[tuple[Any, str, str | None], ...] = (
     (Category, "image_url", CATEGORY),
+    (Brand, "logo_url", None),
     (HeroSlide, "image_url", HERO_SLIDE),
     # Static pages and the store's own logo are owner/system content. Nothing
     # in a preview batch owns them, so they can only ever keep a picture alive.

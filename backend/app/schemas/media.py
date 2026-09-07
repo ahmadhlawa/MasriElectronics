@@ -7,17 +7,22 @@ from app.schemas.common import APIModel, UTCDateTime
 MAX_MEDIA_FILENAME_LENGTH = 300
 
 
+def validate_media_filename(value: str) -> str:
+    """Keep display/import names harmless; storage keys never use them."""
+    if not value.strip() or value in {".", ".."} or "/" in value or "\\" in value:
+        raise ValueError("invalid filename")
+    if any(ord(char) < 32 for char in value):
+        raise ValueError("invalid filename")
+    return value
+
+
 class MediaAssetRenameIn(APIModel):
     original_filename: str = Field(min_length=1, max_length=MAX_MEDIA_FILENAME_LENGTH)
 
     @field_validator("original_filename")
     @classmethod
     def _safe_filename(cls, value: str) -> str:
-        if not value.strip() or value in {".", ".."} or "/" in value or "\\" in value:
-            raise ValueError("invalid filename")
-        if any(ord(char) < 32 for char in value):
-            raise ValueError("invalid filename")
-        return value
+        return validate_media_filename(value)
 
 
 class MediaAssetOut(APIModel):

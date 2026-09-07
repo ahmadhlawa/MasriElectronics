@@ -13,11 +13,17 @@ from app.api.deps import CurrentAdmin, DbSession, PageParams
 from app.core.config import settings
 from app.models import MediaAsset
 from app.schemas.common import MessageResponse, Page
-from app.schemas.media import MAX_MEDIA_FILENAME_LENGTH, MediaAssetOut, MediaAssetRenameIn
+from app.schemas.media import (
+    MAX_MEDIA_FILENAME_LENGTH,
+    MediaAssetOut,
+    MediaAssetRenameIn,
+    validate_media_filename,
+)
 from app.services import audit as audit_service
 from app.services import catalog as catalog_service
-from app.services.errors import ConflictError
+from app.services.errors import ConflictError, DomainError
 from app.storage import get_storage, validate_image_upload
+from app.preview.references import media_reference_holders
 
 router = APIRouter(prefix="/admin", tags=["admin-media"])
 
@@ -81,7 +87,12 @@ async def upload_media(
     # create the ambiguity — and never overwrite the first one. Checked before the bytes
     # are written so the ordinary rejection leaves nothing behind in storage; the unique
     # index on the column is what makes it true under concurrency (see below).
-    original_filename = (file.filename or "upload")[:MAX_MEDIA_FILENAME_LENGTH]
+    try:
+        original_filename = validate_media_filename(
+            (file.filename or "upload")[:MAX_MEDIA_FILENAME_LENGTH]
+        )
+    except ValueError as exc:
+        raise DomainError("اسم الملف غير صالح.", code="invalid_filename") from exc
     if filename_is_taken(db, original_filename):
         raise ConflictError(DUPLICATE_FILENAME_MESSAGE, code="duplicate_filename")
 
@@ -157,6 +168,13 @@ def rename_media(
 @router.delete("/media/{asset_id}", response_model=MessageResponse)
 def delete_media(asset_id: int, db: DbSession, admin: CurrentAdmin):
     asset = get_or_404(db, MediaAsset, asset_id, "الملف غير موجود.")
+    holders = media_reference_holders(db, asset.url)
+    if holders:
+        shown = ", ".join(holders[:3])
+        more = f" (+{len(holders) - 3})" if len(holders) > 3 else ""
+        raise ConflictError(
+            f"لا يمكن حذف ملف مستخدم حالياً: {shown}{more}", code="media_in_use"
+        )
 
     # Delete the stored object only when the running provider is the one that wrote it.
     # After a switch from local to R2 (or back) the old keys belong to the other

@@ -13,6 +13,7 @@ import app.api.v1.endpoints.admin_media as admin_media
 from app.models import AuditLog, MediaAsset, StaticPage, StoreSettings
 from app.services.placeholder_image import gradient_png, masri_preview_png
 from app.storage.base import StoredFile
+from app.storage.r2 import R2StorageProvider
 from tests.conftest import auth
 
 
@@ -224,6 +225,83 @@ def test_local_upload_returns_a_usable_url_and_writes_the_file(
     assert db.query(MediaAsset).count() == 0
 
 
+def test_r2_media_can_be_shared_by_catalog_brand_and_hero_then_deleted_when_unused(
+    client: TestClient, db: Session, admin_token: str, monkeypatch
+) -> None:
+    class FakeR2Client:
+        def __init__(self) -> None:
+            self.objects: dict[str, bytes] = {}
+            self.deleted: list[str] = []
+
+        def put_object(self, **kwargs) -> dict:
+            self.objects[kwargs["Key"]] = kwargs["Body"]
+            assert kwargs["ContentType"] == "image/png"
+            return {}
+
+        def delete_object(self, *, Bucket: str, Key: str) -> dict:  # noqa: N803
+            self.deleted.append(Key)
+            self.objects.pop(Key, None)
+            return {}
+
+    fake = FakeR2Client()
+    storage = R2StorageProvider(
+        endpoint_url="https://account.r2.cloudflarestorage.com",
+        access_key_id="test-key",
+        secret_access_key="test-secret",
+        bucket_name="test-bucket",
+        public_base_url="https://media.example.test",
+        object_prefix="masri/",
+        client=fake,
+    )
+    monkeypatch.setattr(admin_media, "get_storage", lambda: storage)
+
+    uploaded = client.post(
+        "/api/v1/admin/media",
+        headers=auth(admin_token),
+        files={"file": ("shared.png", _png_bytes(), "image/png")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    asset = uploaded.json()
+    assert asset["url"].startswith("https://media.example.test/masri/")
+
+    category = client.post(
+        "/api/v1/admin/categories",
+        headers=auth(admin_token),
+        json={"name": "قسم", "image_url": asset["url"]},
+    ).json()
+    brand = client.post(
+        "/api/v1/admin/brands",
+        headers=auth(admin_token),
+        json={"name": "علامة", "logo_url": asset["url"]},
+    ).json()
+    product = client.post(
+        "/api/v1/admin/products",
+        headers=auth(admin_token),
+        json={
+            "name": "منتج", "price": 10, "category_id": category["id"], "brand_id": brand["id"],
+            "images": [{"url": asset["url"]}],
+        },
+    ).json()
+    slide = client.post(
+        "/api/v1/admin/hero-slides",
+        headers=auth(admin_token),
+        json={"title": "عرض", "image_url": asset["url"]},
+    ).json()
+
+    in_use = client.delete(f"/api/v1/admin/media/{asset['id']}", headers=auth(admin_token))
+    assert in_use.status_code == 409
+    assert in_use.json()["error"]["code"] == "media_in_use"
+    assert fake.deleted == []
+
+    assert client.delete(f"/api/v1/admin/products/{product['id']}", headers=auth(admin_token)).status_code == 200
+    assert client.delete(f"/api/v1/admin/categories/{category['id']}", headers=auth(admin_token)).status_code == 200
+    assert client.delete(f"/api/v1/admin/brands/{brand['id']}", headers=auth(admin_token)).status_code == 200
+    assert client.delete(f"/api/v1/admin/hero-slides/{slide['id']}", headers=auth(admin_token)).status_code == 200
+    assert client.delete(f"/api/v1/admin/media/{asset['id']}", headers=auth(admin_token)).status_code == 200
+    assert fake.deleted == [asset["stored_key"]]
+    assert db.query(MediaAsset).count() == 0
+
+
 def test_media_list_searches_filenames_and_paginates(
     client: TestClient, admin_token: str
 ) -> None:
@@ -299,6 +377,19 @@ def test_upload_rejects_disallowed_content_regardless_of_the_declared_type(
     )
     assert response.status_code == 400
     assert response.json()["error"]["code"] == "unsupported_media_type"
+    assert list(media_root.iterdir()) == []
+
+
+def test_upload_rejects_an_unsafe_client_filename(
+    client: TestClient, admin_token: str, media_root: Path
+) -> None:
+    response = client.post(
+        "/api/v1/admin/media",
+        headers=auth(admin_token),
+        files={"file": ("../outside.png", _png_bytes(), "image/png")},
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invalid_filename"
     assert list(media_root.iterdir()) == []
 
 
