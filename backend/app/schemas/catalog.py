@@ -130,7 +130,7 @@ class ProductOptionOut(APIModel):
 class ProductVariantIn(APIModel):
     title: str = Field(min_length=1, max_length=200)
     sku: str | None = Field(default=None, max_length=64)
-    price_override: Money | None = None
+    price_override: Money | None = Field(default=None, ge=0)
     stock_quantity: int = Field(default=0, ge=0)
     is_active: bool = True
     option_value_ids: list[int] = Field(default_factory=list)

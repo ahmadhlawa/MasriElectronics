@@ -6,11 +6,11 @@ import re
 import unicodedata
 from typing import Any
 
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, and_, exists, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.enums import ProductType
-from app.models import Category, PackageItem, Product
+from app.models import Category, PackageItem, Product, ProductOption, ProductVariant
 
 _TASHKEEL = re.compile(r"[ً-ْـ]")
 _ALEF = re.compile(r"[أإآ]")
@@ -89,8 +89,18 @@ def apply_product_filters(
             Product.compare_at_price.is_not(None), Product.compare_at_price > Product.price
         )
     if in_stock:
+        has_options = exists().where(ProductOption.product_id == Product.id)
+        has_stocked_variant = exists().where(
+            ProductVariant.product_id == Product.id,
+            ProductVariant.is_active.is_(True),
+            ProductVariant.stock_quantity > 0,
+        )
         stmt = stmt.where(
-            or_(Product.track_inventory.is_(False), Product.stock_quantity > 0)
+            or_(
+                Product.track_inventory.is_(False),
+                and_(~has_options, Product.stock_quantity > 0),
+                and_(has_options, has_stocked_variant),
+            )
         )
     if min_price is not None:
         stmt = stmt.where(Product.price >= min_price)
@@ -126,7 +136,11 @@ def paginate(db: Session, stmt: Select, *, offset: int, limit: int) -> tuple[lis
 
 
 def in_stock(product: Product) -> bool:
-    return (not product.track_inventory) or product.stock_quantity > 0
+    if not product.track_inventory:
+        return True
+    if not product.options:
+        return product.stock_quantity > 0
+    return any(variant.is_active and variant.stock_quantity > 0 for variant in product.variants)
 
 
 def product_payload(product: Product, *, include_relations: bool) -> dict[str, Any]:

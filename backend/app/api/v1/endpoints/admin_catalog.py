@@ -195,6 +195,20 @@ def _load_product(db: DbSession, product_id: int) -> Product:
     return product
 
 
+def _reject_taken_sku(
+    db: DbSession, model: type[Product] | type[ProductVariant], sku: str | None,
+    *, exclude_id: int | None = None,
+) -> None:
+    if not sku:
+        return
+    stmt = select(model.id).where(model.sku == sku)
+    if exclude_id is not None:
+        stmt = stmt.where(model.id != exclude_id)
+    if db.scalar(stmt.limit(1)) is not None:
+        code = "product_sku_taken" if model is Product else "variant_sku_taken"
+        raise ConflictError("SKU مستخدم مسبقاً.", code=code)
+
+
 @router.get("/products", response_model=Page[ProductAdminListOut])
 def list_products(
     db: DbSession,
@@ -239,8 +253,11 @@ def get_product(product_id: int, db: DbSession, admin: CurrentAdmin):
 
 @router.post("/products", response_model=ProductAdminOut, status_code=status.HTTP_201_CREATED)
 def create_product(payload: ProductCreate, db: DbSession, admin: CurrentAdmin):
+    if payload.category_id is not None:
+        get_or_404(db, Category, payload.category_id, "القسم المحدد غير موجود.")
     if payload.brand_id is not None:
         get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
+    _reject_taken_sku(db, Product, payload.sku)
     data = payload.model_dump(exclude={"slug", "images", "specifications"})
     data["product_type"] = payload.product_type.value
     product = Product(**data, slug=unique_slug(db, Product, payload.slug or payload.name))
@@ -272,9 +289,13 @@ def update_product(product_id: int, payload: ProductUpdate, db: DbSession, admin
     ).scalar_one_or_none()
     if product is None:
         get_or_404(db, Product, product_id, "Product not found.")
+    if "category_id" in payload.model_fields_set and payload.category_id is not None:
+        get_or_404(db, Category, payload.category_id, "القسم المحدد غير موجود.")
     if "brand_id" in payload.model_fields_set and payload.brand_id is not None:
         get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
     data = payload.model_dump(exclude_unset=True)
+    if "sku" in data:
+        _reject_taken_sku(db, Product, data["sku"], exclude_id=product.id)
     if data.get("slug"):
         data["slug"] = unique_slug(db, Product, data["slug"], exclude_id=product.id)
     if isinstance(data.get("product_type"), ProductType):
@@ -564,11 +585,13 @@ def create_variant(
     product_id: int, payload: ProductVariantIn, db: DbSession, admin: CurrentAdmin
 ):
     product = _load_product(db, product_id)
+    _reject_taken_sku(db, ProductVariant, payload.sku)
     variant = ProductVariant(
         product_id=product.id,
         **payload.model_dump(exclude={"option_value_ids"}),
     )
     _attach_option_values(db, product, variant, payload.option_value_ids)
+    _reject_duplicate_combination(product, variant, payload.option_value_ids)
     db.add(variant)
     audit_service.record(
         db,
@@ -600,8 +623,10 @@ def update_variant(
     variant = db.execute(
         select(ProductVariant).where(ProductVariant.id == variant_id).with_for_update()
     ).scalar_one()
+    _reject_taken_sku(db, ProductVariant, payload.sku, exclude_id=variant.id)
     apply_updates(variant, payload, exclude={"option_value_ids"})
     _attach_option_values(db, product, variant, payload.option_value_ids)
+    _reject_duplicate_combination(product, variant, payload.option_value_ids)
     audit_service.record(
         db,
         admin=admin,
@@ -638,7 +663,11 @@ def delete_variant(product_id: int, variant_id: int, db: DbSession, admin: Curre
 def _attach_option_values(
     db: DbSession, product: Product, variant: ProductVariant, value_ids: list[int]
 ) -> None:
-    if not value_ids:
+    if not product.options and value_ids:
+        raise DomainError(
+            "قيم الخيارات لا تنتمي لهذا المنتج.", code="option_value_mismatch"
+        )
+    if not product.options:
         variant.option_values = []
         return
     allowed = {value.id for option in product.options for value in option.values}
@@ -656,7 +685,28 @@ def _attach_option_values(
             "لا يمكن اختيار أكثر من قيمة من نفس الخيار للنسخة الواحدة.",
             code="option_axis_conflict",
         )
+    if set(axes) != {option.id for option in product.options}:
+        raise DomainError(
+            "يجب اختيار قيمة واحدة من كل خيار للنسخة.",
+            code="variant_option_values_incomplete",
+        )
     variant.option_values = [db.get(ProductOptionValue, value_id) for value_id in value_ids]
+
+
+def _reject_duplicate_combination(
+    product: Product, variant: ProductVariant, value_ids: list[int]
+) -> None:
+    if not product.options:
+        return
+    combination = set(value_ids)
+    if any(
+        row.id != variant.id and {value.id for value in row.option_values} == combination
+        for row in product.variants
+    ):
+        raise ConflictError(
+            "تركيبة قيم الخيارات مستخدمة مسبقاً لهذا المنتج.",
+            code="variant_combination_taken",
+        )
 
 
 # ── Package contents ──────────────────────────────────────────────────────────

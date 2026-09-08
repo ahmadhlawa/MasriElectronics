@@ -59,6 +59,19 @@ function Section({ title, children, actions }) {
 
 const num = (value) => (value === "" || value === null ? null : Number(value));
 
+export function categoryPath(category, categories) {
+  const byId = new Map(categories.map((row) => [row.id, row]));
+  const names = [];
+  const seen = new Set();
+  let current = category;
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    names.unshift(current.name);
+    current = current.parent_id == null ? null : byId.get(current.parent_id);
+  }
+  return names.join(" > ");
+}
+
 export default function ProductEditorPage() {
   const { productId } = useParams();
   const isNew = productId === "new";
@@ -280,7 +293,7 @@ export default function ProductEditorPage() {
           <Field title="القسم">
             <select value={form.category_id} onChange={(e) => update({ category_id: e.target.value })} style={input}>
               <option value="">بدون قسم</option>
-              {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+              {categories.map((category) => <option key={category.id} value={category.id}>{categoryPath(category, categories)}</option>)}
             </select>
           </Field>
           <Field title="العلامة التجارية">
