@@ -350,6 +350,7 @@ export default function CheckoutRoutePage() {
               </span>
               <span className="vs-summary__linetext">
                 <span className="vs-clamp-2">{line.name}</span>
+                {line.variationText && <span className="vs-summary__muted">{line.variationText}</span>}
                 <span className="vs-summary__muted">×{line.qty}</span>
               </span>
               <strong>{line.lineText}</strong>

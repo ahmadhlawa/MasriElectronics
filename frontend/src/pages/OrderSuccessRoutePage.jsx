@@ -72,7 +72,7 @@ export default function OrderSuccessRoutePage() {
           {order.items.map((item) => (
             <div className="vs-summary__row" key={item.id}>
               <span>
-                {item.product_name} ×{item.quantity}
+                {item.product_name}{item.variant_description ? ` · ${item.variant_description}` : ""} ×{item.quantity}
               </span>
               <strong>{money(item.line_total)}</strong>
             </div>

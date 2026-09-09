@@ -89,7 +89,7 @@ def apply_product_filters(
             Product.compare_at_price.is_not(None), Product.compare_at_price > Product.price
         )
     if in_stock:
-        has_options = exists().where(ProductOption.product_id == Product.id)
+        has_variants = exists().where(ProductVariant.product_id == Product.id)
         has_stocked_variant = exists().where(
             ProductVariant.product_id == Product.id,
             ProductVariant.is_active.is_(True),
@@ -98,8 +98,8 @@ def apply_product_filters(
         stmt = stmt.where(
             or_(
                 Product.track_inventory.is_(False),
-                and_(~has_options, Product.stock_quantity > 0),
-                and_(has_options, has_stocked_variant),
+                and_(~has_variants, Product.stock_quantity > 0),
+                and_(has_variants, has_stocked_variant),
             )
         )
     if min_price is not None:
@@ -138,7 +138,7 @@ def paginate(db: Session, stmt: Select, *, offset: int, limit: int) -> tuple[lis
 def in_stock(product: Product) -> bool:
     if not product.track_inventory:
         return True
-    if not product.options:
+    if not product.variants:
         return product.stock_quantity > 0
     return any(variant.is_active and variant.stock_quantity > 0 for variant in product.variants)
 

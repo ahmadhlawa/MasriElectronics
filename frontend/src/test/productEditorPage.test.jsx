@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -44,7 +44,7 @@ describe("product editor primary UX", () => {
     expect(advanced).toHaveTextContent("سعر التكلفة");
     expect(advanced.querySelector('input[type="number"]')).toBeInTheDocument();
     expect(screen.getByText("المواصفات")).toBeInTheDocument();
-    expect(screen.getByText("الخيارات")).toBeInTheDocument();
+    expect(screen.getByText("خيارات يختارها الزبون")).toBeInTheDocument();
     expect(screen.getByText("النسخ (المقاسات والألوان)")).toBeInTheDocument();
   });
 
@@ -55,5 +55,34 @@ describe("product editor primary UX", () => {
 
     await userEvent.selectOptions(screen.getByLabelText("نوع المنتج"), "package");
     expect(screen.getByText("محتويات البكج")).toBeInTheDocument();
+  });
+
+  it("saves configured choices immediately after first product creation", async () => {
+    const calls = stubApi({
+      "/api/v1/admin/products": page([]),
+      "/api/v1/admin/categories": page([]),
+      "/api/v1/admin/brands": page([]),
+      "POST /api/v1/admin/products": { ...product, id: 8, options: [] },
+      "PUT /api/v1/admin/products/8/options": [],
+      "/api/v1/admin/products/8": { ...product, id: 8 },
+    });
+    render(
+      <MemoryRouter initialEntries={["/admin/products/new"]}>
+        <Routes><Route path="/admin/products/:productId" element={<ProductEditorPage />} /></Routes>
+      </MemoryRouter>,
+    );
+    const details = screen.getByText("خيارات يختارها الزبون").closest("details");
+    details.open = true;
+    await userEvent.click(screen.getByRole("button", { name: "إضافة خيار" }));
+    await userEvent.type(screen.getByLabelText("اسم الخيار 1"), "السعة");
+    await userEvent.type(screen.getByLabelText("قيمة 1 للخيار 1"), "2 لتر");
+    await userEvent.click(screen.getByLabelText("يؤثر على السعر"));
+    await userEvent.type(screen.getByLabelText("سعر قيمة 1"), "175");
+    await userEvent.type(screen.getByLabelText("اسم المنتج"), "منتج جديد");
+    await userEvent.click(screen.getByRole("button", { name: "حفظ" }));
+
+    await waitFor(() => expect(calls.find((call) => call.method === "PUT")).toBeTruthy());
+    const put = calls.find((call) => call.method === "PUT");
+    expect(JSON.parse(put.body)).toEqual([{ name: "السعة", sort_order: 0, affects_price: true, values: [{ value: "2 لتر", sort_order: 0, price_override: 175 }] }]);
   });
 });

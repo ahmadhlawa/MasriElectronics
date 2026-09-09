@@ -49,7 +49,10 @@ def validate_coupon(payload: CouponValidateRequest, db: DbSession) -> CouponVali
 def price_cart(payload: CartPricingRequest, db: DbSession) -> CartPricingResponse:
     priced = pricing.price_cart(
         db,
-        [(item.product_id, item.variant_id, item.quantity) for item in payload.items],
+        [
+            (item.product_id, item.variant_id, item.quantity, item.selected_option_value_ids)
+            for item in payload.items
+        ],
         coupon_code=payload.coupon_code,
         delivery_area_id=payload.delivery_area_id,
         delivery_method=payload.delivery_method.value,
@@ -93,7 +96,10 @@ def create_order(payload: OrderCreate, db: DbSession) -> OrderCreatedOut:
         coupon_code=payload.coupon_code,
         payment_method=payload.payment_method.value,
         customer_notes=payload.customer_notes,
-        items=[(item.product_id, item.variant_id, item.quantity) for item in payload.items],
+        items=[
+            (item.product_id, item.variant_id, item.quantity, item.selected_option_value_ids)
+            for item in payload.items
+        ],
     )
     try:
         order = orders_service.create_order(db, draft)

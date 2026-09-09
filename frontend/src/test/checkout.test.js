@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createOrder } = vi.hoisted(() => ({ createOrder: vi.fn() }));
+const { createOrder, priceCart } = vi.hoisted(() => ({ createOrder: vi.fn(), priceCart: vi.fn() }));
 
 vi.mock("../api/publicApi.js", () => ({
   publicApi: {
     createOrder,
-    priceCart: vi.fn(),
+    priceCart,
     validateCoupon: vi.fn(),
     order: vi.fn(),
   },
@@ -39,8 +39,20 @@ describe("checkout confirmation", () => {
       coupon_code: null,
       payment_method: "cash_on_delivery",
       customer_notes: null,
-      items: [{ product_id: 4, variant_id: null, quantity: 2 }],
+      items: [{ product_id: 4, variant_id: null, selected_option_value_ids: [], quantity: 2 }],
     });
+  });
+
+  it("sends selected option ids to both pricing and order creation", async () => {
+    const cart = [{ productId: 4, variantId: null, selectedOptionValueIds: [22, 11], qty: 1 }];
+    priceCart.mockResolvedValue({ lines: [], subtotal: 125, discount: 0, delivery_fee: 0, total: 125 });
+    createOrder.mockResolvedValue({ order_number: "ORD-2" });
+
+    await checkoutService.price(cart, { deliveryMethod: "pickup" });
+    await checkoutService.placeOrder(cart, { name: "Customer", phone: "0591234567", address: "", deliveryMethod: "pickup", paymentMethod: "cash_on_delivery" }, "checkout-ref-0002");
+
+    expect(priceCart.mock.calls[0][0].items[0].selected_option_value_ids).toEqual([22, 11]);
+    expect(createOrder.mock.calls[0][0].items[0].selected_option_value_ids).toEqual([22, 11]);
   });
 
   it("builds the Arabic WhatsApp text entirely from the canonical order response", () => {

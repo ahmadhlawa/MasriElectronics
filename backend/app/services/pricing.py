@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.enums import DiscountType, ProductType
 from app.db.base import utcnow
-from app.models import Coupon, DeliveryArea, Product, ProductVariant
+from app.models import Coupon, DeliveryArea, Product, ProductOptionValue, ProductVariant
 from app.services import store_settings
 from app.services.errors import DomainError, NotFoundError
 
@@ -34,9 +34,18 @@ class PricedLine:
     quantity: int
     unit_price: Decimal
     line_total: Decimal
+    selected_option_values: list[ProductOptionValue]
 
     @property
     def variant_description(self) -> str | None:
+        if self.selected_option_values:
+            selected = {value.id: value for value in self.selected_option_values}
+            return "، ".join(
+                f"{option.name}: {selected[value.id].value}"
+                for option in self.product.options
+                for value in option.values
+                if value.id in selected
+            )
         return self.variant.title if self.variant else None
 
     @property
@@ -67,10 +76,12 @@ def available_stock(product: Product, variant: ProductVariant | None) -> int | N
     return product.stock_quantity
 
 
-def price_lines(db: Session, requested: list[tuple[int, int | None, int]]) -> list[PricedLine]:
+def price_lines(db: Session, requested: list[tuple]) -> list[PricedLine]:
     """Price `(product_id, variant_id, quantity)` triples against the database."""
     lines: list[PricedLine] = []
-    for product_id, variant_id, quantity in requested:
+    for request in requested:
+        product_id, variant_id, quantity = request[:3]
+        selected_ids = list(request[3]) if len(request) > 3 else []
         if quantity <= 0:
             raise DomainError("الكمية يجب أن تكون أكبر من صفر.", code="invalid_quantity")
 
@@ -89,6 +100,11 @@ def price_lines(db: Session, requested: list[tuple[int, int | None, int]]) -> li
             )
 
         variant: ProductVariant | None = None
+        has_variants = bool(product.variants)
+        if has_variants and variant_id is None:
+            raise DomainError(
+                "يجب اختيار نسخة المنتج قبل إضافته إلى الطلب.", code="variant_required"
+            )
         if variant_id is not None:
             variant = db.get(ProductVariant, variant_id)
             if variant is None or variant.product_id != product.id:
@@ -98,6 +114,24 @@ def price_lines(db: Session, requested: list[tuple[int, int | None, int]]) -> li
             if not variant.is_active:
                 raise DomainError("الخيار المحدد غير متاح.", code="variant_inactive")
 
+        selected_values: list[ProductOptionValue] = []
+        if product.options and not has_variants:
+            if len(selected_ids) != len(set(selected_ids)):
+                raise DomainError("لا يمكن تكرار قيمة الخيار.", code="duplicate_option_value")
+            allowed = {
+                value.id: (option, value)
+                for option in product.options
+                for value in option.values
+            }
+            if any(value_id not in allowed for value_id in selected_ids):
+                raise DomainError("قيمة الخيار لا تنتمي إلى هذا المنتج.", code="option_value_mismatch")
+            axes = [allowed[value_id][0].id for value_id in selected_ids]
+            if len(selected_ids) != len(product.options) or len(set(axes)) != len(product.options):
+                raise DomainError("يجب اختيار قيمة واحدة من كل خيار.", code="options_required")
+            selected_values = [allowed[value_id][1] for value_id in selected_ids]
+        elif selected_ids:
+            raise DomainError("قيم الخيارات المنفصلة غير صالحة لهذا المنتج.", code="option_value_mismatch")
+
         stock = available_stock(product, variant)
         if stock is not None and stock < quantity:
             raise DomainError(
@@ -105,7 +139,11 @@ def price_lines(db: Session, requested: list[tuple[int, int | None, int]]) -> li
             )
 
         # compare_at_price is a marketing reference only; it is never charged.
-        unit = variant.price_override if variant and variant.price_override is not None else product.price
+        choice_price = next(
+            (value.price_override for value in selected_values if value.option.affects_price and value.price_override is not None),
+            None,
+        )
+        unit = variant.price_override if variant and variant.price_override is not None else (choice_price if choice_price is not None else product.price)
         unit = money(unit)
         lines.append(
             PricedLine(
@@ -114,6 +152,7 @@ def price_lines(db: Session, requested: list[tuple[int, int | None, int]]) -> li
                 quantity=quantity,
                 unit_price=unit,
                 line_total=money(unit * quantity),
+                selected_option_values=selected_values,
             )
         )
     return lines
@@ -177,7 +216,7 @@ def resolve_delivery_area(db: Session, area_id: int | None) -> DeliveryArea | No
 
 def price_cart(
     db: Session,
-    requested: list[tuple[int, int | None, int]],
+    requested: list[tuple],
     *,
     coupon_code: str | None = None,
     delivery_area_id: int | None = None,

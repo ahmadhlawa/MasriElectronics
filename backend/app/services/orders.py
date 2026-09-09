@@ -199,7 +199,7 @@ class OrderDraft:
     customer_name: str
     customer_phone: str
     address: str
-    items: list[tuple[int, int | None, int]]
+    items: list[tuple[int, int | None, int, list[int]]]
     client_reference: str | None = None
     customer_email: str | None = None
     delivery_area_id: int | None = None
@@ -526,7 +526,7 @@ def create_order(db: Session, draft: OrderDraft) -> Order:
     if not draft.items:
         raise DomainError("العربة فارغة.", code="empty_cart")
 
-    _lock_inventory_rows(db, [(product_id, variant_id) for product_id, variant_id, _ in draft.items])
+    _lock_inventory_rows(db, [(item[0], item[1]) for item in draft.items])
     if draft.client_reference:
         existing = get_by_client_reference(db, draft.client_reference)
         if existing is not None:

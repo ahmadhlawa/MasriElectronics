@@ -6,7 +6,6 @@ import ProductImageGallery from "../ProductImageGallery.jsx";
 import ProductImagesEditor from "../ProductImagesEditor.jsx";
 import { automaticSeo } from "../seo.js";
 import ProductVariantsEditor, {
-  buildOptionsPayload,
   variantsRemovedByOptions,
 } from "../ProductVariantsEditor.jsx";
 import {
@@ -69,6 +68,21 @@ function AdvancedSection({ title, children, actions }) {
 
 const num = (value) => (value === "" || value === null ? null : Number(value));
 
+export const optionPayload = (options) => options
+  .filter((option) => option.name.trim())
+  .map((option, index) => ({
+    ...(option.id ? { id: option.id } : {}),
+    name: option.name.trim(),
+    sort_order: index,
+    affects_price: !!option.affects_price,
+    values: (option.values || []).filter((value) => value.value.trim()).map((value, valueIndex) => ({
+      ...(value.id ? { id: value.id } : {}),
+      value: value.value.trim(),
+      sort_order: valueIndex,
+      price_override: option.affects_price ? num(value.price_override) : null,
+    })),
+  }));
+
 export function categoryPath(category, categories) {
   const byId = new Map(categories.map((row) => [row.id, row]));
   const names = [];
@@ -125,8 +139,12 @@ export default function ProductEditorPage() {
         row.options.map((option) => ({
           id: option.id,
           name: option.name,
-          values: option.values.map((value) => value.value).join("، "),
-          rows: option.values.map((value) => ({ id: value.id, value: value.value })),
+          affects_price: !!option.affects_price,
+          values: option.values.map((value) => ({
+            id: value.id,
+            value: value.value,
+            price_override: value.price_override ?? "",
+          })),
         })),
       );
     } catch (error) {
@@ -219,6 +237,8 @@ export default function ProductEditorPage() {
       if (isNew) {
         const created = await adminApi.createProduct(payload);
         try {
+          const optionRows = optionPayload(options);
+          if (optionRows.length) await adminApi.replaceOptions(created.id, optionRows);
           await attachQueuedImages(created.id);
         } catch (error) {
           await Promise.allSettled([adminApi.deleteProduct(created.id)]);
@@ -269,7 +289,7 @@ export default function ProductEditorPage() {
   // Only ask when the change actually destroys variants; a compatible edit saves
   // straight through.
   const saveOptions = () => {
-    const payload = buildOptionsPayload(options);
+    const payload = optionPayload(options);
     const removed = variantsRemovedByOptions(product?.variants || [], payload);
     if (!removed.length) return commitOptions(payload);
     return setOptionsConfirm({ payload, count: removed.length });
@@ -355,6 +375,34 @@ export default function ProductEditorPage() {
         </div>
       </AdvancedSection>
 
+      <AdvancedSection
+        title="خيارات يختارها الزبون"
+        actions={<Button variant="secondary" onClick={() => setOptions((rows) => [...rows, { name: "", affects_price: false, values: [{ value: "", price_override: "" }] }])}>إضافة خيار</Button>}
+      >
+        {!options.length && <p style={sx`margin:0;font-size:13px;color:#8A7F95`}>أضف خياراً عندما يحتاج الزبون لاختيار قيمة قبل الشراء.</p>}
+        {options.map((option, optionIndex) => (
+          <div key={option.id ?? optionIndex} style={sx`display:flex;flex-direction:column;gap:10px;border:1px solid #F3EBE0;border-radius:10px;padding:12px`}>
+            <input aria-label={`اسم الخيار ${optionIndex + 1}`} value={option.name} onChange={(e) => setOptions((rows) => rows.map((row, i) => i === optionIndex ? { ...row, name: e.target.value } : row))} placeholder="اسم الخيار: اللون" style={input} />
+            <label style={sx`display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700`}>
+              <input type="checkbox" checked={!!option.affects_price} disabled={!option.affects_price && options.some((row, i) => i !== optionIndex && row.affects_price)} onChange={(e) => setOptions((rows) => rows.map((row, i) => i === optionIndex ? { ...row, affects_price: e.target.checked } : row))} />
+              يؤثر على السعر
+            </label>
+            <div style={sx`display:flex;gap:8px;flex-wrap:wrap`}>
+              {(option.values || []).map((value, valueIndex) => (
+                <div key={value.id ?? valueIndex} style={sx`display:flex;gap:6px;align-items:center`}>
+                  <input aria-label={`قيمة ${valueIndex + 1} للخيار ${optionIndex + 1}`} value={value.value} onChange={(e) => setOptions((rows) => rows.map((row, i) => i === optionIndex ? { ...row, values: row.values.map((item, j) => j === valueIndex ? { ...item, value: e.target.value } : item) } : row))} placeholder="قيمة" style={{ ...input, ...sx`width:140px` }} />
+                  {option.affects_price && <input aria-label={`سعر قيمة ${valueIndex + 1}`} type="number" min="0" step="0.01" value={value.price_override ?? ""} onChange={(e) => setOptions((rows) => rows.map((row, i) => i === optionIndex ? { ...row, values: row.values.map((item, j) => j === valueIndex ? { ...item, price_override: e.target.value } : item) } : row))} placeholder="السعر" style={{ ...input, ...sx`width:105px` }} />}
+                  <Button variant="danger" onClick={() => setOptions((rows) => rows.map((row, i) => i === optionIndex ? { ...row, values: row.values.filter((_, j) => j !== valueIndex) } : row))} aria-label={`حذف القيمة ${valueIndex + 1}`}>×</Button>
+                </div>
+              ))}
+              <Button variant="secondary" onClick={() => setOptions((rows) => rows.map((row, i) => i === optionIndex ? { ...row, values: [...row.values, { value: "", price_override: "" }] } : row))}>إضافة قيمة</Button>
+            </div>
+            <Button variant="danger" onClick={() => setOptions((rows) => rows.filter((_, i) => i !== optionIndex))}>حذف الخيار</Button>
+          </div>
+        ))}
+        {!isNew && <Button onClick={saveOptions}>حفظ الخيارات</Button>}
+      </AdvancedSection>
+
       <Section title="صور المنتج">
         <ProductImagesEditor
           mainImage={product?.images?.[0]}
@@ -407,21 +455,6 @@ export default function ProductEditorPage() {
             >
               حفظ المواصفات
             </Button>
-          </AdvancedSection>
-
-          <AdvancedSection
-            title="الخيارات"
-            actions={<Button variant="secondary" onClick={() => setOptions((rows) => [...rows, { name: "", values: "" }])}>إضافة خيار</Button>}
-          >
-            <p style={sx`margin:0;font-size:12.5px;color:#8A7F95`}>حفظ الخيارات يبقي النسخ (variants) المتوافقة كما هي، ويحذف فقط غير المتوافقة بعد تأكيدك.</p>
-            {options.map((option, index) => (
-              <div key={index} style={sx`display:flex;gap:10px;flex-wrap:wrap`}>
-                <input value={option.name} onChange={(e) => setOptions((rows) => rows.map((row, i) => (i === index ? { ...row, name: e.target.value } : row)))} placeholder="اسم الخيار — مثال: الحجم" style={{ ...input, ...sx`flex:1;min-width:150px` }} />
-                <input value={option.values} onChange={(e) => setOptions((rows) => rows.map((row, i) => (i === index ? { ...row, values: e.target.value } : row)))} placeholder="القيم مفصولة بفاصلة" style={{ ...input, ...sx`flex:2;min-width:200px` }} />
-                <Button variant="danger" onClick={() => setOptions((rows) => rows.filter((_, i) => i !== index))}>حذف</Button>
-              </div>
-            ))}
-            <Button onClick={saveOptions}>حفظ الخيارات</Button>
           </AdvancedSection>
 
           <AdvancedSection title="النسخ (المقاسات والألوان)">

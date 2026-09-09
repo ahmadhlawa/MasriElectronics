@@ -503,9 +503,14 @@ describe("saving options from the product editor", () => {
   };
 
   const retypeColours = async (text) => {
-    const fields = await screen.findAllByPlaceholderText("القيم مفصولة بفاصلة");
-    await userEvent.clear(fields[0]);
-    await userEvent.type(fields[0], text);
+    await screen.findByText("خيارات يختارها الزبون");
+    const fields = document.querySelectorAll('input[aria-label^="قيمة "]');
+    if (text.includes("،")) {
+      await userEvent.clear(fields[0]);
+      await userEvent.type(fields[0], text.split("،")[0].trim());
+    } else {
+      await userEvent.click(document.querySelector('button[aria-label="حذف القيمة 1"]'));
+    }
   };
 
   it("saves straight away when no variant is lost", async () => {
@@ -518,7 +523,7 @@ describe("saving options from the product editor", () => {
       expect(call).toBeTruthy();
       return call;
     });
-    expect(JSON.parse(put.body)[0].values[0]).toEqual({ id: 11, value: "قرمزي", sort_order: 0 });
+    expect(JSON.parse(put.body)[0].values[0]).toEqual({ id: 11, value: "قرمزي", sort_order: 0, price_override: null });
     expect(screen.queryByText(/غير متوافقة/)).toBeNull();
   });
 
