@@ -35,6 +35,9 @@ export default function MobileMenu({ open, onClose }) {
     >
       <div className="vs-menu">
         <p className="vs-menu__label">الأقسام</p>
+        <Link to="/categories" className="vs-menu__link" onClick={onClose}>
+          كل الأقسام
+        </Link>
         {categories.map((category) => {
           const expanded = navOpenCat === category.slug;
           return (

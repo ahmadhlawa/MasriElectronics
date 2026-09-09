@@ -115,6 +115,13 @@
   color: var(--vs-ink-4);
 }
 
+.vs-pdp__brand {
+  width: fit-content;
+  color: var(--vs-primary);
+  font-size: var(--vs-fs-sm);
+  font-weight: 700;
+}
+
 .vs-pdp__stock {
   font-size: var(--vs-fs-sm);
   font-weight: 500;

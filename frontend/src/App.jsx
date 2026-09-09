@@ -3,6 +3,7 @@ import { StoreProvider } from "./app/StoreProvider.jsx";
 import PublicShell from "./components/public/shell/PublicShell.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import CatalogPage from "./pages/CatalogPage.jsx";
+import CategoriesPage from "./pages/CategoriesPage.jsx";
 import ProductDetailPage from "./pages/ProductDetailPage.jsx";
 import CartRoutePage from "./pages/CartRoutePage.jsx";
 import CheckoutRoutePage from "./pages/CheckoutRoutePage.jsx";
@@ -30,6 +31,7 @@ export default function App() {
       >
         <Route index element={<HomePage />} />
         <Route path="shop" element={<CatalogPage mode="shop" />} />
+        <Route path="categories" element={<CategoriesPage />} />
         <Route path="category/:slug" element={<CatalogPage mode="category" />} />
         <Route path="offers" element={<CatalogPage mode="offers" />} />
         <Route path="packages" element={<CatalogPage mode="packages" />} />

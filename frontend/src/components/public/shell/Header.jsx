@@ -78,19 +78,6 @@ export default function Header() {
               <MenuIcon size={20} />
             </button>
 
-            {/* The fixed category rail is desktop-only, so its trigger has to
-                exist here for a phone — same overlay, same categories. */}
-            <button
-              type="button"
-              className="vs-iconbtn vs-mob"
-              onClick={toggleCats}
-              aria-label="تصنيفات المنتجات"
-              aria-expanded={catsOpen}
-              aria-controls="vs-catdrawer"
-            >
-              <GridIcon size={19} />
-            </button>
-
             <StoreMark settings={settings} />
 
             <div className="vs-desk vs-header__search">

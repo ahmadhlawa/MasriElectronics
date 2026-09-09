@@ -22,7 +22,7 @@ import { useViewportReveal } from "../hooks/useViewportReveal.js";
  * copy are deliberately part of the approved storefront rather than Admin content.
  */
 const SECTIONS = {
-  categories: { kind: "categories", fallbackTitle: "تسوّق حسب القسم", more: "/shop" },
+  categories: { kind: "categories", fallbackTitle: "تسوّق حسب القسم", more: "/categories" },
   featured_products: {
     kind: "products",
     layout: "grid",

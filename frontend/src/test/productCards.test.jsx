@@ -133,10 +133,17 @@ describe("product card behaviour", () => {
   });
 
   it("gives a package its own card, its contents and its own action", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/products": page([packageProduct]) });
+    const packageWithSecondImage = {
+      ...packageProduct,
+      primary_image_url: "/media/package-cover.png",
+      secondary_image_url: "/media/package-contents.png",
+    };
+    stubApi({ ...storefrontRoutes, "/api/v1/products": page([packageWithSecondImage]) });
     renderApp("/shop");
 
-    const card = within(await cardOf(packageProduct.name));
+    const cardElement = await cardOf(packageProduct.name);
+    const card = within(cardElement);
+    expect(cardElement.querySelector(".vs-pkg__img2")).toHaveAttribute("src", "/media/package-contents.png");
     expect(card.getByText("بكج")).toBeInTheDocument();
     // The contents summary is whatever the payload actually knows: the item
     // names when it carries them, never an invented list.
@@ -213,7 +220,7 @@ describe("product card behaviour", () => {
     expect(within(panel).getByRole("button", { name: /نظرة سريعة على/ })).toBeInTheDocument();
   });
 
-  it("swaps to a second image only when the product has one", async () => {
+  it("keeps ordinary product cards on their primary image", async () => {
     const withSecond = {
       ...productFixture,
       primary_image_url: "/media/one.png",
@@ -231,12 +238,21 @@ describe("product card behaviour", () => {
     renderApp("/shop");
 
     const swapper = await cardOf(withSecond.name);
-    expect(swapper.querySelector(".vs-card__img2")).toHaveAttribute("src", "/media/two.png");
+    expect(swapper.querySelector(".vs-card__img2")).toBeNull();
 
     // The fallback: cover stays, panel still reveals, no invented second image.
     const plain = await cardOf(withoutSecond.name);
     expect(plain.querySelector(".vs-card__img2")).toBeNull();
     expect(plain.querySelector(".vs-card__panel")).not.toBeNull();
+  });
+
+  it("keeps a one-image package card valid", async () => {
+    stubApi({ ...storefrontRoutes, "/api/v1/products": page([packageProduct]) });
+    renderApp("/shop");
+
+    const card = await cardOf(packageProduct.name);
+    expect(card.querySelector(".vs-pkg__img2")).toBeNull();
+    expect(within(card).getByRole("link", { name: /التفاصيل/ })).toBeInTheDocument();
   });
 
   it("adds exactly one line however fast the button is pressed", async () => {

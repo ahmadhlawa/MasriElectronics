@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { useStore } from "../../../app/StoreProvider.jsx";
 import { ShieldIcon, TruckIcon, WalletIcon } from "../shell/icons.jsx";
 import { useViewportReveal } from "../../../hooks/useViewportReveal.js";
 
@@ -9,18 +8,11 @@ import { useViewportReveal } from "../../../hooks/useViewportReveal.js";
  * that really exists. Nothing here is invented copy.
  */
 export default function TrustStrip() {
-  const { deliveryAreas } = useStore();
   const paymentReveal = useViewportReveal(0);
   const deliveryReveal = useViewportReveal(70);
   const returnReveal = useViewportReveal(140);
 
   const paymentText = "ادفع نقداً للمندوب عند التسليم";
-
-  const areasText = !deliveryAreas.length
-    ? null
-    : deliveryAreas.length === 1
-      ? `توصيل إلى ${deliveryAreas[0].name}`
-      : `توصيل إلى ${deliveryAreas.length} مناطق`;
 
   return (
     <div className="vs-trust">
@@ -35,18 +27,16 @@ export default function TrustStrip() {
         </span>
       </div>
 
-      {areasText && (
-        <div className="vs-trust__item" {...deliveryReveal}>
+      <div className="vs-trust__item" {...deliveryReveal}>
           <span className="vs-trust__icon">
             <TruckIcon size={20} />
           </span>
           <span>
-            <span className="vs-trust__title">{areasText}</span>
+            <span className="vs-trust__title">التوصيل إلى جميع المناطق</span>
             <br />
             <span className="vs-trust__desc">تُحتسب رسوم التوصيل عند إتمام الطلب</span>
           </span>
-        </div>
-      )}
+      </div>
 
       <Link to="/page/return-policy" className="vs-trust__item" {...returnReveal}>
         <span className="vs-trust__icon">

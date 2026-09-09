@@ -49,7 +49,6 @@
 
 /* The second picture is stacked over the cover and cross-faded in. It is only
    rendered when the product actually has one. */
-.vs-card__img2,
 .vs-pkg__img2 {
   position: absolute;
   inset: 0;
@@ -157,9 +156,6 @@
     transform: scale(1.025);
   }
 
-  .vs-card:hover .vs-card__img2,
-  .vs-card:focus-within .vs-card__img2,
-  .vs-card[data-revealed="true"] .vs-card__img2,
   .vs-pkg:hover .vs-pkg__img2,
   .vs-pkg:focus-within .vs-pkg__img2,
   .vs-pkg[data-revealed="true"] .vs-pkg__img2 {
@@ -175,6 +171,51 @@
     padding: 12px;
     border-block-start: 1px solid var(--vs-border);
   }
+}
+
+.vs-categories-page__head {
+  margin-block: 22px 28px;
+}
+
+.vs-categories-page__head h1 {
+  font-size: clamp(28px, 4vw, 42px);
+  color: var(--vs-ink);
+}
+
+.vs-categories-page__head p {
+  margin-block-start: 8px;
+  color: var(--vs-ink-3);
+}
+
+.vs-categories-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 24px;
+}
+
+.vs-categories-page__item {
+  min-width: 0;
+}
+
+.vs-categories-page__children {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-block-start: 10px;
+}
+
+.vs-categories-page__children a {
+  padding: 6px 10px;
+  border: 1px solid var(--vs-border);
+  border-radius: var(--vs-r-pill);
+  color: var(--vs-ink-2);
+  font-size: var(--vs-fs-sm);
+}
+
+.vs-categories-page__children a:hover,
+.vs-categories-page__children a:focus-visible {
+  border-color: var(--vs-primary);
+  color: var(--vs-primary);
 }
 
 @media (max-width: 599px) {

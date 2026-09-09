@@ -178,6 +178,7 @@ export default function ProductDetailPage() {
             </div>
 
             <h1 className="vs-pdp__title">{view.name}</h1>
+            {product.brandName && <span className="vs-pdp__brand">{product.brandName}</span>}
             {product.sku && <span className="vs-pdp__sku">رمز المنتج: {product.sku}</span>}
 
             <div className="vs-price vs-price--lg">
