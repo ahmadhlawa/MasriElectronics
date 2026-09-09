@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Category, ProductVariant
+from app.models import Brand, Category, ProductVariant
 from tests.conftest import auth, make_product
 
 
@@ -36,25 +36,48 @@ def test_public_stock_uses_active_variants_when_product_has_options(
     assert product.slug in slugs
 
 
-def test_product_category_and_sku_validation(
+def test_product_server_managed_identifiers_and_category_brand_validation(
     client: TestClient, db: Session, admin_token: str
 ) -> None:
     category = Category(name="أجهزة", slug="validation-category")
-    db.add(category)
+    brand = Brand(name="Masri Test Brand")
+    db.add_all([category, brand])
     db.commit()
-    payload = {"name": "أول", "price": 10, "category_id": category.id, "sku": "TAKEN-P"}
-    assert client.post("/api/v1/admin/products", headers=auth(admin_token), json=payload).status_code == 201
-    duplicate = client.post("/api/v1/admin/products", headers=auth(admin_token), json={**payload, "name": "ثان"})
-    assert duplicate.status_code == 409
-    assert duplicate.json()["error"]["code"] == "product_sku_taken"
+    payload = {
+        "name": "Air Fryer Test",
+        "price": 10,
+        "category_id": category.id,
+        "brand_id": brand.id,
+        "sku": "CLIENT-SKU",
+        "slug": "client-slug",
+    }
+    created = client.post("/api/v1/admin/products", headers=auth(admin_token), json=payload)
+    assert created.status_code == 201, created.text
+    product = created.json()
+    assert product["sku"] == f"MASRI-{product['id']:06d}"
+    assert product["sku"] != "CLIENT-SKU"
+    assert product["slug"] == "air-fryer-test"
+
+    updated = client.patch(
+        f"/api/v1/admin/products/{product['id']}", headers=auth(admin_token),
+        json={"name": "Renamed Product", "sku": "CHANGED", "slug": "changed"},
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["sku"] == product["sku"]
+    assert updated.json()["slug"] == product["slug"]
+
     missing = client.post("/api/v1/admin/products", headers=auth(admin_token), json={**payload, "sku": "NEW", "category_id": 999999})
     assert missing.status_code == 404
-    product_id = client.get("/api/v1/admin/products", headers=auth(admin_token)).json()["items"][0]["id"]
     missing_update = client.patch(
-        f"/api/v1/admin/products/{product_id}", headers=auth(admin_token),
+        f"/api/v1/admin/products/{product['id']}", headers=auth(admin_token),
         json={"category_id": 999999},
     )
     assert missing_update.status_code == 404
+    missing_brand = client.patch(
+        f"/api/v1/admin/products/{product['id']}", headers=auth(admin_token),
+        json={"brand_id": 999999},
+    )
+    assert missing_brand.status_code == 404
 
 
 def test_variant_validation_and_combination_integrity(

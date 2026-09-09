@@ -23,11 +23,9 @@ import {
 
 const EMPTY = {
   name: "",
-  slug: "",
   category_id: "",
   brand_id: "",
   product_type: "standard",
-  sku: "",
   short_description: "",
   description: "",
   price: "",
@@ -54,6 +52,18 @@ function Section({ title, children, actions }) {
       </div>
       {children}
     </div>
+  );
+}
+
+function AdvancedSection({ title, children, actions }) {
+  return (
+    <details style={{ ...card, ...sx`margin-bottom:16px` }}>
+      <summary style={sx`cursor:pointer;font-size:16px;font-weight:800`}>{title}</summary>
+      <div style={sx`display:flex;flex-direction:column;gap:14px;margin-top:16px`}>
+        {actions && <div style={sx`display:flex;justify-content:flex-end`}>{actions}</div>}
+        {children}
+      </div>
+    </details>
   );
 }
 
@@ -185,7 +195,6 @@ export default function ProductEditorPage() {
         category_id: form.category_id === "" ? null : Number(form.category_id),
         brand_id: form.brand_id === "" ? null : Number(form.brand_id),
         product_type: form.product_type,
-        sku: form.sku.trim() || null,
         short_description: form.short_description,
         description: form.description,
         price: num(form.price) ?? 0,
@@ -206,7 +215,6 @@ export default function ProductEditorPage() {
           existing: isNew ? undefined : form,
         }),
       };
-      if (form.slug.trim()) payload.slug = form.slug.trim();
 
       if (isNew) {
         const created = await adminApi.createProduct(payload);
@@ -288,8 +296,6 @@ export default function ProductEditorPage() {
       <Section title="البيانات الأساسية">
         <div style={sx`display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px`}>
           <Field title="اسم المنتج"><input value={form.name} onChange={(e) => update({ name: e.target.value })} style={input} /></Field>
-          <Field title="الرابط (اختياري)" hint="يُولَّد من الاسم إذا تُرك فارغاً"><input value={form.slug} onChange={(e) => update({ slug: e.target.value })} style={input} /></Field>
-          <Field title="رقم SKU"><input value={form.sku} onChange={(e) => update({ sku: e.target.value })} style={input} /></Field>
           <Field title="القسم">
             <select value={form.category_id} onChange={(e) => update({ category_id: e.target.value })} style={input}>
               <option value="">بدون قسم</option>
@@ -309,7 +315,6 @@ export default function ProductEditorPage() {
               <option value="silicone_mold">قالب سيليكون</option>
             </select>
           </Field>
-          <Field title="ترتيب العرض"><input type="number" value={form.sort_order} onChange={(e) => update({ sort_order: e.target.value })} style={input} /></Field>
         </div>
         <Field title="وصف مختصر"><textarea rows="2" value={form.short_description} onChange={(e) => update({ short_description: e.target.value })} style={textarea} /></Field>
         <Field title="الوصف الكامل" hint="افصل الفقرات بسطر فارغ."><textarea rows="6" value={form.description} onChange={(e) => update({ description: e.target.value })} style={textarea} /></Field>
@@ -319,17 +324,12 @@ export default function ProductEditorPage() {
         <div style={sx`display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px`}>
           <Field title="سعر البيع"><input type="number" step="0.01" value={form.price} onChange={(e) => update({ price: e.target.value })} style={input} /></Field>
           <Field title="سعر قبل الخصم" hint="يجب أن يكون أعلى من سعر البيع"><input type="number" step="0.01" value={form.compare_at_price ?? ""} onChange={(e) => update({ compare_at_price: e.target.value })} style={input} /></Field>
-          <Field title="سعر التكلفة" hint="داخلي — لا يظهر في المتجر"><input type="number" step="0.01" value={form.cost_price ?? ""} onChange={(e) => update({ cost_price: e.target.value })} style={input} /></Field>
           <Field title="الكمية في المخزون"><input type="number" value={form.stock_quantity} onChange={(e) => update({ stock_quantity: e.target.value })} style={input} /></Field>
-          <Field title="حد التنبيه"><input type="number" value={form.low_stock_threshold} onChange={(e) => update({ low_stock_threshold: e.target.value })} style={input} /></Field>
         </div>
         <div style={sx`display:flex;gap:18px;flex-wrap:wrap`}>
           {[
             ["track_inventory", "تتبّع المخزون"],
             ["is_active", "فعّال في المتجر"],
-            ["is_featured", "مميّز"],
-            ["is_new", "جديد"],
-            ["is_bestseller", "الأكثر مبيعاً"],
           ].map(([key, title]) => (
             <label key={key} style={sx`display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer`}>
               <input type="checkbox" checked={!!form[key]} onChange={(e) => update({ [key]: e.target.checked })} style={sx`width:18px;height:18px;accent-color:var(--admin-primary)`} />
@@ -338,6 +338,22 @@ export default function ProductEditorPage() {
           ))}
         </div>
       </Section>
+
+      <AdvancedSection title="إعدادات متقدمة">
+        <div style={sx`display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px`}>
+          <Field title="سعر التكلفة" hint="داخلي — لا يظهر في المتجر"><input type="number" step="0.01" value={form.cost_price ?? ""} onChange={(e) => update({ cost_price: e.target.value })} style={input} /></Field>
+          <Field title="حد التنبيه"><input type="number" value={form.low_stock_threshold} onChange={(e) => update({ low_stock_threshold: e.target.value })} style={input} /></Field>
+          <Field title="ترتيب العرض"><input type="number" value={form.sort_order} onChange={(e) => update({ sort_order: e.target.value })} style={input} /></Field>
+        </div>
+        <div style={sx`display:flex;gap:18px;flex-wrap:wrap`}>
+          {[["is_featured", "مميّز"], ["is_new", "جديد"], ["is_bestseller", "الأكثر مبيعاً"]].map(([key, title]) => (
+            <label key={key} style={sx`display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer`}>
+              <input type="checkbox" checked={!!form[key]} onChange={(e) => update({ [key]: e.target.checked })} style={sx`width:18px;height:18px;accent-color:var(--admin-primary)`} />
+              {title}
+            </label>
+          ))}
+        </div>
+      </AdvancedSection>
 
       <Section title="صور المنتج">
         <ProductImagesEditor
@@ -369,7 +385,7 @@ export default function ProductEditorPage() {
             />
           </Section>
 
-          <Section
+          <AdvancedSection
             title="المواصفات"
             actions={<Button variant="secondary" onClick={() => setSpecs((rows) => [...rows, { name: "", value: "" }])}>إضافة سطر</Button>}
           >
@@ -391,9 +407,9 @@ export default function ProductEditorPage() {
             >
               حفظ المواصفات
             </Button>
-          </Section>
+          </AdvancedSection>
 
-          <Section
+          <AdvancedSection
             title="الخيارات"
             actions={<Button variant="secondary" onClick={() => setOptions((rows) => [...rows, { name: "", values: "" }])}>إضافة خيار</Button>}
           >
@@ -406,9 +422,9 @@ export default function ProductEditorPage() {
               </div>
             ))}
             <Button onClick={saveOptions}>حفظ الخيارات</Button>
-          </Section>
+          </AdvancedSection>
 
-          <Section title="النسخ (المقاسات والألوان)">
+          <AdvancedSection title="النسخ (المقاسات والألوان)">
             <ProductVariantsEditor
               options={product?.options || []}
               variants={product?.variants || []}
@@ -425,10 +441,10 @@ export default function ProductEditorPage() {
               )}
               onReport={(message) => feedback.success(message)}
             />
-          </Section>
+          </AdvancedSection>
 
           {isPackage && (
-            <Section title="محتويات البكج">
+            <AdvancedSection title="محتويات البكج">
               <div style={sx`display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end`}>
                 <Field title="المنتج">
                   <select value={packageChoice.included_product_id} onChange={(e) => setPackageChoice({ ...packageChoice, included_product_id: e.target.value })} style={input}>
@@ -465,7 +481,7 @@ export default function ProductEditorPage() {
                 ))}
                 {!product?.package_items?.length && <span style={sx`font-size:13px;color:#8A7F95`}>لم تُضف منتجات إلى هذا البكج بعد.</span>}
               </div>
-            </Section>
+            </AdvancedSection>
           )}
 
           <div style={sx`display:flex;gap:10px;margin-bottom:30px`}>

@@ -257,10 +257,9 @@ def create_product(payload: ProductCreate, db: DbSession, admin: CurrentAdmin):
         get_or_404(db, Category, payload.category_id, "القسم المحدد غير موجود.")
     if payload.brand_id is not None:
         get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
-    _reject_taken_sku(db, Product, payload.sku)
-    data = payload.model_dump(exclude={"slug", "images", "specifications"})
+    data = payload.model_dump(exclude={"slug", "sku", "images", "specifications"})
     data["product_type"] = payload.product_type.value
-    product = Product(**data, slug=unique_slug(db, Product, payload.slug or payload.name))
+    product = Product(**data, slug=unique_slug(db, Product, payload.name))
     for index, image in enumerate(payload.images):
         product.images.append(ProductImage(**image.model_dump(), ))
         product.images[-1].sort_order = image.sort_order or index
@@ -270,6 +269,8 @@ def create_product(payload: ProductCreate, db: DbSession, admin: CurrentAdmin):
     catalog_service.refresh_search_text(product)
     db.add(product)
     db.flush()
+    product.sku = f"MASRI-{product.id:06d}"
+    _reject_taken_sku(db, Product, product.sku, exclude_id=product.id)
     audit_service.record(
         db,
         admin=admin,
@@ -293,11 +294,7 @@ def update_product(product_id: int, payload: ProductUpdate, db: DbSession, admin
         get_or_404(db, Category, payload.category_id, "القسم المحدد غير موجود.")
     if "brand_id" in payload.model_fields_set and payload.brand_id is not None:
         get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
-    data = payload.model_dump(exclude_unset=True)
-    if "sku" in data:
-        _reject_taken_sku(db, Product, data["sku"], exclude_id=product.id)
-    if data.get("slug"):
-        data["slug"] = unique_slug(db, Product, data["slug"], exclude_id=product.id)
+    data = payload.model_dump(exclude_unset=True, exclude={"sku", "slug"})
     if isinstance(data.get("product_type"), ProductType):
         data["product_type"] = data["product_type"].value
 
