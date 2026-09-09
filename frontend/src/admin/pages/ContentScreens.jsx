@@ -1,7 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../../api/adminApi.js";
 import ResourceScreen from "../ResourceScreen.jsx";
 import { Badge } from "../ui.jsx";
+import { categoryPath } from "../categoryPath.js";
 
 const activeColumn = {
   key: "is_active",
@@ -11,6 +12,57 @@ const activeColumn = {
 
 export function HeroSlidesPage() {
   const fetchList = useCallback(() => adminApi.listHeroSlides(), []);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    adminApi.listCategories({ page: 1, page_size: 100 }).then(
+      (result) => !cancelled && setCategories(result.items || []),
+      () => !cancelled && setCategories([]),
+    );
+    return () => { cancelled = true; };
+  }, []);
+
+  const fields = (row, values = {}) => {
+    const targetType = values.target_type ?? row?.target_type ?? "none";
+    return [
+      {
+        name: "image_url",
+        title: "الصورة",
+        type: "media",
+        required: true,
+        hint: "المقاس الموصى به لسطح المكتب: 2100×800 بكسل (21:8).",
+      },
+      {
+        name: "target_type",
+        title: "الوجهة",
+        type: "select",
+        required: true,
+        defaultValue: "none",
+        options: [
+          { value: "none", label: "بدون وجهة" },
+          { value: "products", label: "كل المنتجات" },
+          { value: "offers", label: "العروض" },
+          { value: "packages", label: "البكجات" },
+          { value: "categories", label: "كل الأقسام" },
+          { value: "category", label: "قسم محدد" },
+        ],
+      },
+      ...(targetType === "category" ? [{
+        name: "target_slug",
+        title: "القسم",
+        type: "select",
+        required: true,
+        options: categories.map((category) => ({
+          value: category.slug,
+          label: categoryPath(category, categories),
+        })),
+      }] : []),
+      { name: "sort_order", title: "الترتيب", type: "number", defaultValue: 0 },
+      { name: "is_active", title: "ظاهر", type: "checkbox", defaultValue: true },
+    ];
+  };
+
   return (
     <ResourceScreen
       title="شرائح الواجهة"
@@ -26,11 +78,12 @@ export function HeroSlidesPage() {
         { key: "sort_order", title: "الترتيب" },
         activeColumn,
       ]}
-      fields={[
-        { name: "image_url", title: "الصورة", type: "media", required: true },
-        { name: "sort_order", title: "الترتيب", type: "number", defaultValue: 0 },
-        { name: "is_active", title: "ظاهر", type: "checkbox", defaultValue: true },
-      ]}
+      fields={fields}
+      preparePayload={(payload) => ({
+        ...payload,
+        target_slug: payload.target_type === "category" ? payload.target_slug : null,
+        button_url: null,
+      })}
     />
   );
 }

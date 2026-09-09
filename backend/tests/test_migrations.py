@@ -77,12 +77,15 @@ def test_alembic_upgrade_builds_the_whole_schema(tmp_path, monkeypatch) -> None:
 
     engine = build_engine(url)
     try:
-        tables = set(inspect(engine).get_table_names())
+        inspector = inspect(engine)
+        tables = set(inspector.get_table_names())
+        hero_columns = {column["name"] for column in inspector.get_columns("hero_slides")}
     finally:
         engine.dispose()
 
     assert EXPECTED_TABLES.issubset(tables)
     assert "alembic_version" in tables
+    assert {"target_type", "target_slug"}.issubset(hero_columns)
 
 
 def test_models_and_expected_tables_agree() -> None:

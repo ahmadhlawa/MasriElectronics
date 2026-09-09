@@ -136,7 +136,7 @@ export default function ResourceScreen({
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(null);
   const feedback = useFeedback();
-  const activeFields = typeof fields === "function" ? fields(editing?.row) : fields;
+  const activeFields = typeof fields === "function" ? fields(editing?.row, values) : fields;
 
   const load = useCallback(async () => {
     setLoading(true);

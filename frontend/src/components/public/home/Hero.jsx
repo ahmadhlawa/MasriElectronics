@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Media from "../shell/Media.jsx";
+import { resolveHeroDestination } from "../../../utils/heroTarget.js";
 
 const INTERVAL_MS = 6000;
 
@@ -26,16 +28,30 @@ export default function Hero({ slides }) {
 
   return (
     <section className="vs-hero" aria-label="العروض">
-      {slides.map((slide, slideIndex) => (
-        <div
-          key={slide.id}
-          className="vs-hero__slide"
-          data-active={slideIndex === index}
-          aria-hidden={slideIndex !== index}
-        >
-          <Media className="vs-hero__media" src={slide.imageUrl} alt="" eager={slideIndex === 0} />
-        </div>
-      ))}
+      {slides.map((slide, slideIndex) => {
+        const destination = resolveHeroDestination(slide);
+        const active = slideIndex === index;
+        const artwork = <Media className="vs-hero__media" src={slide.imageUrl} alt="" eager={slideIndex === 0} />;
+        return (
+          <div
+            key={slide.id}
+            className="vs-hero__slide"
+            data-active={active}
+            aria-hidden={!active}
+          >
+            {destination ? (
+              <Link
+                to={destination}
+                className="vs-hero__link"
+                aria-label={slide.title || "فتح العرض"}
+                tabIndex={active ? 0 : -1}
+              >
+                {artwork}
+              </Link>
+            ) : artwork}
+          </div>
+        );
+      })}
     </section>
   );
 }

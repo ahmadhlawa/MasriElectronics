@@ -192,6 +192,68 @@ def test_hero_slides_respect_their_schedule(
     assert [slide["image_url"] for slide in public] == ["/media/hero-live.png"]
 
 
+def test_hero_structured_targets_are_validated_and_public(
+    client: TestClient, admin_token: str
+) -> None:
+    headers = auth(admin_token)
+    for target_type in ("none", "products", "offers", "packages", "categories"):
+        response = client.post(
+            "/api/v1/admin/hero-slides",
+            headers=headers,
+            json={
+                "image_url": f"/media/{target_type}.png",
+                "target_type": target_type,
+                "target_slug": "must-be-cleared",
+                "button_url": "/offers",
+            },
+        )
+        assert response.status_code == 201, response.text
+        body = response.json()
+        assert body["target_type"] == target_type
+        assert body["target_slug"] is None
+        assert body["button_url"] is None
+
+    category = client.post(
+        "/api/v1/admin/hero-slides",
+        headers=headers,
+        json={"image_url": "/media/category.png", "target_type": "category", "target_slug": "air-fryers"},
+    )
+    assert category.status_code == 201
+    assert category.json()["target_slug"] == "air-fryers"
+
+    assert client.post(
+        "/api/v1/admin/hero-slides",
+        headers=headers,
+        json={"image_url": "/media/missing.png", "target_type": "category"},
+    ).status_code == 422
+    assert client.post(
+        "/api/v1/admin/hero-slides",
+        headers=headers,
+        json={"image_url": "/media/bad.png", "target_type": "external"},
+    ).status_code == 422
+
+    public = client.get("/api/v1/hero-slides").json()
+    category_public = next(row for row in public if row["image_url"] == "/media/category.png")
+    assert category_public["target_type"] == "category"
+    assert category_public["target_slug"] == "air-fryers"
+
+
+def test_hero_legacy_button_url_remains_in_api(
+    client: TestClient, admin_token: str
+) -> None:
+    created = client.post(
+        "/api/v1/admin/hero-slides",
+        headers=auth(admin_token),
+        json={"image_url": "/media/legacy.png", "button_url": "/shop"},
+    )
+    assert created.status_code == 201
+    assert created.json()["target_type"] is None
+    public = client.get("/api/v1/hero-slides").json()
+    legacy = next(row for row in public if row["image_url"] == "/media/legacy.png")
+    assert legacy["button_url"] == "/shop"
+    assert legacy["target_type"] is None
+
+
 
 # ── media ────────────────────────────────────────────────────────────────────
 def _png_bytes() -> bytes:

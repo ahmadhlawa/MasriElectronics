@@ -76,6 +76,10 @@ export function normalizeHeroSlide(raw) {
   return {
     id: raw.id,
     imageUrl: raw.image_url,
+    title: raw.title || "",
+    targetType: raw.target_type ?? null,
+    targetSlug: raw.target_slug ?? null,
+    buttonUrl: raw.button_url || null,
   };
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import sx from "../../sx.js";
 import { adminApi } from "../../api/adminApi.js";
+import { categoryPath } from "../categoryPath.js";
 import ProductImageGallery from "../ProductImageGallery.jsx";
 import ProductImagesEditor from "../ProductImagesEditor.jsx";
 import { automaticSeo } from "../seo.js";
@@ -83,18 +84,7 @@ export const optionPayload = (options) => options
     })),
   }));
 
-export function categoryPath(category, categories) {
-  const byId = new Map(categories.map((row) => [row.id, row]));
-  const names = [];
-  const seen = new Set();
-  let current = category;
-  while (current && !seen.has(current.id)) {
-    seen.add(current.id);
-    names.unshift(current.name);
-    current = current.parent_id == null ? null : byId.get(current.parent_id);
-  }
-  return names.join(" > ");
-}
+export { categoryPath } from "../categoryPath.js";
 
 export default function ProductEditorPage() {
   const { productId } = useParams();
