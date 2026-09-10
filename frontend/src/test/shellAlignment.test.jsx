@@ -189,7 +189,7 @@ describe("homepage hero", () => {
     renderApp("/");
 
     await waitFor(() =>
-      expect(document.querySelector(".vs-header .vs-logo__name")).toHaveTextContent("متجر الاختبار"),
+      expect(document.querySelector(".vs-header .vs-logo__name")).toHaveTextContent(settingsFixture.store_name_ar),
     );
     expect(document.querySelector(".vs-hero__slide")).toBeNull();
   });
@@ -379,7 +379,7 @@ describe("store logo", () => {
     // Masri Electronics's supplied logo is a square lockup whose own wordmark is illegible at
     // header size, so the name is set in type next to it — a logo never removes
     // the store's name from the header.
-    expect(document.querySelector(".vs-logo__name")).toHaveTextContent("متجر الاختبار");
+    expect(document.querySelector(".vs-logo__name")).toHaveTextContent(settingsFixture.store_name_ar);
     expect(document.querySelector(".vs-header .vs-logo__box")).not.toBeNull();
   });
 
@@ -391,7 +391,7 @@ describe("store logo", () => {
     expect(document.querySelector(".vs-header .vs-logo__img")).not.toBeNull();
     // What the store *has* set still wins over the shipped defaults — the
     // fallback fills gaps, it does not overwrite the owner's identity.
-    expect(document.querySelector(".vs-logo__name")).toHaveTextContent("متجر الاختبار");
+    expect(document.querySelector(".vs-logo__name")).toHaveTextContent(settingsFixture.store_name_ar);
     expect(document.querySelector(".vs-logo__tag")).toHaveTextContent("مستلزمات حرفية");
   });
 });
@@ -404,7 +404,7 @@ describe("homepage category grid", () => {
     });
     renderApp("/");
 
-    expect(await screen.findByRole("heading", { name: "تسوّق حسب القسم" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "تسوّق حسب التصنيف" })).toBeInTheDocument();
     const cards = document.querySelectorAll(".vs-cat");
     expect(cards).toHaveLength(2);
 

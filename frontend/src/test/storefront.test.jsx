@@ -167,7 +167,7 @@ describe("public storefront", () => {
 
     expect(await screen.findAllByText("الرجاء إدخال الاسم الكامل")).not.toHaveLength(0);
     expect(screen.getByText("رقم هاتف غير صالح — مثال 0591234567")).toBeInTheDocument();
-    expect(screen.getByText("اختر منطقة التوصيل")).toBeInTheDocument();
+    expect(screen.getByText("اختر مدينة التوصيل")).toBeInTheDocument();
     expect(await screen.findByRole("alert")).toHaveTextContent("الرجاء إدخال الاسم الكامل");
     expect(screen.getByPlaceholderText("مثال: سارة أحمد")).toHaveFocus();
     expect(calls.some((call) => call.path === "/api/v1/orders")).toBe(false);
@@ -242,7 +242,7 @@ describe("public storefront", () => {
     await userEvent.type(screen.getByPlaceholderText("05XXXXXXXX"), "0591234567");
     await userEvent.type(screen.getByPlaceholderText("الشارع، رقم البناية، أقرب معلم"), "رام الله، شارع الإرسال");
     // Addressed by its own label: the header search field is also a combobox.
-    await userEvent.selectOptions(screen.getByLabelText(/منطقة التوصيل/), "1");
+    await userEvent.selectOptions(screen.getByLabelText(/مدينة التوصيل/), "1");
     await userEvent.click(screen.getByRole("checkbox"));
     await userEvent.click(screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ }));
 
@@ -276,7 +276,7 @@ describe("public storefront", () => {
     await userEvent.type(await screen.findByPlaceholderText("مثال: سارة أحمد"), "سارة أحمد");
     await userEvent.type(screen.getByPlaceholderText("05XXXXXXXX"), "0591234567");
     await userEvent.type(screen.getByPlaceholderText("الشارع، رقم البناية، أقرب معلم"), "رام الله، شارع الإرسال");
-    await userEvent.selectOptions(screen.getByLabelText(/منطقة التوصيل/), "1");
+    await userEvent.selectOptions(screen.getByLabelText(/مدينة التوصيل/), "1");
     await userEvent.click(screen.getByRole("checkbox"));
     await userEvent.click(screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ }));
 

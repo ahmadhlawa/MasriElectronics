@@ -31,9 +31,12 @@ def _place_order(
         "customer_name": "سارة أحمد",
         "customer_phone": "0591234567",
         "address": "رام الله، شارع الإرسال، بناية ٥",
+        "delivery_method": "pickup",
         "items": [{"product_id": product.id, "quantity": quantity}],
     }
     payload.update(overrides)
+    if payload.get("delivery_area_id") is not None:
+        payload["delivery_method"] = "delivery"
     response = client.post("/api/v1/orders", json=payload)
     assert response.status_code == 201, response.text
     return response.json()
@@ -811,17 +814,17 @@ def test_no_order_is_created_when_the_payment_method_is_rejected(
     assert db.get(Product, product.id).stock_quantity == 50
 
 
-def test_the_admin_order_view_shows_the_payment_method(
+def test_the_admin_order_view_shows_cash_on_delivery(
     client: TestClient, db: Session, product: Product, admin_token: str
 ) -> None:
-    created = _place_order(client, product, quantity=1, payment_method="card")
+    created = _place_order(client, product, quantity=1)
     order = _order_row(db, created["order_number"])
 
     detail = client.get(f"/api/v1/admin/orders/{order.id}", headers=auth(admin_token)).json()
-    assert detail["payment_method"] == "card"
+    assert detail["payment_method"] == "cash_on_delivery"
 
     listing = client.get("/api/v1/admin/orders", headers=auth(admin_token)).json()
-    assert listing["items"][0]["payment_method"] == "card"
+    assert listing["items"][0]["payment_method"] == "cash_on_delivery"
 
 
 def test_manual_payment_instructions_are_blank_until_the_owner_supplies_them(

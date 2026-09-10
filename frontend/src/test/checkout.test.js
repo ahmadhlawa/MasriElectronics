@@ -102,7 +102,7 @@ describe("checkout payment methods", () => {
     }
   });
 
-  it("shows electronic payment as unavailable", () => {
-    expect(paymentMethods.find((method) => method.key === "electronic")?.disabled).toBe(true);
+  it("offers cash on delivery only", () => {
+    expect(paymentMethods.map((method) => method.key)).toEqual(["cash_on_delivery"]);
   });
 });

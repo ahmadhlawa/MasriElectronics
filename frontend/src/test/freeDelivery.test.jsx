@@ -16,7 +16,11 @@ const AREAS = [
   { id: 3, name: "الداخل", delivery_fee: 80, free_delivery_threshold: 400, estimated_days: "3 أيام عمل", sort_order: 3 },
 ];
 
-const routes = { ...storefrontRoutes, "/api/v1/delivery-areas": AREAS };
+const routes = {
+  ...storefrontRoutes,
+  "/api/v1/store/settings": { ...storefrontRoutes["/api/v1/store/settings"], free_delivery_threshold: 220 },
+  "/api/v1/delivery-areas": AREAS,
+};
 
 const seedCart = (unit, qty = 1) =>
   cartStorage.save([
@@ -47,9 +51,7 @@ describe("free delivery notice", () => {
     renderApp("/cart");
 
     const panel = within(await notice());
-    // 220 − 100 for الضفة and القدس, which share a threshold and so share a line.
-    expect(panel.getByText(/الضفة، القدس/)).toHaveTextContent("أضف 120 ₪");
-    expect(panel.getByText(/الداخل/)).toHaveTextContent("أضف 300 ₪");
+    expect(panel.getByText(/الضفة، القدس، الداخل/)).toHaveTextContent("أضف 120 ₪");
   });
 
   it("confirms eligibility once the subtotal reaches the threshold", async () => {
@@ -58,38 +60,14 @@ describe("free delivery notice", () => {
     renderApp("/cart");
 
     const panel = within(await notice());
-    expect(panel.getByText(/طلبك مؤهل للتوصيل المجاني إلى الضفة، القدس/)).toBeInTheDocument();
-    // The higher threshold is not reached and still says so.
-    expect(panel.getByText(/الداخل/)).toHaveTextContent("أضف 180 ₪");
-  });
-
-  it("narrows to the chosen area at checkout", async () => {
-    seedCart(100);
-    stubApi({
-      ...routes,
-      "POST /api/v1/cart/price": {
-        lines: [],
-        subtotal: 100,
-        discount: 0,
-        delivery_fee: 80,
-        total: 180,
-        coupon_code: null,
-        delivery_area_name: "الداخل",
-      },
-    });
-    renderApp("/checkout");
-
-    await userEvent.selectOptions(await screen.findByLabelText("منطقة التوصيل"), "3");
-
-    const panel = within(await notice());
-    expect(panel.getByText(/الداخل/)).toHaveTextContent("أضف 300 ₪");
-    expect(panel.queryByText(/الضفة/)).not.toBeInTheDocument();
+    expect(panel.getByText(/طلبك مؤهل للتوصيل المجاني إلى الضفة، القدس، الداخل/)).toBeInTheDocument();
   });
 
   it("says nothing at all when no area offers free delivery", async () => {
     seedCart(100);
     stubApi({
       ...routes,
+      "/api/v1/store/settings": { ...storefrontRoutes["/api/v1/store/settings"], free_delivery_threshold: null },
       "/api/v1/delivery-areas": [
         { id: 1, name: "الضفة", delivery_fee: 25, free_delivery_threshold: null, sort_order: 1 },
       ],

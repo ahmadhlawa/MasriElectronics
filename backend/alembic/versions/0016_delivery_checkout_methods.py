@@ -18,18 +18,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("store_settings", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("free_delivery_threshold", sa.Numeric(12, 2), nullable=True))
-    with op.batch_alter_table("orders", schema=None) as batch_op:
-        batch_op.add_column(
-            sa.Column("delivery_method", sa.String(length=16), nullable=False, server_default="delivery")
-        )
+    op.add_column("store_settings", sa.Column("free_delivery_threshold", sa.Numeric(12, 2), nullable=True))
+    op.add_column(
+        "orders",
+        sa.Column("delivery_method", sa.String(length=16), nullable=False, server_default="delivery"),
+    )
     # Per-city minimums and thresholds are retired; existing cities remain intact.
     op.execute("UPDATE delivery_areas SET min_order_amount = NULL, free_delivery_threshold = NULL")
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("orders", schema=None) as batch_op:
-        batch_op.drop_column("delivery_method")
-    with op.batch_alter_table("store_settings", schema=None) as batch_op:
-        batch_op.drop_column("free_delivery_threshold")
+    op.drop_column("orders", "delivery_method")
+    op.drop_column("store_settings", "free_delivery_threshold")

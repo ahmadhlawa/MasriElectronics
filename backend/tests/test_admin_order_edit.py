@@ -15,6 +15,7 @@ def _create_order(client: TestClient, product: Product, **changes: object) -> di
         "customer_name": "Search Customer",
         "customer_phone": "0591234567",
         "address": "Ramallah, Main Street 10",
+        "delivery_method": "pickup",
         "items": [{"product_id": product.id, "quantity": 1}],
     }
     payload.update({key: value for key, value in changes.items() if key != "suffix"})

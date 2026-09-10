@@ -26,9 +26,8 @@ describe("storefront with no catalog", () => {
     renderApp("/");
 
     expect(await screen.findAllByText(settingsFixture.store_name_ar)).not.toHaveLength(0);
-    // The gap the dropped sections leave is filled by an honest empty state rather
-    // than by invented content. Waiting on it also means every list has resolved.
-    expect(await screen.findByText("المتجر قيد التجهيز")).toBeInTheDocument();
+    // The fixed service statement remains even before catalog data arrives.
+    expect(await screen.findByText("أجهزة أصلية + كفالة + أسعار تنافسية")).toBeInTheDocument();
     // Empty catalog blocks are absent rather than rendered as empty headings.
     expect(screen.queryByText("تسوّق حسب القسم")).not.toBeInTheDocument();
     expect(screen.queryByText("منتجات مختارة")).not.toBeInTheDocument();

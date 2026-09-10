@@ -16,22 +16,23 @@ import { useMoney } from "../../../hooks/useStorefront.js";
  * know what they will pay. Once an area is selected the notice narrows to it.
  */
 export default function FreeDeliveryNotice({ subtotal, areaId = null }) {
-  const { deliveryAreas } = useStore();
+  const { deliveryAreas, settings } = useStore();
   const money = useMoney();
 
   const groups = useMemo(() => {
-    const eligible = deliveryAreas.filter((area) => area.freeOver != null && area.freeOver > 0);
-    const selected = areaId ? eligible.filter((area) => area.id === areaId) : eligible;
+    const threshold = settings.freeDeliveryThreshold;
+    if (threshold == null || threshold <= 0) return [];
+    const selected = areaId ? deliveryAreas.filter((area) => area.id === areaId) : deliveryAreas;
     const byThreshold = new Map();
     selected.forEach((area) => {
-      const names = byThreshold.get(area.freeOver) || [];
+      const names = byThreshold.get(threshold) || [];
       names.push(area.name);
-      byThreshold.set(area.freeOver, names);
+      byThreshold.set(threshold, names);
     });
     return [...byThreshold.entries()]
       .sort(([a], [b]) => a - b)
       .map(([threshold, names]) => ({ threshold, names, reached: subtotal >= threshold }));
-  }, [deliveryAreas, areaId, subtotal]);
+  }, [deliveryAreas, areaId, settings.freeDeliveryThreshold, subtotal]);
 
   if (!groups.length) return null;
 

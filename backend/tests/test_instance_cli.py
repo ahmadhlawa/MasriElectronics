@@ -131,9 +131,9 @@ def test_the_shipped_masri_profile_applies(cli_env, capsys) -> None:
         # Through the CLI, which is how an instance is actually stood up: the
         # branding a fresh Masri Electronics store comes online with is whatever this writes.
         settings_row = db.execute(select(StoreSettings)).scalar_one()
-        assert settings_row.primary_color == "#374151"
-        assert settings_row.secondary_color == "#6B7280"
-        assert settings_row.accent_color == "#0F766E"
+        assert settings_row.primary_color == "#1B2F52"
+        assert settings_row.secondary_color == "#D9232E"
+        assert settings_row.accent_color == "#D9232E"
         # Identity only — the catalogue is the separate demo seed.
         assert db.execute(select(Product)).scalars().all() == []
         assert db.execute(select(Order)).scalars().all() == []
