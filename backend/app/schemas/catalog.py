@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from pydantic import Field, field_validator, model_validator
+from decimal import Decimal
+from typing import Literal
+
+from pydantic import Field, StrictBool, field_validator, model_validator
 
 from app.core.enums import ProductType
 from app.schemas.common import APIModel, Money, UTCDateTime
@@ -101,6 +104,87 @@ class ProductSpecificationOut(ProductSpecificationIn):
     id: int
 
 
+class AttributeChoice(APIModel):
+    code: str = Field(min_length=1, max_length=80, pattern=r"^[a-z0-9_]+$")
+    label: str = Field(min_length=1, max_length=150)
+
+
+class AttributeDefinitionCreate(APIModel):
+    key: str = Field(min_length=1, max_length=80, pattern=r"^[a-z][a-z0-9_]*$")
+    label: str = Field(min_length=1, max_length=150)
+    type: Literal["number", "enum", "boolean", "text"]
+    unit: str | None = Field(default=None, max_length=40)
+    enum_choices: list[AttributeChoice] = Field(default_factory=list, alias="choices")
+    filterable: bool = False
+    comparable: bool = False
+    show_on_card: bool = False
+    sort_order: int = 0
+
+    @model_validator(mode="after")
+    def validate_choices(self):
+        codes = [choice.code for choice in self.enum_choices]
+        if (self.type == "enum") != bool(codes) or len(codes) != len(set(codes)):
+            raise ValueError("enum attributes require unique choices; other types have none")
+        return self
+
+
+class AttributeDefinitionUpdate(APIModel):
+    key: str | None = Field(default=None, min_length=1, max_length=80, pattern=r"^[a-z][a-z0-9_]*$")
+    label: str | None = Field(default=None, min_length=1, max_length=150)
+    type: Literal["number", "enum", "boolean", "text"] | None = None
+    unit: str | None = Field(default=None, max_length=40)
+    enum_choices: list[AttributeChoice] | None = Field(default=None, alias="choices")
+    filterable: bool | None = None
+    comparable: bool | None = None
+    show_on_card: bool | None = None
+    sort_order: int | None = None
+
+
+class AttributeDefinitionOut(APIModel):
+    id: int
+    category_id: int
+    key: str
+    label: str
+    type: Literal["number", "enum", "boolean", "text"]
+    unit: str | None = None
+    enum_choices: list[AttributeChoice] = Field(default_factory=list)
+    filterable: bool
+    comparable: bool
+    show_on_card: bool
+    sort_order: int
+
+
+class ProductAttributeValueIn(APIModel):
+    attribute_definition_id: int
+    number_value: Decimal | None = Field(default=None, max_digits=14, decimal_places=3)
+    enum_value: str | None = Field(default=None, max_length=80)
+    boolean_value: StrictBool | None = None
+    text_value: str | None = Field(default=None, max_length=250)
+
+
+class ProductAttributeValueOut(ProductAttributeValueIn):
+    id: int
+    key: str
+    label: str
+    type: str
+    unit: str | None = None
+
+
+class CardAttributeOut(APIModel):
+    key: str
+    label: str
+    type: str
+    unit: str | None = None
+    value: float | str | bool
+    option_label: str | None = None
+
+
+class ProductAttributePublicOut(CardAttributeOut):
+    comparable: bool
+    show_on_card: bool
+    sort_order: int
+
+
 class ProductOptionValueIn(APIModel):
     # `id` identifies an existing row so a rename keeps the same value id, and the
     # variants pointing at it survive. Omit it for a brand-new value.
@@ -193,6 +277,7 @@ class ProductBase(APIModel):
     short_description: str | None = None
     description: str | None = None
     sku: str | None = Field(default=None, max_length=64)
+    model_number: str | None = Field(default=None, max_length=100)
     product_type: ProductType = ProductType.STANDARD
     price: Money = Field(ge=0)
     compare_at_price: Money | None = None
@@ -230,6 +315,7 @@ class ProductUpdate(APIModel):
     short_description: str | None = None
     description: str | None = None
     sku: str | None = Field(default=None, max_length=64)
+    model_number: str | None = Field(default=None, max_length=100)
     product_type: ProductType | None = None
     price: Money | None = Field(default=None, ge=0)
     compare_at_price: Money | None = None
@@ -254,6 +340,8 @@ class ProductPublicOut(APIModel):
     slug: str
     short_description: str | None = None
     sku: str | None = None
+    model_number: str | None = None
+    card_attributes: list[CardAttributeOut] = Field(default_factory=list)
     product_type: ProductType
     category_id: int | None = None
     category_name: str | None = None
@@ -289,6 +377,7 @@ class ProductPublicDetail(ProductPublicOut):
     seo_description: str | None = None
     images: list[ProductImageOut] = Field(default_factory=list)
     specifications: list[ProductSpecificationOut] = Field(default_factory=list)
+    attributes: list[ProductAttributePublicOut] = Field(default_factory=list)
     options: list[ProductOptionOut] = Field(default_factory=list)
     variants: list[ProductVariantOut] = Field(default_factory=list)
     package_items: list[PackageItemOut] = Field(default_factory=list)
@@ -308,6 +397,7 @@ class ProductAdminListOut(APIModel):
     name: str
     slug: str
     sku: str | None = None
+    model_number: str | None = None
     product_type: ProductType
     category_id: int | None = None
     category_name: str | None = None

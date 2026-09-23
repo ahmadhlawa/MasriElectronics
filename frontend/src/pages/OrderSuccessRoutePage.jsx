@@ -5,12 +5,20 @@ import { checkoutService } from "../services/checkout.js";
 import { orderTokenStorage } from "../storage/authStorage.js";
 import { orderStatusLabels } from "../store.js";
 import { CheckIcon } from "../components/public/shell/icons.jsx";
+import { storefrontService } from "../services/storefront.js";
 
 export default function OrderSuccessRoutePage() {
   const { orderNumber } = useParams();
   const money = useMoney();
   const [order, setOrder] = useState(null);
   const [status, setStatus] = useState("loading");
+  const [shipping, setShipping] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    storefrontService.page("shipping-policy").then((page) => { if (active) setShipping(page); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +64,8 @@ export default function OrderSuccessRoutePage() {
     );
   }
 
+  const pickup = order.delivery_method === "pickup";
+
   return (
     <section className="vs-container vs-container--narrow vs-section">
       <div className="vs-done">
@@ -88,7 +98,7 @@ export default function OrderSuccessRoutePage() {
             </div>
           )}
           <div className="vs-summary__row">
-            <span>التوصيل {order.delivery_area_name ? `(${order.delivery_area_name})` : ""}</span>
+            <span>{pickup ? "الاستلام من المتجر" : `التوصيل ${order.delivery_area_name ? `(${order.delivery_area_name})` : ""}`}</span>
             <strong>{money(order.delivery_fee)}</strong>
           </div>
           <div className="vs-summary__row">
@@ -105,8 +115,8 @@ export default function OrderSuccessRoutePage() {
           <h2 className="vs-done__nexttitle">ما الخطوة التالية؟</h2>
           <ol className="vs-bullets">
             <li>سنراجع الطلب ونتواصل معك لتأكيد التفاصيل.</li>
-            <li>يُجهَّز الطلب ثم يُسلَّم لمندوب التوصيل في منطقتك.</li>
-            <li>الدفع يتم عند الاستلام نقداً للمندوب.</li>
+            <li>{shipping?.body[pickup ? 1 : 0] || (pickup ? "سنؤكد تفاصيل الاستلام من المتجر معك." : "سنؤكد تفاصيل التوصيل معك.")}</li>
+            <li>{pickup ? "الدفع يتم نقداً عند الاستلام من المتجر." : "الدفع يتم عند الاستلام نقداً للمندوب."}</li>
           </ol>
         </div>
 

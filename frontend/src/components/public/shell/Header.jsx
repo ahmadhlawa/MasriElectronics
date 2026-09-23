@@ -6,7 +6,7 @@ import { useMoney } from "../../../hooks/useStorefront.js";
 import { navLinks } from "../../../store.js";
 import { HEADER_LOGO_URL } from "../../../brand.js";
 import SearchBox from "../search/SearchBox.jsx";
-import { CartIcon, GridIcon, MenuIcon, SearchIcon, UserIcon } from "./icons.jsx";
+import { CartIcon, GridIcon, MenuIcon, SearchIcon } from "./icons.jsx";
 
 function StoreMark({ settings }) {
   // The file is left exactly as the owner supplied it; only how much of the box
@@ -94,10 +94,6 @@ export default function Header() {
               >
                 <SearchIcon size={19} />
               </button>
-
-              <Link to="/admin/login" className="vs-iconbtn" aria-label="تسجيل دخول الإدارة" title="تسجيل دخول الإدارة">
-                <UserIcon size={18} />
-              </Link>
 
               <button
                 type="button"

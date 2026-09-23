@@ -172,6 +172,40 @@ def test_arabic_search_ignores_spelling_variants(client: TestClient, db: Session
     assert found.json()["total"] == 1
 
 
+def test_public_search_finds_names_identifiers_descriptions_and_brands(
+    client: TestClient, admin_token: str,
+) -> None:
+    headers = auth(admin_token)
+    brand = client.post("/api/v1/admin/brands", headers=headers,
+                        json={"name": "إلكترو"}).json()
+    first = client.post("/api/v1/admin/products", headers=headers, json={
+        "name": "ثلاجة عائلية", "price": 100, "brand_id": brand["id"],
+        "model_number": "RF-420_X", "short_description": "تبريد سريع",
+    }).json()
+    second = client.post("/api/v1/admin/products", headers=headers, json={
+        "name": "غسالة منزلية", "price": 100, "brand_id": brand["id"],
+    }).json()
+    client.post("/api/v1/admin/products", headers=headers, json={
+        "name": "فرن مستقل", "price": 100,
+    })
+
+    def matches(term):
+        response = client.get("/api/v1/products", params={"q": term})
+        assert response.status_code == 200, response.text
+        return {item["id"] for item in response.json()["items"]}
+
+    for term in ("ثلاجة", "تبريد", "RF-420_X", "rf420x", "RF 420 X",
+                 first["sku"], first["sku"].replace("-", "")):
+        assert first["id"] in matches(term), term
+    assert matches("الكترو") == {first["id"], second["id"]}
+    paged = client.get("/api/v1/products", params={"q": "الكترو", "page_size": 1})
+    assert paged.json()["total"] == 2 and paged.json()["pages"] == 2
+    renamed = client.patch(f"/api/v1/admin/brands/{brand['id']}", headers=headers,
+                           json={"name": "Philips"})
+    assert renamed.status_code == 200
+    assert matches("Philips") == {first["id"], second["id"]}
+
+
 def test_product_filters_and_pagination(client: TestClient, db: Session, category: Category) -> None:
     make_product(db, slug="p1", name="منتج ١", price="10.00", category_id=category.id, is_featured=True)
     make_product(db, slug="p2", name="منتج ٢", price="200.00", category_id=category.id)

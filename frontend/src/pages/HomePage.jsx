@@ -55,14 +55,6 @@ const SECTIONS = {
     more: "/packages",
     limit: 6,
   },
-  silicone_molds: {
-    kind: "products",
-    layout: "split",
-    source: "molds",
-    fallbackTitle: "قوالب سيليكون",
-    more: "/molds",
-    limit: 4,
-  },
   custom_text: { kind: "text", fallbackTitle: "" },
 };
 
@@ -71,7 +63,6 @@ const LOADERS = {
   newest: (limit) => catalogService.newest(limit),
   bestsellers: (limit) => catalogService.bestsellers(limit),
   packages: (limit) => catalogService.packages({ page_size: limit }),
-  molds: (limit) => catalogService.molds({ page_size: limit }),
 };
 
 const HOME_SECTIONS = [
@@ -79,7 +70,7 @@ const HOME_SECTIONS = [
   { id: "featured", type: "featured_products", title: "منتجات مختارة", description: "اختيارات عملية للاستخدام اليومي.", config: {} },
   { id: "bestsellers", type: "bestsellers", title: "الأكثر طلباً", description: "أجهزة يحبها عملاؤنا.", config: {} },
   { id: "new", type: "new_products", title: "وصل حديثاً", description: "تشكيلة حديثة تواكب احتياجات المنزل.", config: {} },
-  { id: "service", type: "custom_text", title: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "شحن سريع | خدمة عملاء على مدار الساعة", config: {} },
+  { id: "service", type: "custom_text", title: "معلومات الخدمة", description: null, config: {} },
 ];
 
 function RevealSection({ className, children }) {
@@ -191,12 +182,13 @@ export default function HomePage() {
       }
 
       if (spec.kind === "text") {
-        if (!section.title && !section.description) return null;
+        const description = store.settings.seoDescription;
+        if (!description) return null;
         return (
           <RevealSection key={section.id} className="vs-container vs-section">
             <div className="vs-split__panel">
               <h2 className="vs-split__title">{section.title}</h2>
-              {section.description && <p className="vs-split__desc">{section.description}</p>}
+              <p className="vs-split__desc">{description}</p>
               <Link to="/shop" className="vs-btn vs-btn--lg vs-split__cta">
                 تصفّح المتجر <ArrowForward size={16} />
               </Link>
@@ -234,7 +226,7 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="vs-split__grid">
-                <ProductGrid views={items.slice(0, 4)} variant="plain" eagerCount={0} />
+                <ProductGrid views={items.slice(0, 4)} variant="plain" eagerCount={0} listing />
               </div>
             </div>
           </RevealSection>
@@ -248,7 +240,7 @@ export default function HomePage() {
             description={section.description}
             moreHref={spec.more}
           />
-          <ProductGrid views={items} variant={spec.layout} eagerCount={0} />
+          <ProductGrid views={items} variant={spec.layout} eagerCount={0} listing />
         </section>
       );
     })

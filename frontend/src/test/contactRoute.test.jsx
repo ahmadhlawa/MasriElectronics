@@ -4,11 +4,12 @@ import { renderApp, storefrontRoutes, stubApi } from "./utils.jsx";
 
 describe("contact route", () => {
   it("offers direct contact without a message-composer form", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/pages/contact": { lead: "تواصل مباشر" } });
+    stubApi({ ...storefrontRoutes, "/api/v1/pages/contact": { lead: "تواصل مباشر", content: "اسألنا عن التوصيل أو الاستلام." } });
     renderApp("/contact");
 
     const contact = await screen.findByRole("heading", { name: "تواصل معنا" });
     const page = contact.closest("section");
+    expect(within(page).getByText("اسألنا عن التوصيل أو الاستلام.")).toBeInTheDocument();
     const whatsapp = within(page).getByRole("link", { name: "تواصل عبر واتساب" });
     expect(whatsapp).toHaveAttribute("href", "https://wa.me/0590000000?text=");
     expect(within(page).queryByLabelText("الاسم")).not.toBeInTheDocument();

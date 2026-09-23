@@ -24,6 +24,8 @@ export const adminApi = {
     api.put(`/admin/products/${id}/images/reorder`, { image_ids: imageIds }, authed),
   replaceSpecifications: (id, payload) =>
     api.put(`/admin/products/${id}/specifications`, payload, authed),
+  listProductAttributes: (id) => api.get(`/admin/products/${id}/attributes`, authed),
+  replaceProductAttributes: (id, payload) => api.put(`/admin/products/${id}/attributes`, payload, authed),
   replaceOptions: (id, payload) => api.put(`/admin/products/${id}/options`, payload, authed),
   createVariant: (id, payload) => api.post(`/admin/products/${id}/variants`, payload, authed),
   updateVariant: (id, variantId, payload) =>
@@ -38,6 +40,10 @@ export const adminApi = {
   createCategory: (payload) => api.post("/admin/categories", payload, authed),
   updateCategory: (id, payload) => api.patch(`/admin/categories/${id}`, payload, authed),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`, authed),
+  listCategoryAttributes: (id) => api.get(`/admin/categories/${id}/attributes`, authed),
+  createCategoryAttribute: (id, payload) => api.post(`/admin/categories/${id}/attributes`, payload, authed),
+  updateCategoryAttribute: (id, attributeId, payload) =>
+    api.patch(`/admin/categories/${id}/attributes/${attributeId}`, payload, authed),
 
   listBrands: (params) => api.get("/admin/brands", withParams(params)),
   createBrand: (payload) => api.post("/admin/brands", payload, authed),

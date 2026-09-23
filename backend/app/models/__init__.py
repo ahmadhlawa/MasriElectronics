@@ -1,10 +1,12 @@
 from app.models.admin import AdminUser
 from app.models.audit import AuditLog
 from app.models.catalog import (
+    AttributeDefinition,
     Brand,
     Category,
     PackageItem,
     Product,
+    ProductAttributeValue,
     ProductImage,
     ProductOption,
     ProductOptionValue,
@@ -22,6 +24,7 @@ from app.models.orders import Order, OrderActivity, OrderItem, OrderItemPackageC
 from app.models.store import StoreSettings
 
 __all__ = [
+    "AttributeDefinition",
     "AdminUser",
     "AuditLog",
     "Brand",
@@ -42,6 +45,7 @@ __all__ = [
     "OrderStatusHistory",
     "PackageItem",
     "Product",
+    "ProductAttributeValue",
     "ProductImage",
     "ProductOption",
     "ProductOptionValue",

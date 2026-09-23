@@ -36,6 +36,8 @@ export function useCatalogQuery() {
       inStock: params.get("stock") === "1",
       minPrice: number("min"),
       maxPrice: number("max"),
+      brandId: number("brand"),
+      attributes: params.getAll("attribute"),
     };
   }, [params]);
 
@@ -44,7 +46,13 @@ export function useCatalogQuery() {
       setParams(
         (current) => {
           const next = new URLSearchParams(current);
+          if (Object.hasOwn(changes, "cat") && changes.cat !== current.get("cat")) next.delete("attribute");
           Object.entries(changes).forEach(([key, value]) => {
+            if (key === "attributes") {
+              next.delete("attribute");
+              value.forEach((item) => next.append("attribute", item));
+              return;
+            }
             if (value === null || value === "" || value === false) next.delete(key);
             else next.set(key, value === true ? "1" : String(value));
           });
@@ -73,6 +81,7 @@ export function useCatalogQuery() {
   const active = useMemo(() => {
     const chips = [];
     if (filters.category) chips.push({ key: "cat", label: filters.category, clear: { cat: null } });
+    if (filters.brandId != null) chips.push({ key: "brand", label: String(filters.brandId), clear: { brand: null } });
     if (filters.onSale) chips.push({ key: "sale", label: "المخفّضة فقط", clear: { sale: null } });
     if (filters.inStock) chips.push({ key: "stock", label: "المتوفر فقط", clear: { stock: null } });
     if (filters.minPrice != null || filters.maxPrice != null) {

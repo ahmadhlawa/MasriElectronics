@@ -47,7 +47,7 @@ export const paymentMethods = [
   {
     key: "cash_on_delivery",
     label: "الدفع عند الاستلام",
-    desc: "ادفع نقداً للمندوب عند التسليم",
+    desc: "ادفع نقداً عند استلام الطلب",
   },
 ];
 

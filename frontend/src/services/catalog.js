@@ -24,6 +24,9 @@ export function normalizeProduct(raw) {
     price: hasCompare ? Number(raw.compare_at_price) : Number(raw.price),
     sale: hasCompare ? Number(raw.price) : null,
     sku: raw.sku || "",
+    modelNumber: raw.model_number || "",
+    cardAttributes: (raw.card_attributes || []).slice(0, 2),
+    attributes: raw.attributes || [],
     stock: raw.stock_quantity ?? 0,
     trackInventory: raw.track_inventory !== false,
     inStock: raw.in_stock !== false,
@@ -109,6 +112,14 @@ export const catalogService = {
   async category(slug) {
     if (isStaticPreview) return normalizeCategory(previewData.categories.find((item) => item.slug === slug));
     return normalizeCategory(await publicApi.category(slug));
+  },
+  async categoryAttributes(slug) {
+    if (isStaticPreview) return [];
+    return publicApi.categoryAttributes(slug);
+  },
+  async brands() {
+    if (isStaticPreview) return [...new Map(previewData.products.filter((row) => row.brand_id && row.brand_name).map((row) => [row.brand_id, { id: row.brand_id, name: row.brand_name }])).values()];
+    return publicApi.brands();
   },
   async featured(limit = 8) {
     if (isStaticPreview) return page({ ...previewProducts(), items: previewData.products.filter((item) => item.is_featured).slice(0, limit) });

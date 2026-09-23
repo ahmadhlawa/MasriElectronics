@@ -114,7 +114,7 @@ export default function SearchBox({ autoFocus = false, onNavigate, placeholder }
         aria-controls="vs-suggest-list"
         role="combobox"
         autoComplete="off"
-        placeholder={placeholder || "ابحث عن منتج أو قسم…"}
+        placeholder={placeholder || "ابحث عن منتج، ماركة أو رقم موديل..."}
       />
       <span className="vs-hsearch__icon">
         <SearchIcon size={19} />

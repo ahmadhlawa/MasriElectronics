@@ -5,10 +5,17 @@ import { useCategoryNav, useMoney } from "../../../hooks/useStorefront.js";
  * supports. Nothing decorative: a filter that cannot change the result set does
  * not belong on the page.
  */
-export default function FilterPanel({ filters, patch, reset, showCategories, ceiling }) {
+export default function FilterPanel({ filters, patch, reset, showCategories, ceiling, brands = [], definitions = [] }) {
   const categories = useCategoryNav();
   const money = useMoney();
   const max = filters.maxPrice ?? ceiling;
+  const attributeValue = (key, operator) => filters.attributes
+    .find((item) => item.startsWith(`${key}:${operator}:`))?.split(":").slice(2).join(":") || "";
+  const setAttribute = (key, operator, value) => {
+    const prefix = `${key}:${operator}:`;
+    const remaining = filters.attributes.filter((item) => !item.startsWith(prefix));
+    patch({ attributes: value === "" ? remaining : [...remaining, `${prefix}${value}`] });
+  };
 
   return (
     <div className="vs-filters">
@@ -38,6 +45,33 @@ export default function FilterPanel({ filters, patch, reset, showCategories, cei
           ))}
         </fieldset>
       )}
+
+      {brands.length > 0 && (
+        <fieldset className="vs-filters__group">
+          <legend className="vs-filters__legend">العلامة التجارية</legend>
+          <select className="vs-select vs-filterselect" aria-label="العلامة التجارية" value={filters.brandId ?? ""} onChange={(event) => patch({ brand: event.target.value || null })}>
+            <option value="">كل العلامات</option>
+            {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+          </select>
+        </fieldset>
+      )}
+
+      {definitions.filter((definition) => definition.filterable && definition.type !== "text").map((definition) => (
+        <fieldset className="vs-filters__group" key={definition.id}>
+          <legend className="vs-filters__legend">{definition.label}{definition.unit ? ` (${definition.unit})` : ""}</legend>
+          {definition.type === "number" ? (
+            <div className="vs-filterrange">
+              <input className="vs-select" type="number" step="any" aria-label={`${definition.label} من`} placeholder="من" value={attributeValue(definition.key, "gte")} onChange={(event) => setAttribute(definition.key, "gte", event.target.value)} />
+              <input className="vs-select" type="number" step="any" aria-label={`${definition.label} إلى`} placeholder="إلى" value={attributeValue(definition.key, "lte")} onChange={(event) => setAttribute(definition.key, "lte", event.target.value)} />
+            </div>
+          ) : (
+            <select className="vs-select vs-filterselect" aria-label={definition.label} value={attributeValue(definition.key, "eq")} onChange={(event) => setAttribute(definition.key, "eq", event.target.value)}>
+              <option value="">الكل</option>
+              {(definition.type === "boolean" ? [{ code: "true", label: "نعم" }, { code: "false", label: "لا" }] : definition.enum_choices || []).map((choice) => <option key={choice.code} value={choice.code}>{choice.label}</option>)}
+            </select>
+          )}
+        </fieldset>
+      ))}
 
       <fieldset className="vs-filters__group">
         <legend className="vs-filters__legend">السعر الأقصى — {money(max)}</legend>

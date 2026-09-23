@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 from app.core.template_version import template_version
 from app.db.base import utcnow
 from app.instance.profile import InstanceProfile, StaticPageProfile
+from app.core.config import settings
 from app.models import DeliveryArea, InstanceMetadata, StaticPage, StoreSettings
 from app.models.store import STORE_SETTINGS_DEFAULTS
 from app.services import store_settings as settings_service
@@ -72,6 +73,12 @@ def _settings_field_is_untouched(row: StoreSettings, attribute: str) -> bool:
     """
     current = getattr(row, attribute, None)
     if current in (None, ""):
+        return True
+    legacy_review_copy = {
+        "working_hours": "مفتوح 24 ساعة / مفتوح دائماً",
+        "seo_description": "حلول كهربائية متكاملة لبيتك ومشروعك. أجهزة أصلية + كفالة + أسعار تنافسية. شحن سريع | خدمة عملاء على مدار الساعة",
+    }
+    if current == legacy_review_copy.get(attribute):
         return True
     return attribute in STORE_SETTINGS_DEFAULTS and current == STORE_SETTINGS_DEFAULTS[attribute]
 
@@ -211,6 +218,8 @@ def build_plan(db: Session, profile: InstanceProfile) -> Plan:
 
 def apply_profile(db: Session, profile: InstanceProfile) -> Plan:
     """Execute the plan. Idempotent, and never overwrites owner-edited content."""
+    if settings.APP_ENV.strip().lower() in {"production", "prod"} and profile.demo_business_content:
+        raise RuntimeError("Production cannot apply a profile with demo business content enabled.")
     plan = build_plan(db, profile)
     if plan.has_conflict:
         conflict = next(a for a in plan.actions if a.outcome == "conflict")

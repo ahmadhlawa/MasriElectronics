@@ -345,4 +345,4 @@ products:
 
 hero_slides:
   - { key: home-solutions, title: "حلول كهربائية متكاملة لبيتك ومشروعك", subtitle: "أجهزة عملية لكل تفاصيل يومك", description: "تعرّف إلى تشكيلتنا التجريبية من الأجهزة المنزلية والكهربائية.", button_label: "تسوق المنتجات", button_url: "/shop", image_url: "/branding/hero.png", sort_order: 1, origin: placeholder }
-  - { key: demo-offers, title: "اختيارات مميزة بأسعار تجريبية", subtitle: "أجهزة أصلية + كفالة + أسعار تنافسية", description: "تصفح المنتجات المخفضة ضمن نسخة المعاينة.", button_label: "عرض التخفيضات", button_url: "/offers", image: hero-offers, sort_order: 2, origin: placeholder }
+  - { key: demo-offers, title: "اختيارات مميزة بأسعار تجريبية", subtitle: "منتجات تجريبية للمراجعة", description: "تصفح المنتجات المخفضة ضمن نسخة المعاينة.", button_label: "عرض التخفيضات", button_url: "/offers", image: hero-offers, sort_order: 2, origin: placeholder }

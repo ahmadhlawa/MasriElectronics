@@ -5,7 +5,7 @@ import { useProductDetail, useVariantSelection } from "../hooks/useProductDetail
 import useMediaQuery from "../hooks/useMediaQuery.js";
 import { useMoney, useProductActions } from "../hooks/useStorefront.js";
 import { catalogService } from "../services/catalog.js";
-import { productView } from "../utils/productView.js";
+import { attributeDisplayValue, productView } from "../utils/productView.js";
 import AddToCartButton from "../components/AddToCartButton.jsx";
 import Gallery from "../components/public/product/Gallery.jsx";
 import OptionPicker from "../components/public/product/OptionPicker.jsx";
@@ -91,6 +91,16 @@ export default function ProductDetailPage() {
 
   const view = productView(product, money);
   const specs = product.specs || [];
+  const structured = (product.attributes || [])
+    .map((attribute) => ({ ...attribute, display: attributeDisplayValue(attribute) }))
+    .filter((attribute) => attribute.label && attribute.display !== null)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const keySpecs = [...structured].sort((a, b) =>
+    Number(!!(b.comparable || b.show_on_card)) - Number(!!(a.comparable || a.show_on_card))
+    || (a.sort_order ?? 0) - (b.sort_order ?? 0)).slice(0, 5);
+  const specIdentity = (name, value) => `${String(name).trim().replace(/\s+/g, " ").toLowerCase()}|${String(value).trim().replace(/\s+/g, " ").toLowerCase()}`;
+  const structuredPairs = new Set(structured.map((attribute) => specIdentity(attribute.label, attribute.display)));
+  const freeSpecs = specs.filter(([name, value]) => name && value && !structuredPairs.has(specIdentity(name, value)));
   const description = paragraphsOf(product.description || product.short);
 
   // Returns false when the add was refused, so the button does not announce a
@@ -121,15 +131,33 @@ export default function ProductDetailPage() {
     {
       key: "specs",
       label: "المواصفات",
-      content: specs.length ? (
-        <dl className="vs-specs">
-          {specs.map(([name, value]) => (
-            <div className="vs-specs__row" key={name}>
-              <dt>{name}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
+      content: structured.length || freeSpecs.length ? (
+        <div className="vs-pdp__specsections">
+          {structured.length > 0 && (
+            <section>
+              <h3 className="vs-pdp__spec-heading">الخصائص الفنية</h3>
+              <dl className="vs-specs">
+                {structured.map((attribute) => (
+                  <div className="vs-specs__row" key={attribute.key}>
+                    <dt>{attribute.label}</dt><dd>{attribute.display}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+          {freeSpecs.length > 0 && (
+            <section>
+              {structured.length > 0 && <h3 className="vs-pdp__spec-heading">مواصفات إضافية</h3>}
+              <dl className="vs-specs">
+                {freeSpecs.map(([name, value], index) => (
+                  <div className="vs-specs__row" key={`${name}-${index}`}>
+                    <dt>{name}</dt><dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+        </div>
       ) : (
         <p className="vs-prose vs-prose--muted">لا تتوفر مواصفات إضافية لهذا المنتج.</p>
       ),
@@ -139,7 +167,7 @@ export default function ProductDetailPage() {
       label: "التوصيل والدفع",
       content: (
         <ul className="vs-bullets">
-          <li>الدفع عند الاستلام نقداً للمندوب عند التسليم.</li>
+          <li>الدفع نقداً عند الاستلام.</li>
           <li>لا يطلب المتجر بيانات بطاقات بنكية في أي مرحلة.</li>
           <li>تُحتسب رسوم التوصيل حسب المنطقة في صفحة إتمام الطلب.</li>
           <li>
@@ -179,7 +207,8 @@ export default function ProductDetailPage() {
 
             <h1 className="vs-pdp__title">{view.name}</h1>
             {product.brandName && <span className="vs-pdp__brand">{product.brandName}</span>}
-            {product.sku && <span className="vs-pdp__sku">رمز المنتج: {product.sku}</span>}
+            {product.modelNumber && <span className="vs-pdp__model">رقم الموديل: <bdi>{product.modelNumber}</bdi></span>}
+            {product.sku && <span className="vs-pdp__sku">رمز المنتج: <bdi>{product.sku}</bdi></span>}
 
             <div className="vs-price vs-price--lg">
               <span className="vs-price__now">{money(selection.price * 1)}</span>
@@ -195,6 +224,17 @@ export default function ProductDetailPage() {
                     ? `متبقٍ ${selection.stock} فقط`
                     : "متوفر في المخزون"}
             </p>
+
+            {keySpecs.length > 0 && (
+              <section className="vs-pdp__key-specs" aria-label="أبرز المواصفات">
+                <h2>أبرز المواصفات</h2>
+                <dl>
+                  {keySpecs.map((attribute) => (
+                    <div key={attribute.key}><dt>{attribute.label}</dt><dd>{attribute.display}</dd></div>
+                  ))}
+                </dl>
+              </section>
+            )}
 
             {product.short && description[0] !== product.short && (
               <p className="vs-pdp__short">{product.short}</p>

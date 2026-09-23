@@ -10,7 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.router import api_router
-from app.core.config import settings
+from app.core.config import BACKEND_ROOT, settings
+from app.instance.profile import masri_demo_content_enabled
 from app.core.enums import StorageProviderName
 from app.services.errors import DomainError
 
@@ -26,6 +27,12 @@ def create_app() -> FastAPI:
     is_production = settings.APP_ENV.strip().lower() in {"production", "prod"}
     if (settings.VERCEL or is_production) and settings.STORAGE_PROVIDER != StorageProviderName.R2.value:
         raise RuntimeError("Production deployments require STORAGE_PROVIDER=r2 for persistent media.")
+    if is_production:
+        profile_path = BACKEND_ROOT.parent / "instance" / "masri-electronics.yaml"
+        if not profile_path.is_file():
+            raise RuntimeError("Production requires the Masri instance profile to verify business content.")
+        if masri_demo_content_enabled():
+            raise RuntimeError("Production cannot start with demo business content enabled in the instance profile.")
 
     app = FastAPI(
         title=settings.APP_NAME,

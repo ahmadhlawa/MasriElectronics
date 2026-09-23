@@ -5,6 +5,7 @@ export const publicApi = {
   settings: () => api.get("/store/settings"),
   categories: (params) => api.get("/categories", { params }),
   category: (slug) => api.get(`/categories/${encodeURIComponent(slug)}`),
+  categoryAttributes: (slug) => api.get(`/categories/${encodeURIComponent(slug)}/attributes`),
   brands: () => api.get("/brands"),
 
   products: (params) => api.get("/products", { params }),

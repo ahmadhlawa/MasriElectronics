@@ -12,6 +12,7 @@ import {
   stubApi,
 } from "./utils.jsx";
 import { cartStorage } from "../storage/cartStorage.js";
+import { orderTokenStorage } from "../storage/authStorage.js";
 
 describe("public storefront", () => {
   it("renders the shell with store identity from the API", async () => {
@@ -179,6 +180,7 @@ describe("public storefront", () => {
     ]);
     stubApi({
       ...storefrontRoutes,
+      "/api/v1/pages/return-policy": { title: "سياسة الإرجاع", content: "تواصل معنا مع رقم الطلب لمراجعة الحالة." },
       "POST /api/v1/cart/price": {
         lines: [], subtotal: 100, discount: 0, delivery_fee: 20, total: 120,
         coupon_code: null, delivery_area_name: "رام الله",
@@ -186,7 +188,7 @@ describe("public storefront", () => {
     });
     renderApp("/checkout");
 
-    expect(await screen.findByText("سياسة الاستبدال والاسترجاع غير متاحة حالياً. يرجى التواصل مع المتجر قبل إتمام الطلب.")).toBeInTheDocument();
+    expect(await screen.findByText("تواصل معنا مع رقم الطلب لمراجعة الحالة.")).toBeInTheDocument();
     const acknowledgement = screen.getByRole("checkbox", { name: /قرأت سياسة الإرجاع والاستبدال وأوافق عليها/ });
     const submit = screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ });
     expect(acknowledgement).not.toBeChecked();
@@ -195,6 +197,107 @@ describe("public storefront", () => {
 
     await userEvent.click(acknowledgement);
     expect(submit).toBeEnabled();
+  });
+
+  it("shows configured pickup guidance and area fees at checkout", async () => {
+    cartStorage.save([{ key: "1|", productId: 1, variantId: null, slug: "clear-resin", name: "ريزن شفاف", unit: 100, bg: "", variation: "", qty: 1 }]);
+    stubApi({
+      ...storefrontRoutes,
+      "/api/v1/pages/shipping-policy": { title: "سياسة التوصيل", content: "تختلف الرسوم حسب المنطقة.\n\nانتظر تأكيد جاهزية الطلب قبل الحضور." },
+      "POST /api/v1/cart/price": { lines: [], subtotal: 100, discount: 0, delivery_fee: 20, total: 120 },
+    });
+    renderApp("/checkout");
+    expect(await screen.findByRole("option", { name: /رام الله.*20/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("radio", { name: "استلام من المحل" }));
+    expect(await screen.findByText("انتظر تأكيد جاهزية الطلب قبل الحضور.")).toBeInTheDocument();
+  });
+
+  it("holds submission and hides totals until the current server quote resolves", async () => {
+    cartStorage.save([{ key: "1|", productId: 1, variantId: null, slug: "clear-resin", name: "ريزن شفاف", unit: 100, bg: "", variation: "", qty: 1 }]);
+    const calls = stubApi({ ...storefrontRoutes, "POST /api/v1/orders": respond(500, { error: { message: "unexpected order" } }) });
+    const originalFetch = globalThis.fetch;
+    let resolvePrice;
+    globalThis.fetch = vi.fn((url, init) => String(url).includes("/cart/price")
+      ? new Promise((resolve) => { resolvePrice = resolve; })
+      : originalFetch(url, init));
+    renderApp("/checkout");
+
+    await userEvent.click(await screen.findByRole("checkbox"));
+    const submit = screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ });
+    expect(submit).toBeDisabled();
+    expect(screen.getByText("جارٍ احتساب الإجمالي…")).toBeInTheDocument();
+    expect(within(screen.getByRole("complementary")).queryByText("0 ₪")).not.toBeInTheDocument();
+    expect(calls.some((call) => call.path === "/api/v1/orders")).toBe(false);
+
+    resolvePrice(new Response(JSON.stringify({ lines: [], subtotal: 100, discount: 0, delivery_fee: 20, total: 120, delivery_area_name: "رام الله" }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    await waitFor(() => expect(submit).toBeEnabled());
+    expect(within(screen.getByRole("complementary")).getByText("120 ₪")).toBeInTheDocument();
+  });
+
+  it("keeps failed pricing blocked and retries the quote", async () => {
+    cartStorage.save([{ key: "1|", productId: 1, variantId: null, slug: "clear-resin", name: "ريزن شفاف", unit: 100, bg: "", variation: "", qty: 1 }]);
+    let attempts = 0;
+    const calls = stubApi({
+      ...storefrontRoutes,
+      "POST /api/v1/cart/price": () => ++attempts === 1
+        ? respond(503, { error: { code: "unavailable", message: "تعذّر احتساب الإجمالي" } })
+        : { lines: [], subtotal: 100, discount: 0, delivery_fee: 20, total: 120, delivery_area_name: "رام الله" },
+      "POST /api/v1/orders": respond(500, { error: { message: "unexpected order" } }),
+    });
+    renderApp("/checkout");
+
+    await userEvent.click(await screen.findByRole("checkbox"));
+    expect(await screen.findByText("تعذّر احتساب الإجمالي")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ })).toBeDisabled();
+    expect(within(screen.getByRole("complementary")).queryByText("0 ₪")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "إعادة احتساب الإجمالي" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ })).toBeEnabled());
+    expect(attempts).toBe(2);
+    expect(calls.some((call) => call.path === "/api/v1/orders")).toBe(false);
+  });
+
+  it("invalidates an earlier quote immediately when the delivery method changes", async () => {
+    cartStorage.save([{ key: "1|", productId: 1, variantId: null, slug: "clear-resin", name: "ريزن شفاف", unit: 100, bg: "", variation: "", qty: 1 }]);
+    stubApi({
+      ...storefrontRoutes,
+      "POST /api/v1/cart/price": { lines: [], subtotal: 100, discount: 0, delivery_fee: 20, total: 120, delivery_area_name: "رام الله" },
+    });
+    const originalFetch = globalThis.fetch;
+    let resolvePickup;
+    globalThis.fetch = vi.fn((url, init) => {
+      if (String(url).includes("/cart/price") && JSON.parse(init.body).delivery_method === "pickup") {
+        return new Promise((resolve) => { resolvePickup = resolve; });
+      }
+      return originalFetch(url, init);
+    });
+    renderApp("/checkout");
+
+    await userEvent.click(await screen.findByRole("checkbox"));
+    const submit = screen.getByRole("button", { name: /تأكيد وإرسال الطلب/ });
+    await waitFor(() => expect(submit).toBeEnabled());
+    await userEvent.click(screen.getByRole("radio", { name: "استلام من المحل" }));
+    expect(submit).toBeDisabled();
+    expect(within(screen.getByRole("complementary")).queryByText("120 ₪")).not.toBeInTheDocument();
+
+    resolvePickup(new Response(JSON.stringify({ lines: [], subtotal: 100, discount: 0, delivery_fee: 0, total: 100, delivery_area_name: null }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    await waitFor(() => expect(submit).toBeEnabled());
+    expect(within(screen.getByRole("complementary")).getAllByText("100 ₪").length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ["delivery", "سنؤكد تفاصيل التوصيل", "التسليم من المتجر"],
+    ["pickup", "الاستلام من المتجر", "يُجهّز الطلب ثم يُسلّم لمندوب التوصيل"],
+  ])("shows %s instructions from the order delivery method", async (deliveryMethod, expected, excluded) => {
+    const number = `ORD-${deliveryMethod}`;
+    orderTokenStorage.save(number, "token-value-123456");
+    stubApi({ ...storefrontRoutes, [`/api/v1/orders/${number}`]: {
+      order_number: number, status: "pending", delivery_method: deliveryMethod,
+      items: [], subtotal: 100, discount: 0, delivery_fee: deliveryMethod === "pickup" ? 0 : 20, total: deliveryMethod === "pickup" ? 100 : 120,
+    } });
+    renderApp(`/order-success/${number}`);
+
+    expect((await screen.findAllByText(new RegExp(expected))).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(new RegExp(excluded))).toHaveLength(0);
   });
 
   it("submits a valid checkout and moves to the confirmation route", async () => {

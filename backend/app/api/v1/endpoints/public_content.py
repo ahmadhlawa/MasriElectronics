@@ -15,6 +15,7 @@ from app.schemas.content import (
 from app.schemas.marketing import DeliveryAreaOut
 from app.schemas.store import StoreSettingsPublic
 from app.services import store_settings as settings_service
+from app.instance.profile import masri_demo_content_enabled
 
 router = APIRouter(tags=["public-content"])
 
@@ -40,7 +41,10 @@ def _within_window(stmt: Select, model) -> Select:
 
 @identity_router.get("/store/settings", response_model=StoreSettingsPublic)
 def store_settings(db: DbSession):
-    return settings_service.public_settings(db)
+    row = settings_service.public_settings(db)
+    return StoreSettingsPublic.model_validate(row).model_copy(
+        update={"demo_business_content": masri_demo_content_enabled()}
+    )
 
 
 @router.get("/hero-slides", response_model=list[HeroSlideOut])

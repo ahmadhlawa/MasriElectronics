@@ -29,6 +29,13 @@ export function productAction(product) {
   return PRODUCT_ACTION.ADD;
 }
 
+export function attributeDisplayValue(attribute) {
+  if (attribute.value == null || (typeof attribute.value === "string" && !attribute.value.trim())) return null;
+  if (attribute.type === "boolean") return attribute.value ? "نعم" : "لا";
+  if (attribute.type === "enum") return attribute.option_label || String(attribute.value);
+  return `${attribute.value}${attribute.unit ? ` ${attribute.unit}` : ""}`;
+}
+
 export function productView(product, money) {
   if (!product) return null;
   const hasSale = product.sale != null;
@@ -41,6 +48,13 @@ export function productView(product, money) {
     id: product.id,
     slug: product.slug,
     name: product.name,
+    brandName: product.brandName,
+    sku: product.sku,
+    modelNumber: product.modelNumber,
+    cardAttributes: (product.cardAttributes || []).slice(0, 2)
+      .map((attribute) => [attribute.label, attributeDisplayValue(attribute)])
+      .filter(([label, value]) => label && value !== null),
+    specs: (product.specs || []).filter(([name, value]) => name && value).slice(0, 2),
     href: `/product/${product.slug}`,
     categoryName: product.categoryName,
     categoryHref: product.categorySlug ? `/category/${product.categorySlug}` : null,

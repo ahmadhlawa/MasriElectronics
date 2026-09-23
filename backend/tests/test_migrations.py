@@ -20,6 +20,7 @@ EXPECTED_TABLES = {
     "admin_users",
     "audit_logs",
     "brands",
+    "attribute_definitions",
     "categories",
     "coupons",
     "delivery_areas",
@@ -42,6 +43,7 @@ EXPECTED_TABLES = {
     "product_option_values",
     "product_options",
     "product_specifications",
+    "product_attribute_values",
     "product_variant_option_values",
     "product_variants",
     "products",
@@ -80,12 +82,14 @@ def test_alembic_upgrade_builds_the_whole_schema(tmp_path, monkeypatch) -> None:
         inspector = inspect(engine)
         tables = set(inspector.get_table_names())
         hero_columns = {column["name"] for column in inspector.get_columns("hero_slides")}
+        product_columns = {column["name"] for column in inspector.get_columns("products")}
     finally:
         engine.dispose()
 
     assert EXPECTED_TABLES.issubset(tables)
     assert "alembic_version" in tables
     assert {"target_type", "target_slug"}.issubset(hero_columns)
+    assert "model_number" in product_columns
 
 
 def test_models_and_expected_tables_agree() -> None:

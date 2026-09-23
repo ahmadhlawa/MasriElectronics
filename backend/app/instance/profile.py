@@ -189,6 +189,7 @@ class InstanceProfile(_Strict):
     profile_schema_version: int
     template_version: str
     client_slug: str
+    demo_business_content: bool = False
     store: StoreProfile
     domain: DomainProfile = Field(default_factory=DomainProfile)
     contact: ContactProfile = Field(default_factory=ContactProfile)
@@ -303,3 +304,11 @@ def load_profile(path: str | Path) -> InstanceProfile:
     if raw is None:
         raise ProfileError(f"{file_path}: profile is empty.")
     return parse_profile(raw, source=str(file_path))
+
+
+def masri_demo_content_enabled() -> bool:
+    """The committed instance profile is the single review-content switch."""
+    from app.core.config import BACKEND_ROOT
+
+    path = BACKEND_ROOT.parent / "instance" / "masri-electronics.yaml"
+    return path.is_file() and load_profile(path).demo_business_content

@@ -57,11 +57,11 @@ export const page = (items = [], extra = {}) => ({
 export const settingsFixture = {
   store_name: "Masri Electronics",
   store_name_ar: "المصري للأدوات الكهربائية",
-  store_tagline: "مستلزمات حرفية",
+  store_tagline: "أجهزة كهربائية منزلية",
   phone: "0590000000",
   whatsapp: "0590000000",
   working_hours: "٩:٠٠ – ١٩:٠٠",
-  announcement: "توصيل سريع",
+  announcement: "تختلف رسوم التوصيل حسب المنطقة",
   currency_code: "ILS",
   currency_symbol: "₪",
   seo_title: "متجر الاختبار",

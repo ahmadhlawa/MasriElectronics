@@ -115,6 +115,54 @@
   color: var(--vs-ink-4);
 }
 
+.vs-pdp__model {
+  font-size: var(--vs-fs-sm);
+  color: var(--vs-ink-2);
+  font-weight: 600;
+}
+
+.vs-pdp__key-specs {
+  border-block-start: 1px solid var(--vs-border);
+  padding-block-start: 12px;
+}
+
+.vs-pdp__key-specs h2,
+.vs-pdp__spec-heading {
+  margin: 0 0 9px;
+  font-size: var(--vs-fs-sm);
+  font-weight: 700;
+  color: var(--vs-ink);
+}
+
+.vs-pdp__key-specs dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  margin: 0;
+}
+
+.vs-pdp__key-specs dl > div {
+  min-width: 0;
+  font-size: var(--vs-fs-sm);
+}
+
+.vs-pdp__key-specs dt {
+  color: var(--vs-ink-3);
+}
+
+.vs-pdp__key-specs dd {
+  margin: 2px 0 0;
+  color: var(--vs-ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.vs-pdp__specsections {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
 .vs-pdp__brand {
   width: fit-content;
   color: var(--vs-primary);

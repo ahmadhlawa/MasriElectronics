@@ -47,17 +47,12 @@ describe("public shell", () => {
     expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
   });
 
-  it("sends the header icon beside the cart to the isolated admin login", async () => {
+  it("does not expose admin login in the customer header", async () => {
     stubApi(storefrontRoutes);
     renderApp("/");
 
-    const adminLogin = await screen.findByRole("link", { name: "تسجيل دخول الإدارة" });
-    expect(adminLogin).toHaveAttribute("href", "/admin/login");
-
-    await userEvent.click(adminLogin);
-    expect(await screen.findByRole("heading", { name: "تسجيل دخول الإدارة" })).toBeInTheDocument();
-    expect(screen.queryByRole("banner")).not.toBeInTheDocument();
-    expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
+    const header = await screen.findByRole("banner");
+    expect(header.querySelector('a[href="/admin/login"]')).toBeNull();
   });
 
   it("renders the real footer without an order-tracking entry", async () => {
@@ -67,6 +62,25 @@ describe("public shell", () => {
     const footer = await screen.findByRole("contentinfo");
     expect(within(footer).queryByText("تتبّع الطلب")).not.toBeInTheDocument();
     expect(footer.querySelectorAll('a[href="/track-order"]')).toHaveLength(0);
+  });
+
+  it("labels configured demo content and hides unsupported trust claims", async () => {
+    stubApi({
+      ...storefrontRoutes,
+      "/api/v1/store/settings": { ...settingsFixture, demo_business_content: true },
+      "/api/v1/delivery-areas": [],
+    });
+    renderApp("/");
+
+    expect(await screen.findByText(/معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق/)).toBeInTheDocument();
+    expect(screen.queryByText("التوصيل إلى المناطق المتاحة")).not.toBeInTheDocument();
+    expect(document.querySelector('.vs-trust a[href="/page/return-policy"]')).toBeNull();
+  });
+
+  it("does not expose the disabled molds page", async () => {
+    stubApi(storefrontRoutes);
+    renderApp("/molds");
+    expect(await screen.findByRole("heading", { name: "الصفحة غير موجودة" })).toBeInTheDocument();
   });
 
   it("keeps duplicate contact details out of the header and payment note out of the footer", async () => {
@@ -85,7 +99,7 @@ describe("public shell", () => {
 
     const header = await screen.findByRole("banner");
     expect(header.querySelectorAll('a[href="/track-order"]')).toHaveLength(0);
-    expect(screen.getByRole("link", { name: "تسجيل دخول الإدارة" })).toHaveAttribute("href", "/admin/login");
+    expect(header.querySelector('a[href="/admin/login"]')).toBeNull();
 
     await userEvent.click(screen.getByRole("button", { name: "فتح القائمة" }));
     const mobileNavigation = screen.getByRole("dialog", { name: "قائمة التنقّل" });
@@ -224,6 +238,22 @@ describe("drawers", () => {
 });
 
 describe("search", () => {
+  it("shows appliance search guidance and keeps result cards and the mobile search sheet working", async () => {
+    const appliance = { ...productFixture, id: 21, name: "ثلاجة عائلية", slug: "family-fridge",
+      model_number: "RF-420", brand_name: "سامسونج" };
+    const calls = stubApi({ ...storefrontRoutes, "/api/v1/products": page([appliance]) });
+    renderApp("/search?q=RF420");
+    expect(screen.getByPlaceholderText("ابحث عن منتج، ماركة أو رقم موديل...")).toBeInTheDocument();
+    const card = (await screen.findByText("ثلاجة عائلية")).closest("article");
+    expect(within(card).getByText(/RF-420/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "فتح البحث" }));
+    const drawer = await screen.findByRole("dialog", { name: "البحث" });
+    const field = within(drawer).getByPlaceholderText("ابحث عن منتج، ماركة أو رقم موديل...");
+    await userEvent.type(field, "RF420");
+    await waitFor(() => expect(calls.some((call) => new URL(`http://test${call.path}`).searchParams.get("q") === "RF420")).toBe(true));
+    expect(await within(drawer).findByRole("option", { name: /ثلاجة عائلية/ })).toBeInTheDocument();
+  });
+
   it("suggests products as the visitor types and routes to the results page", async () => {
     const calls = stubApi({
       ...storefrontRoutes,
@@ -256,6 +286,14 @@ describe("search", () => {
 });
 
 describe("catalogue states", () => {
+  it("names active category and price filters in the listing toolbar", async () => {
+    stubApi(storefrontRoutes);
+    renderApp("/shop?cat=resin&max=120");
+
+    expect(await screen.findByRole("button", { name: "ريزن ✕" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /حتى 120 ₪ ✕/ })).toBeInTheDocument();
+  });
+
   it("keeps an intentional empty state when a filter matches nothing", async () => {
     stubApi({ ...storefrontRoutes, "/api/v1/products": page([]) });
     renderApp("/shop?sale=1");

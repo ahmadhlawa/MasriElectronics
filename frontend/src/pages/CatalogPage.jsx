@@ -33,12 +33,6 @@ const MODES = {
     filterCategories: false,
     force: { product_type: "package" },
   },
-  molds: {
-    title: "قوالب سيليكون",
-    subtitle: "قوالب للريزن والشمع",
-    filterCategories: false,
-    force: { product_type: "silicone_mold" },
-  },
   search: { title: "نتائج البحث", filterCategories: true },
 };
 
@@ -49,7 +43,7 @@ const DENSITIES = [
 
 /**
  * One catalogue template behind /shop, /category/:slug, /offers, /packages,
- * /molds and /search. The mode fixes the parts of the query the visitor cannot
+ * and /search. The mode fixes the parts of the query the visitor cannot
  * change; everything else comes from the URL.
  */
 export default function CatalogPage({ mode = "shop" }) {
@@ -67,9 +61,53 @@ export default function CatalogPage({ mode = "shop" }) {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("loading");
   const [category, setCategory] = useState(null);
+  const [brands, setBrands] = useState([]);
+  const [attributeState, setAttributeState] = useState({ slug: null, rows: [], status: "ready" });
   const [ceiling, setCeiling] = useState(500);
   const [density, setDensity] = useState("standard");
   const firstLoad = useRef(true);
+  const previousCategory = useRef(null);
+  const categorySlug = mode === "category" ? params.slug : filters.category;
+  const definitions = attributeState.slug === categorySlug ? attributeState.rows : [];
+  const validAttributes = filters.attributes.filter((raw) => {
+    const [key, operator, value] = raw.split(":", 3);
+    const definition = definitions.find((row) => row.key === key && row.filterable);
+    if (!definition || !value || !categorySlug) return false;
+    if (definition.type === "number") return ["eq", "gte", "lte"].includes(operator)
+      && /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?$/i.test(value) && Number.isFinite(Number(value));
+    if (operator !== "eq") return false;
+    if (definition.type === "boolean") return value === "true" || value === "false";
+    if (definition.type === "enum") return definition.enum_choices.some((choice) => choice.code === value);
+    return false;
+  }).slice(0, 12);
+
+  useEffect(() => {
+    catalogService.brands().then(setBrands).catch(() => setBrands([]));
+  }, []);
+
+  useEffect(() => {
+    if (previousCategory.current && previousCategory.current !== categorySlug && filters.attributes.length) patch({ attributes: [] });
+    previousCategory.current = categorySlug;
+    if (!categorySlug) {
+      if (filters.attributes.length) patch({ attributes: [] });
+      setAttributeState({ slug: null, rows: [], status: "ready" });
+      return undefined;
+    }
+    let cancelled = false;
+    setAttributeState({ slug: null, rows: [], status: "loading" });
+    catalogService.categoryAttributes(categorySlug)
+      .then((rows) => { if (!cancelled) setAttributeState({ slug: categorySlug, rows, status: "ready" }); })
+      .catch(() => { if (!cancelled) setAttributeState({ slug: categorySlug, rows: [], status: "error" }); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categorySlug]);
+
+  useEffect(() => {
+    if (attributeState.slug === categorySlug && attributeState.status === "ready" && filters.attributes.length !== validAttributes.length) {
+      patch({ attributes: validAttributes });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attributeState, categorySlug, filters.attributes.join("|")]);
 
   const baseQuery = useMemo(() => {
     const query = { ...(spec.force || {}) };
@@ -80,11 +118,14 @@ export default function CatalogPage({ mode = "shop" }) {
     if (filters.inStock) query.in_stock = true;
     if (filters.minPrice != null) query.min_price = filters.minPrice;
     if (filters.maxPrice != null) query.max_price = filters.maxPrice;
+    if (filters.brandId != null) query.brand_id = filters.brandId;
+    if (attributeState.slug === categorySlug && validAttributes.length) query.attribute = validAttributes;
     query.sort = filters.sort;
     return query;
-  }, [spec.force, mode, params.slug, filters, term]);
+  }, [spec.force, mode, params.slug, filters, term, attributeState, categorySlug]);
 
   const queryKey = JSON.stringify(baseQuery);
+  const queryReady = !filters.attributes.length || (attributeState.slug === categorySlug && attributeState.status === "ready");
 
   useEffect(() => {
     setPage(1);
@@ -93,6 +134,10 @@ export default function CatalogPage({ mode = "shop" }) {
 
   useEffect(() => {
     let cancelled = false;
+    if (!queryReady) {
+      setStatus(attributeState.status === "error" ? "error" : "loading");
+      return undefined;
+    }
     // Nothing to ask the API for until the visitor has typed something.
     if (mode === "search" && !term) {
       setItems([]);
@@ -120,7 +165,7 @@ export default function CatalogPage({ mode = "shop" }) {
     };
     // `queryKey` stands in for the whole query object.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryKey, page]);
+  }, [queryKey, page, queryReady, attributeState.status]);
 
   // The price slider needs a real upper bound, so it comes from the catalogue
   // itself rather than from a number invented in the UI.
@@ -158,6 +203,28 @@ export default function CatalogPage({ mode = "shop" }) {
   }, [mode, params.slug]);
 
   const views = items.map((product) => productView(product, money));
+  const selectedCategory = categories.flatMap((item) => [item, ...item.children]).find((item) => item.slug === filters.category);
+  const activeChips = active.map((chip) => {
+    if (chip.key === "cat") return { ...chip, label: selectedCategory?.name || chip.label };
+    if (chip.key === "price") {
+      const lower = filters.minPrice == null ? null : money(filters.minPrice);
+      const upper = filters.maxPrice == null ? null : money(filters.maxPrice);
+      return { ...chip, label: lower && upper ? `${lower} – ${upper}` : lower ? `من ${lower}` : `حتى ${upper}` };
+    }
+    if (chip.key === "brand") return { ...chip, label: brands.find((brand) => brand.id === filters.brandId)?.name || chip.label };
+    return chip;
+  }).concat(validAttributes.map((raw) => {
+    const [key, operator, value] = raw.split(":", 3);
+    const definition = definitions.find((row) => row.key === key);
+    const display = definition.type === "boolean" ? (value === "true" ? "نعم" : "لا")
+      : definition.type === "enum" ? definition.enum_choices.find((choice) => choice.code === value)?.label || value
+        : `${value}${definition.unit ? ` ${definition.unit}` : ""}`;
+    return {
+      key: raw,
+      label: `${definition.label} ${operator === "gte" ? "من " : operator === "lte" ? "إلى " : ""}${display}`,
+      clear: { attributes: filters.attributes.filter((item) => item !== raw) },
+    };
+  }));
   const title = mode === "category" ? category?.name || "القسم" : spec.title;
   const subtitle =
     mode === "category"
@@ -182,6 +249,8 @@ export default function CatalogPage({ mode = "shop" }) {
       reset={reset}
       showCategories={spec.filterCategories}
       ceiling={ceiling}
+      brands={brands}
+      definitions={definitions}
     />
   );
 
@@ -287,9 +356,9 @@ export default function CatalogPage({ mode = "shop" }) {
               </label>
             </div>
 
-            {active.length > 0 && (
+            {activeChips.length > 0 && (
               <div className="vs-activefilters">
-                {active.map((chip) => (
+                {activeChips.map((chip) => (
                   <button
                     key={chip.key}
                     type="button"
@@ -309,7 +378,7 @@ export default function CatalogPage({ mode = "shop" }) {
 
             {status === "error" && (
               <div className="vs-state vs-state--error" role="alert">
-                <p className="vs-state__body">تعذّر تحميل المنتجات. حاول مرة أخرى بعد قليل.</p>
+                <p className="vs-state__body">{attributeState.status === "error" ? "تعذّر تحميل خصائص القسم. حاول مرة أخرى بعد قليل." : "تعذّر تحميل المنتجات. حاول مرة أخرى بعد قليل."}</p>
               </div>
             )}
 
@@ -322,7 +391,7 @@ export default function CatalogPage({ mode = "shop" }) {
                 <p className="vs-state__body">
                   جرّب توسيع نطاق السعر أو إلغاء بعض عوامل التصفية.
                 </p>
-                {active.length > 0 && (
+                {activeChips.length > 0 && (
                   <button type="button" className="vs-btn vs-btn--primary" onClick={reset}>
                     إعادة تعيين التصفية
                   </button>
@@ -330,7 +399,7 @@ export default function CatalogPage({ mode = "shop" }) {
               </div>
             )}
 
-            {views.length > 0 && <ProductGrid views={views} />}
+            {views.length > 0 && <ProductGrid views={views} listing />}
 
             {page < meta.pages && (
               <button

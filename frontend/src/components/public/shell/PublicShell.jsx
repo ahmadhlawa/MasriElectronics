@@ -41,7 +41,7 @@ export default function PublicShell() {
         <a className="vs-skip" href="#vs-content">
           تخطَّ إلى المحتوى
         </a>
-        <PreviewNotice />
+        <PreviewNotice text={store.settings.demoBusinessContent ? "نسخة تجريبية للمراجعة — معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق" : undefined} />
         <Header />
         <CategoryRail />
 

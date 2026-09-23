@@ -200,6 +200,7 @@ describe("product images", () => {
     const calls = stubApi({
       "/api/v1/admin/products/7/images": asset(3, "shot.png"),
       "/api/v1/admin/products/7": product,
+      "/api/v1/admin/products/7/attributes": [],
       "/api/v1/admin/products": page([]),
       "/api/v1/admin/categories": page([]),
       "/api/v1/admin/media": LIBRARY,

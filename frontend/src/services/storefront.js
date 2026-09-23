@@ -58,6 +58,7 @@ export function normalizeSettings(raw) {
     seoTitle: settings.seo_title || settings.store_name || STORE_NAME_LATIN,
     seoDescription: settings.seo_description || "",
     maintenanceMode: !!settings.maintenance_mode,
+    demoBusinessContent: !!settings.demo_business_content,
     // Blank until the owner supplies real account details. The checkout shows nothing
     // rather than inventing transfer instructions.
     manualPaymentInstructions: settings.manual_payment_instructions || "",

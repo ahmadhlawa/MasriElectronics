@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
 import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
@@ -17,6 +18,41 @@ from scripts import instance_cli, mysql_compat
 REPO_ROOT = Path(__file__).resolve().parents[2]
 # The fork ships Masri Electronics's profile where the template shipped a demo one.
 MASRI_PROFILE = REPO_ROOT / "instance" / "masri-electronics.yaml"
+
+
+def test_masri_review_profile_has_demo_business_content() -> None:
+    from app.instance.profile import load_profile
+
+    profile = load_profile(MASRI_PROFILE)
+    assert profile.demo_business_content is True
+    assert [(area.name, area.delivery_fee) for area in profile.delivery_areas] == [
+        ("نابلس", 15), ("رام الله والبيرة", 25), ("طولكرم", 20),
+    ]
+    assert all(page.content for page in profile.static_pages)
+
+
+def test_production_rejects_demo_business_content(monkeypatch) -> None:
+    from app.core.config import settings
+    from app.main import create_app
+
+    monkeypatch.setattr(settings, "APP_ENV", "production")
+    monkeypatch.setattr(settings, "STORAGE_PROVIDER", "r2")
+    with pytest.raises(RuntimeError, match="demo business content"):
+        create_app()
+
+
+def test_public_api_marks_demo_content_and_hides_molds(client: TestClient, db: Session) -> None:
+    from app.instance.bootstrap import apply_profile
+    from app.instance.profile import load_profile
+
+    apply_profile(db, load_profile(MASRI_PROFILE))
+    settings_response = client.get("/api/v1/store/settings")
+    assert settings_response.status_code == 200
+    assert settings_response.json()["demo_business_content"] is True
+    assert client.get("/api/v1/products/molds").status_code == 404
+    assert [(area["name"], area["delivery_fee"]) for area in client.get("/api/v1/delivery-areas").json()] == [
+        ("نابلس", 15), ("رام الله والبيرة", 25), ("طولكرم", 20),
+    ]
 
 
 @pytest.fixture()

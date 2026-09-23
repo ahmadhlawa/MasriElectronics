@@ -33,10 +33,10 @@ describe("storefront UX polish", () => {
     expect(within(menu).getByRole("link", { name: "كل الأقسام" })).toHaveAttribute("href", "/categories");
   });
 
-  it("shows the exact delivery trust promise", async () => {
+  it("limits the delivery trust claim to configured areas", async () => {
     stubApi(storefrontRoutes);
     renderApp("/");
-    expect(await screen.findByText("التوصيل إلى جميع المناطق")).toBeInTheDocument();
-    expect(screen.getByText("تُحتسب رسوم التوصيل عند إتمام الطلب")).toBeInTheDocument();
+    expect(await screen.findByText("التوصيل إلى المناطق المتاحة")).toBeInTheDocument();
+    expect(screen.getByText("تختلف الرسوم حسب المنطقة وتظهر عند إتمام الطلب")).toBeInTheDocument();
   });
 });

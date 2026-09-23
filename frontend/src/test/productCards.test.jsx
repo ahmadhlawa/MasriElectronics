@@ -56,6 +56,30 @@ const packageProduct = {
 const cardOf = async (name) => (await screen.findByText(name)).closest("article");
 
 describe("product card behaviour", () => {
+  it("shows appliance identity and buying details on homepage cards at rest", async () => {
+    const appliance = {
+      ...productFixture,
+      id: 41,
+      slug: "washer-8kg",
+      name: "غسالة 8 كغم",
+      brand_name: "سامسونج",
+      model_number: "WW80T",
+      card_attributes: [{ key: "capacity_kg", label: "السعة", type: "number", value: 8, unit: "كغم" }],
+    };
+    stubApi({ ...storefrontRoutes, "/api/v1/products/featured": page([appliance, { ...productFixture, id: 42, slug: "second-product" }]) });
+    renderApp("/");
+
+    const cardElement = await cardOf(appliance.name);
+    const card = within(cardElement);
+    expect(cardElement).toHaveClass("vs-card--listing");
+    expect(card.getByText("سامسونج")).toBeInTheDocument();
+    expect(card.getByText(/WW80T/)).toBeInTheDocument();
+    expect(card.getByText(/السعة.*8 كغم/)).toBeInTheDocument();
+    expect(card.getByText("100 ₪")).toBeInTheDocument();
+    expect(card.getByText("متوفر")).toBeInTheDocument();
+    expect(card.getByRole("button", { name: /أضف إلى العربة/ })).toBeEnabled();
+  });
+
   it("adds a simple product straight to the cart and reveals the drawer", async () => {
     stubApi(storefrontRoutes);
     renderApp("/shop");
@@ -180,6 +204,33 @@ describe("product card behaviour", () => {
     expect(card.getByText("130 ₪")).toBeInTheDocument();
   });
 
+  it("shows available appliance details in listing cards without changing cart actions", async () => {
+    const appliance = {
+      ...productFixture,
+      name: "غسالة أوتوماتيكية",
+      brand_name: "سامسونج",
+      sku: "WW80T",
+      specifications: [
+        { name: "السعة", value: "8 كغم" },
+        { name: "سرعة العصر", value: "1400 دورة" },
+        { name: "اللون", value: "أبيض" },
+      ],
+    };
+    stubApi({ ...storefrontRoutes, "/api/v1/products": page([appliance]) });
+    renderApp("/shop");
+
+    const cardElement = await cardOf(appliance.name);
+    const card = within(cardElement);
+    expect(cardElement).toHaveClass("vs-card--listing");
+    expect(card.getByText("سامسونج")).toBeInTheDocument();
+    expect(card.getByText(/WW80T/)).toBeInTheDocument();
+    expect(card.getByText(/السعة.*8 كغم/)).toBeInTheDocument();
+    expect(card.getByText(/سرعة العصر.*1400 دورة/)).toBeInTheDocument();
+    expect(card.queryByText(/اللون.*أبيض/)).not.toBeInTheDocument();
+    expect(card.getByText("متوفر")).toBeInTheDocument();
+    expect(card.getByRole("button", { name: /أضف إلى العربة/ })).toBeEnabled();
+  });
+
   it("opens the quick view from the card and links on to the full product page", async () => {
     stubApi({
       ...storefrontRoutes,
@@ -269,23 +320,20 @@ describe("product card behaviour", () => {
     expect(cartStorage.load()[0].qty).toBe(1);
   });
 
-  it("reveals the panel on a touch tap instead of navigating away", async () => {
-    stubApi(storefrontRoutes);
+  it("opens a listing product on the first touch because its details are already visible", async () => {
+    stubApi({ ...storefrontRoutes, "/api/v1/products/clear-resin": productFixture });
     renderApp("/shop");
 
     const card = await cardOf(productFixture.name);
-    expect(card).toHaveAttribute("data-revealed", "false");
+    expect(card).toHaveClass("vs-card--listing");
 
-    // A finger, not a mouse: the first tap on the artwork reveals rather than
-    // following the card's link.
     const media = card.querySelector(".vs-card__link");
     await userEvent.pointer([
       { target: media, keys: "[TouchA>]" },
       { target: media, keys: "[/TouchA]" },
     ]);
 
-    await waitFor(() => expect(card).toHaveAttribute("data-revealed", "true"));
-    expect(window.location.pathname).not.toContain("/product/");
+    expect(await screen.findByRole("heading", { name: productFixture.name, level: 1 })).toBeInTheDocument();
   });
 
   it("keeps the add-to-cart acknowledgement when motion is reduced", async () => {

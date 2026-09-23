@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../../api/adminApi.js";
 import ResourceScreen from "../ResourceScreen.jsx";
-import { Badge } from "../ui.jsx";
+import CategoryAttributesEditor from "../CategoryAttributesEditor.jsx";
+import { Badge, Button } from "../ui.jsx";
 
 
 export function categoryParentOptions(rows, category) {
@@ -36,6 +37,7 @@ export function categoryParentOptions(rows, category) {
 
 export function CategoriesPage() {
   const [parents, setParents] = useState([]);
+  const [attributesCategory, setAttributesCategory] = useState(null);
 
   useEffect(() => {
     adminApi
@@ -47,6 +49,7 @@ export function CategoriesPage() {
   const fetchList = useCallback((params) => adminApi.listCategories(params), []);
 
   return (
+    <>
     <ResourceScreen
       title="الأقسام"
       description="أقسام المتجر وترتيب ظهورها في الواجهة."
@@ -56,6 +59,7 @@ export function CategoriesPage() {
       createItem={adminApi.createCategory}
       updateItem={adminApi.updateCategory}
       deleteItem={adminApi.deleteCategory}
+      extraActions={(row) => <Button variant="ghost" onClick={() => setAttributesCategory(row)}>الخصائص</Button>}
       columns={[
         { key: "name", title: "الاسم" },
         { key: "slug", title: "الرابط" },
@@ -86,6 +90,8 @@ export function CategoriesPage() {
         { name: "is_active", title: "فعّال", type: "checkbox", defaultValue: true },
       ]}
     />
+    {attributesCategory && <CategoryAttributesEditor category={attributesCategory} onClose={() => setAttributesCategory(null)} />}
+    </>
   );
 }
 

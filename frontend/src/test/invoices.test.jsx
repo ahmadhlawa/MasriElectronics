@@ -466,7 +466,7 @@ describe("storefront payment surface", () => {
     renderApp("/checkout");
 
     expect(
-      await screen.findByText(/لا يتم تحصيل أي مبلغ الآن؛ يُدفع نقداً للمندوب عند التسليم/),
+      await screen.findByText(/لا يتم تحصيل أي مبلغ الآن؛ يُدفع نقداً عند الاستلام/),
     ).toBeInTheDocument();
   });
 

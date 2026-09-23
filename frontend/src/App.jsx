@@ -35,7 +35,6 @@ export default function App() {
         <Route path="category/:slug" element={<CatalogPage mode="category" />} />
         <Route path="offers" element={<CatalogPage mode="offers" />} />
         <Route path="packages" element={<CatalogPage mode="packages" />} />
-        <Route path="molds" element={<CatalogPage mode="molds" />} />
         <Route path="search" element={<CatalogPage mode="search" />} />
         <Route path="product/:slug" element={<ProductDetailPage />} />
         <Route path="cart" element={<CartRoutePage />} />

@@ -23,6 +23,7 @@ import {
 
 const EMPTY = {
   name: "",
+  model_number: "",
   category_id: "",
   brand_id: "",
   product_type: "standard",
@@ -101,6 +102,12 @@ export default function ProductEditorPage() {
   const [saving, setSaving] = useState(false);
   const [confirming, setConfirming] = useState(null);
   const [optionsConfirm, setOptionsConfirm] = useState(null);
+  const [categoryConfirm, setCategoryConfirm] = useState(null);
+  const [definitions, setDefinitions] = useState([]);
+  const [attributeValues, setAttributeValues] = useState({});
+  const [savedAttributeValues, setSavedAttributeValues] = useState([]);
+  const [attributesReady, setAttributesReady] = useState(false);
+  const [valuesReady, setValuesReady] = useState(isNew);
 
   const [queuedMain, setQueuedMain] = useState(null);
   const [queuedAdditional, setQueuedAdditional] = useState([]);
@@ -113,6 +120,7 @@ export default function ProductEditorPage() {
   const loadProduct = useCallback(async () => {
     if (isNew) return;
     setLoading(true);
+    setValuesReady(false);
     try {
       const row = await adminApi.getProduct(productId);
       setProduct(row);
@@ -137,6 +145,12 @@ export default function ProductEditorPage() {
           })),
         })),
       );
+      const values = await adminApi.listProductAttributes(productId);
+      setSavedAttributeValues(values);
+      setAttributeValues(Object.fromEntries(values.map((value) => [value.attribute_definition_id,
+        value[`${value.type}_value`] === null ? "" : String(value[`${value.type}_value`])
+      ])));
+      setValuesReady(true);
     } catch (error) {
       feedback.error(error.message || "تعذّر تحميل المنتج.");
     } finally {
@@ -148,6 +162,21 @@ export default function ProductEditorPage() {
   useEffect(() => {
     loadProduct();
   }, [loadProduct]);
+
+  useEffect(() => {
+    if (!form.category_id) {
+      setDefinitions([]);
+      setAttributesReady(true);
+      return;
+    }
+    let active = true;
+    setAttributesReady(false);
+    adminApi.listCategoryAttributes(form.category_id)
+      .then((rows) => { if (active) { setDefinitions(rows); setAttributesReady(true); } })
+      .catch((error) => { if (active) { setDefinitions([]); feedback.error(error.message || "تعذّر تحميل خصائص القسم."); } });
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.category_id]);
 
   useEffect(() => {
     adminApi.listCategories({ page_size: 100 }).then((r) => setCategories(r.items || [])).catch(() => {});
@@ -195,11 +224,26 @@ export default function ProductEditorPage() {
     }
   };
 
-  const save = async () => {
+  const attributePayload = () => definitions.flatMap((definition) => {
+    const raw = attributeValues[definition.id];
+    if (raw === undefined || raw === "") return [];
+    const value = definition.type === "number" ? Number(raw)
+      : definition.type === "boolean" ? raw === "true" : String(raw).trim();
+    if (value === "") return [];
+    return [{ attribute_definition_id: definition.id, [`${definition.type}_value`]: value }];
+  });
+
+  const save = async (approvedCategoryChange = false) => {
+    if (!attributesReady || !valuesReady) return;
+    if (!isNew && String(form.category_id) !== String(product?.category_id ?? "") && savedAttributeValues.length && !approvedCategoryChange) {
+      setCategoryConfirm({ categoryId: form.category_id });
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
         name: form.name.trim(),
+        model_number: form.model_number.trim() || null,
         category_id: form.category_id === "" ? null : Number(form.category_id),
         brand_id: form.brand_id === "" ? null : Number(form.brand_id),
         product_type: form.product_type,
@@ -229,6 +273,7 @@ export default function ProductEditorPage() {
         try {
           const optionRows = optionPayload(options);
           if (optionRows.length) await adminApi.replaceOptions(created.id, optionRows);
+          if (attributePayload().length) await adminApi.replaceProductAttributes(created.id, attributePayload());
           await attachQueuedImages(created.id);
         } catch (error) {
           await Promise.allSettled([adminApi.deleteProduct(created.id)]);
@@ -238,7 +283,18 @@ export default function ProductEditorPage() {
         feedback.success("تم إنشاء المنتج.");
         navigate(`/admin/products/${created.id}`, { replace: true });
       } else {
-        await adminApi.updateProduct(productId, payload);
+        const changingCategory = String(form.category_id) !== String(product?.category_id ?? "");
+        if (changingCategory && savedAttributeValues.length) await adminApi.replaceProductAttributes(productId, []);
+        try {
+          await adminApi.updateProduct(productId, payload);
+        } catch (error) {
+          if (changingCategory && savedAttributeValues.length) {
+            try { await adminApi.replaceProductAttributes(productId, savedAttributeValues.map(({ attribute_definition_id, number_value, enum_value, boolean_value, text_value }) => ({ attribute_definition_id, number_value, enum_value, boolean_value, text_value }))); }
+            catch { feedback.error("تعذّر استعادة قيم الخصائص السابقة. راجع المنتج قبل المحاولة مجدداً."); }
+          }
+          throw error;
+        }
+        if (definitions.length || savedAttributeValues.length) await adminApi.replaceProductAttributes(productId, attributePayload());
         const { added } = await attachQueuedImages(productId);
         if (added.length) {
           if (queuedMain) {
@@ -250,6 +306,7 @@ export default function ProductEditorPage() {
         clearQueuedImages();
         feedback.success("تم حفظ المنتج.");
         await loadProduct();
+        setCategoryConfirm(null);
       }
     } catch (error) {
       feedback.error(error.message || "تعذّر الحفظ.");
@@ -297,7 +354,7 @@ export default function ProductEditorPage() {
         actions={
           <>
             <Button variant="ghost" onClick={() => navigate("/admin/products")}>رجوع</Button>
-            <Button onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ…" : "حفظ"}</Button>
+            <Button onClick={() => save()} disabled={saving || !attributesReady || !valuesReady}>{saving ? "جارٍ الحفظ…" : "حفظ"}</Button>
           </>
         }
       />
@@ -306,8 +363,16 @@ export default function ProductEditorPage() {
       <Section title="البيانات الأساسية">
         <div style={sx`display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px`}>
           <Field title="اسم المنتج"><input value={form.name} onChange={(e) => update({ name: e.target.value })} style={input} /></Field>
+          <Field title="رقم الموديل"><input value={form.model_number} onChange={(e) => update({ model_number: e.target.value })} style={input} maxLength={100} /></Field>
           <Field title="القسم">
-            <select value={form.category_id} onChange={(e) => update({ category_id: e.target.value })} style={input}>
+            <select value={form.category_id} onChange={(e) => {
+              const categoryId = e.target.value;
+              update({ category_id: categoryId });
+              setAttributeValues(String(categoryId) === String(product?.category_id ?? "")
+                ? Object.fromEntries(savedAttributeValues.map((value) => [value.attribute_definition_id, value[`${value.type}_value`] === null ? "" : String(value[`${value.type}_value`])]))
+                : {});
+              setCategoryConfirm(null);
+            }} style={input}>
               <option value="">بدون قسم</option>
               {categories.map((category) => <option key={category.id} value={category.id}>{categoryPath(category, categories)}</option>)}
             </select>
@@ -329,6 +394,25 @@ export default function ProductEditorPage() {
         <Field title="وصف مختصر"><textarea rows="2" value={form.short_description} onChange={(e) => update({ short_description: e.target.value })} style={textarea} /></Field>
         <Field title="الوصف الكامل" hint="افصل الفقرات بسطر فارغ."><textarea rows="6" value={form.description} onChange={(e) => update({ description: e.target.value })} style={textarea} /></Field>
       </Section>
+
+      {!!form.category_id && definitions.length > 0 && (
+        <Section title="خصائص القسم">
+          <div style={sx`display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px`}>
+            {definitions.map((definition) => (
+              <Field key={definition.id} title={definition.label} hint={definition.type === "number" ? definition.unit : undefined}>
+                {definition.type === "enum" || definition.type === "boolean" ? (
+                  <select aria-label={definition.label} value={attributeValues[definition.id] ?? ""} onChange={(event) => setAttributeValues((current) => ({ ...current, [definition.id]: event.target.value }))} style={input}>
+                    <option value="">—</option>
+                    {(definition.type === "boolean" ? [{ code: "true", label: "نعم" }, { code: "false", label: "لا" }] : definition.enum_choices).map((choice) => <option key={choice.code} value={choice.code}>{choice.label}</option>)}
+                  </select>
+                ) : (
+                  <input aria-label={definition.label} type={definition.type === "number" ? "number" : "text"} step={definition.type === "number" ? "0.001" : undefined} value={attributeValues[definition.id] ?? ""} onChange={(event) => setAttributeValues((current) => ({ ...current, [definition.id]: event.target.value }))} style={input} />
+                )}
+              </Field>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section title="الأسعار والمخزون">
         <div style={sx`display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px`}>
@@ -508,7 +592,7 @@ export default function ProductEditorPage() {
           )}
 
           <div style={sx`display:flex;gap:10px;margin-bottom:30px`}>
-            <Button onClick={save} disabled={saving}>{saving ? "جارٍ الحفظ…" : "حفظ المنتج"}</Button>
+            <Button onClick={() => save()} disabled={saving || !attributesReady || !valuesReady}>{saving ? "جارٍ الحفظ…" : "حفظ المنتج"}</Button>
             <Button variant="danger" onClick={() => setConfirming(true)}>حذف المنتج</Button>
           </div>
         </>
@@ -525,6 +609,16 @@ export default function ProductEditorPage() {
             commitOptions(payload);
           }}
           onCancel={() => setOptionsConfirm(null)}
+        />
+      )}
+
+      {categoryConfirm && !categoryConfirm.approved && (
+        <ConfirmDialog
+          title="تأكيد تغيير القسم"
+          message="سيؤدي حفظ القسم الجديد إلى حذف قيم خصائص القسم السابق لهذا المنتج. هل تريد المتابعة؟"
+          confirmLabel="تغيير القسم وحذف القيم"
+          onConfirm={() => { setCategoryConfirm(null); save(true); }}
+          onCancel={() => setCategoryConfirm(null)}
         />
       )}
 

@@ -9,11 +9,12 @@ from sqlalchemy import select
 
 from app.api.deps import DbSession, PageParams
 from app.core.enums import ProductType
-from app.models import Brand, Category, Product
+from app.models import AttributeDefinition, Brand, Category, Product
 from app.schemas.catalog import (
     CategoryOut,
     CategoryTreeOut,
     BrandOut,
+    AttributeDefinitionOut,
     ProductPublicDetail,
     ProductPublicOut,
 )
@@ -69,6 +70,17 @@ def get_category(slug: str, db: DbSession) -> dict:
     return catalog_service.category_payload(category, counts.get(category.id, 0))
 
 
+@router.get("/categories/{slug}/attributes", response_model=list[AttributeDefinitionOut])
+def category_attributes(slug: str, db: DbSession) -> list[AttributeDefinition]:
+    category = db.scalar(select(Category).where(Category.slug == slug, Category.is_active.is_(True)))
+    if category is None:
+        raise _NOT_FOUND
+    return list(db.scalars(select(AttributeDefinition).where(
+        AttributeDefinition.category_id == category.id,
+        AttributeDefinition.filterable.is_(True),
+    ).order_by(AttributeDefinition.sort_order, AttributeDefinition.id)))
+
+
 def _product_page(
     db: DbSession,
     pagination,
@@ -76,6 +88,8 @@ def _product_page(
     sort: str = "featured",
     **filters,
 ) -> Page[ProductPublicOut]:
+    if filters.get("q"):
+        filters["search_brand_ids"] = catalog_service.matching_brand_ids(db, filters["q"])
     stmt = catalog_service.apply_product_filters(
         catalog_service.base_product_query(active_only=True), **filters
     )
@@ -114,6 +128,11 @@ def package_products(db: DbSession, pagination: PageParams) -> Page[ProductPubli
 
 @router.get("/products/molds", response_model=Page[ProductPublicOut])
 def silicone_mold_products(db: DbSession, pagination: PageParams) -> Page[ProductPublicOut]:
+    from app.models import InstanceMetadata
+
+    instance = db.execute(select(InstanceMetadata).limit(1)).scalar_one_or_none()
+    if instance is not None and "silicone_molds" not in (instance.enabled_features or []):
+        raise HTTPException(status_code=404, detail="Not found")
     return _product_page(db, pagination, product_type=ProductType.SILICONE_MOLD.value)
 
 
@@ -123,6 +142,10 @@ def list_products(
     pagination: PageParams,
     q: Annotated[str | None, Query(max_length=120)] = None,
     category: Annotated[str | None, Query(max_length=160)] = None,
+    brand_id: Annotated[int | None, Query(gt=0)] = None,
+    attribute: Annotated[list[str] | None, Query(
+        description="Repeat attribute=key:operator:value; number supports eq/gte/lte, other types eq. Requires category."
+    )] = None,
     product_type: ProductType | None = None,
     is_featured: bool | None = None,
     is_new: bool | None = None,
@@ -139,6 +162,8 @@ def list_products(
         sort=sort,
         q=q,
         category_slug=category,
+        brand_id=brand_id,
+        attribute_filters=catalog_service.parse_attribute_filters(db, category, attribute or []),
         product_type=product_type.value if product_type else None,
         is_featured=is_featured,
         is_new=is_new,

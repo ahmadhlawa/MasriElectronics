@@ -15,10 +15,15 @@ function safeMapUrl(value) {
 export default function ContactRoutePage() {
   const { settings } = useStore();
   const [lead, setLead] = useState("");
+  const [help, setHelp] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
-    storefrontService.page("contact").then((page) => !cancelled && setLead(page.lead || page.body[0] || "")).catch(() => !cancelled && setLead(""));
+    storefrontService.page("contact").then((page) => {
+      if (cancelled) return;
+      setLead(page.lead || "");
+      setHelp(page.body);
+    }).catch(() => { if (!cancelled) { setLead(""); setHelp([]); } });
     return () => { cancelled = true; };
   }, []);
 
@@ -38,6 +43,7 @@ export default function ContactRoutePage() {
     <section className="vs-container vs-container--narrow vs-section">
       <h1 className="vs-page__title">تواصل معنا</h1>
       <p className="vs-page__lead">{lead || `يسعدنا استقبال استفساراتك حول منتجات ${settings.storeName}.`}</p>
+      {help.map((paragraph) => <p className="vs-prose" key={paragraph}>{paragraph}</p>)}
       <div className="vs-contact">
         <aside className="vs-contact__side">
           <h2 className="vs-contact__title">معلومات التواصل</h2>

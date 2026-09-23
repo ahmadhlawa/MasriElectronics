@@ -20,7 +20,7 @@ import { ArrowForward, BoxIcon } from "../shell/icons.jsx";
  * The panel is absolutely positioned: revealing it cannot change the card's
  * height or move the row. Below 900px it is static and always visible.
  */
-export default function PackageCard({ view, eager = false, revealDelay = 0 }) {
+export default function PackageCard({ view, listing = false, eager = false, revealDelay = 0 }) {
   const { primaryAction } = useProductActions();
   const { cardProps } = useCardReveal();
   const revealProps = useViewportReveal(revealDelay);
@@ -42,7 +42,7 @@ export default function PackageCard({ view, eager = false, revealDelay = 0 }) {
       : view.short || "";
 
   return (
-    <article className="vs-pkg" {...revealProps} {...cardProps}>
+    <article className="vs-pkg" {...revealProps} {...(listing ? {} : cardProps)}>
       <div className="vs-pkg__media">
         <Link to={view.href} className="vs-pkg__link" aria-label={view.name}>
           <Media
@@ -69,7 +69,7 @@ export default function PackageCard({ view, eager = false, revealDelay = 0 }) {
           {view.hasSale && <span className="vs-badge vs-badge--sale">{view.discountText}</span>}
         </div>
 
-        {view.soldOut && (
+        {view.soldOut && !listing && (
           <div className="vs-card__veil">
             <span>غير متوفر حالياً</span>
           </div>
@@ -92,6 +92,7 @@ export default function PackageCard({ view, eager = false, revealDelay = 0 }) {
           <span className="vs-price__now">{view.priceText}</span>
           {view.hasSale && <span className="vs-price__was">{view.oldText}</span>}
         </div>
+        {listing && <span className="vs-card__stock">{view.soldOut ? "غير متوفر حالياً" : "متوفر"}</span>}
 
         <div className="vs-pkg__acts">
           <AddToCartButton

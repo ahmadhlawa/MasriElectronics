@@ -11,10 +11,12 @@ from app.api.crud import apply_updates, get_or_404
 from app.api.deps import CurrentAdmin, DbSession, PageParams
 from app.core.enums import ProductType
 from app.models import (
+    AttributeDefinition,
     Category,
     Brand,
     PackageItem,
     Product,
+    ProductAttributeValue,
     ProductImage,
     ProductOption,
     ProductOptionValue,
@@ -22,6 +24,9 @@ from app.models import (
     ProductVariant,
 )
 from app.schemas.catalog import (
+    AttributeDefinitionCreate,
+    AttributeDefinitionOut,
+    AttributeDefinitionUpdate,
     CategoryAdminOut,
     CategoryCreate,
     CategoryUpdate,
@@ -29,6 +34,8 @@ from app.schemas.catalog import (
     PackageItemOut,
     ProductAdminListOut,
     ProductAdminOut,
+    ProductAttributeValueIn,
+    ProductAttributeValueOut,
     ProductCreate,
     ProductImageIn,
     ProductImageOut,
@@ -186,6 +193,90 @@ def delete_category(category_id: int, db: DbSession, admin: CurrentAdmin):
     return MessageResponse(message="تم حذف القسم.")
 
 
+# ── Category attribute definitions ───────────────────────────────────────────
+def _definition(db: DbSession, category_id: int, definition_id: int) -> AttributeDefinition:
+    row = get_or_404(db, AttributeDefinition, definition_id, "الخاصية غير موجودة.")
+    if row.category_id != category_id:
+        raise DomainError("الخاصية لا تنتمي لهذا القسم.", code="attribute_category_mismatch")
+    return row
+
+
+def _validate_definition_data(data: dict) -> None:
+    choices = data["enum_choices"]
+    codes = [choice["code"] for choice in choices]
+    if (data["type"] == "enum") != bool(codes) or len(codes) != len(set(codes)):
+        raise DomainError("Enum choices must be unique and used only for enum attributes.", code="invalid_attribute_definition")
+
+
+@router.get("/categories/{category_id}/attributes", response_model=list[AttributeDefinitionOut])
+def list_attribute_definitions(category_id: int, db: DbSession, admin: CurrentAdmin):
+    get_or_404(db, Category, category_id)
+    return list(db.scalars(select(AttributeDefinition).where(
+        AttributeDefinition.category_id == category_id
+    ).order_by(AttributeDefinition.sort_order, AttributeDefinition.id)))
+
+
+@router.post("/categories/{category_id}/attributes", response_model=AttributeDefinitionOut, status_code=status.HTTP_201_CREATED)
+def create_attribute_definition(category_id: int, payload: AttributeDefinitionCreate, db: DbSession, admin: CurrentAdmin):
+    get_or_404(db, Category, category_id)
+    if db.scalar(select(AttributeDefinition.id).where(
+        AttributeDefinition.category_id == category_id, AttributeDefinition.key == payload.key
+    )) is not None:
+        raise ConflictError("Attribute key already exists in this category.", code="attribute_key_taken")
+    row = AttributeDefinition(category_id=category_id, **payload.model_dump())
+    db.add(row)
+    db.flush()
+    audit_service.record(db, admin=admin, action="attribute_definition.created",
+                         entity_type="attribute_definition", entity_id=row.id, meta={"key": row.key})
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.patch("/categories/{category_id}/attributes/{definition_id}", response_model=AttributeDefinitionOut)
+def update_attribute_definition(category_id: int, definition_id: int, payload: AttributeDefinitionUpdate,
+                                db: DbSession, admin: CurrentAdmin):
+    row = _definition(db, category_id, definition_id)
+    changes = payload.model_dump(exclude_unset=True)
+    if any(value is None for key, value in changes.items() if key != "unit"):
+        raise DomainError("Attribute fields cannot be null.", code="invalid_attribute_definition")
+    candidate = {key: getattr(row, key) for key in (
+        "key", "label", "type", "unit", "enum_choices", "filterable", "comparable", "show_on_card", "sort_order"
+    )}
+    candidate.update(changes)
+    _validate_definition_data(candidate)
+    if candidate["key"] != row.key and db.scalar(select(AttributeDefinition.id).where(
+        AttributeDefinition.category_id == category_id, AttributeDefinition.key == candidate["key"]
+    )) is not None:
+        raise ConflictError("Attribute key already exists in this category.", code="attribute_key_taken")
+    has_values = db.scalar(select(ProductAttributeValue.id).where(
+        ProductAttributeValue.attribute_definition_id == row.id
+    ).limit(1)) is not None
+    if has_values and any(candidate[key] != getattr(row, key) for key in ("key", "type", "enum_choices")):
+        raise ConflictError("Remove attribute values before changing its key, type or choices.", code="attribute_has_values")
+    for key, value in changes.items():
+        setattr(row, key, value)
+    audit_service.record(db, admin=admin, action="attribute_definition.updated",
+                         entity_type="attribute_definition", entity_id=row.id, meta={"fields": list(changes)})
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.delete("/categories/{category_id}/attributes/{definition_id}", response_model=MessageResponse)
+def delete_attribute_definition(category_id: int, definition_id: int, db: DbSession, admin: CurrentAdmin):
+    row = _definition(db, category_id, definition_id)
+    if db.scalar(select(ProductAttributeValue.id).where(
+        ProductAttributeValue.attribute_definition_id == row.id
+    ).limit(1)) is not None:
+        raise ConflictError("Remove attribute values before deleting its definition.", code="attribute_has_values")
+    audit_service.record(db, admin=admin, action="attribute_definition.deleted",
+                         entity_type="attribute_definition", entity_id=row.id, meta={"key": row.key})
+    db.delete(row)
+    db.commit()
+    return MessageResponse(message="تم حذف الخاصية.")
+
+
 # ── Products ──────────────────────────────────────────────────────────────────
 def _load_product(db: DbSession, product_id: int) -> Product:
     stmt = catalog_service.base_product_query(active_only=False).where(Product.id == product_id)
@@ -294,6 +385,8 @@ def update_product(product_id: int, payload: ProductUpdate, db: DbSession, admin
         get_or_404(db, Category, payload.category_id, "القسم المحدد غير موجود.")
     if "brand_id" in payload.model_fields_set and payload.brand_id is not None:
         get_or_404(db, Brand, payload.brand_id, "العلامة التجارية غير موجودة.")
+    if "category_id" in payload.model_fields_set and payload.category_id != product.category_id and product.attribute_values:
+        raise ConflictError("Remove product attribute values before changing its category.", code="product_has_category_attributes")
     data = payload.model_dump(exclude_unset=True, exclude={"sku", "slug"})
     if isinstance(data.get("product_type"), ProductType):
         data["product_type"] = data["product_type"].value
@@ -321,6 +414,38 @@ def update_product(product_id: int, payload: ProductUpdate, db: DbSession, admin
     )
     db.commit()
     return catalog_service.admin_product_payload(_load_product(db, product.id))
+
+
+# ── Product attribute values ──────────────────────────────────────────────────
+@router.get("/products/{product_id}/attributes", response_model=list[ProductAttributeValueOut])
+def list_product_attributes(product_id: int, db: DbSession, admin: CurrentAdmin):
+    product = _load_product(db, product_id)
+    return [catalog_service.attribute_value_payload(row) for row in sorted(
+        product.attribute_values, key=lambda row: (row.definition.sort_order, row.definition.id)
+    )]
+
+
+@router.put("/products/{product_id}/attributes", response_model=list[ProductAttributeValueOut])
+def replace_product_attributes(product_id: int, payload: list[ProductAttributeValueIn],
+                               db: DbSession, admin: CurrentAdmin):
+    product = _load_product(db, product_id)
+    if len(payload) != len({item.attribute_definition_id for item in payload}):
+        raise DomainError("Attribute definition repeated.", code="duplicate_product_attribute")
+    definitions = {row.id: row for row in db.scalars(select(AttributeDefinition).where(
+        AttributeDefinition.id.in_([item.attribute_definition_id for item in payload])
+    ))}
+    for item in payload:
+        definition = definitions.get(item.attribute_definition_id)
+        if definition is None or definition.category_id != product.category_id:
+            raise DomainError("Attribute does not belong to the product category.", code="attribute_category_mismatch")
+        catalog_service.validate_attribute_value(definition, item.model_dump(exclude={"attribute_definition_id"}))
+    product.attribute_values.clear()
+    db.flush()
+    product.attribute_values.extend(ProductAttributeValue(**item.model_dump()) for item in payload)
+    audit_service.record(db, admin=admin, action="product.attributes_replaced",
+                         entity_type="product", entity_id=product.id, meta={"count": len(payload)})
+    db.commit()
+    return list_product_attributes(product_id, db, admin)
 
 
 @router.delete("/products/{product_id}", response_model=MessageResponse)

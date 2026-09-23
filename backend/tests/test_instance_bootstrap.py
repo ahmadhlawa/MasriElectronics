@@ -328,8 +328,8 @@ def test_a_fresh_instance_uses_the_masri_profile_without_a_manual_edit(db: Sessi
     assert "#1F4E4A" not in (row.primary_color, row.secondary_color, row.accent_color)
 
 
-def test_the_shipped_profile_carries_the_clients_confirmed_store_data(db: Session) -> None:
-    """The client data phase, checked against the file the instance is bootstrapped from."""
+def test_the_shipped_profile_carries_marked_review_content(db: Session) -> None:
+    """Review business details are explicit in the bootstrapped instance."""
     apply_profile(db, load_profile(MASRI_PROFILE))
 
     row = db.execute(select(StoreSettings)).scalar_one()
@@ -343,7 +343,7 @@ def test_the_shipped_profile_carries_the_clients_confirmed_store_data(db: Sessio
     # Nothing was invented for what the client has not supplied.
     assert row.email is None
     assert row.address == "نابلس، أول شارع القدس، فلسطين"
-    assert row.working_hours == "مفتوح 24 ساعة / مفتوح دائماً"
+    assert row.working_hours == "للمراجعة فقط: السبت–الخميس 09:00–18:00؛ الجمعة مغلق"
     assert row.currency_code == "ILS"
     assert row.currency_symbol == "₪"
     assert row.logo_url == "/branding/logo1.png"
@@ -359,7 +359,11 @@ def test_the_shipped_profile_carries_the_clients_confirmed_store_data(db: Sessio
     assert [
         (a.name, a.delivery_fee, a.free_delivery_threshold, a.min_order_amount, a.is_active)
         for a in areas
-    ] == []
+    ] == [
+        ("نابلس", 15, None, None, True),
+        ("رام الله والبيرة", 25, None, None, True),
+        ("طولكرم", 20, None, None, True),
+    ]
 
     pages = {row.slug: row for row in db.execute(select(StaticPage)).scalars()}
     assert set(pages) == {
@@ -371,5 +375,5 @@ def test_the_shipped_profile_carries_the_clients_confirmed_store_data(db: Sessio
         "contact",
     }
     for page in pages.values():
-        assert page.content in (None, "")
+        assert page.content
         assert page.is_published is True

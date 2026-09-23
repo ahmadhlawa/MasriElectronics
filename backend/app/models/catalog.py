@@ -6,7 +6,9 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     ForeignKey,
+    Index,
     Integer,
+    JSON,
     Numeric,
     String,
     Text,
@@ -38,6 +40,9 @@ class Category(TimestampMixin, Base):
         back_populates="parent", cascade="save-update, merge"
     )
     products: Mapped[list["Product"]] = relationship(back_populates="category")
+    attribute_definitions: Mapped[list["AttributeDefinition"]] = relationship(
+        back_populates="category", cascade="all, delete-orphan"
+    )
 
 
 class Brand(TimestampMixin, Base):
@@ -66,6 +71,7 @@ class Product(TimestampMixin, Base):
     short_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     sku: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    model_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     product_type: Mapped[str] = mapped_column(
         String(32), default=ProductType.STANDARD.value, nullable=False, index=True
     )
@@ -102,6 +108,9 @@ class Product(TimestampMixin, Base):
         back_populates="product",
         cascade="all, delete-orphan",
         order_by="ProductSpecification.sort_order",
+    )
+    attribute_values: Mapped[list["ProductAttributeValue"]] = relationship(
+        back_populates="product", cascade="all, delete-orphan"
     )
     options: Mapped[list["ProductOption"]] = relationship(
         back_populates="product",
@@ -175,6 +184,66 @@ class ProductSpecification(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     product: Mapped[Product] = relationship(back_populates="specifications")
+
+
+class AttributeDefinition(Base):
+    __tablename__ = "attribute_definitions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey("categories.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    key: Mapped[str] = mapped_column(String(80), nullable=False)
+    label: Mapped[str] = mapped_column(String(150), nullable=False)
+    type: Mapped[str] = mapped_column(String(16), nullable=False)
+    unit: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    enum_choices: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    filterable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    comparable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    show_on_card: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    category: Mapped[Category] = relationship(back_populates="attribute_definitions")
+    values: Mapped[list["ProductAttributeValue"]] = relationship(back_populates="definition")
+
+    __table_args__ = (
+        UniqueConstraint("category_id", "key", name="uq_attribute_definition_category_key"),
+        CheckConstraint("type IN ('number', 'enum', 'boolean', 'text')", name="ck_attribute_definition_type"),
+    )
+
+
+class ProductAttributeValue(Base):
+    __tablename__ = "product_attribute_values"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"), nullable=False
+    )
+    attribute_definition_id: Mapped[int] = mapped_column(
+        ForeignKey("attribute_definitions.id", ondelete="RESTRICT"), nullable=False
+    )
+    number_value: Mapped[Decimal | None] = mapped_column(Numeric(14, 3), nullable=True)
+    enum_value: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    boolean_value: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    text_value: Mapped[str | None] = mapped_column(String(250), nullable=True)
+
+    product: Mapped[Product] = relationship(back_populates="attribute_values")
+    definition: Mapped[AttributeDefinition] = relationship(back_populates="values")
+
+    __table_args__ = (
+        UniqueConstraint("product_id", "attribute_definition_id", name="uq_product_attribute_value"),
+        CheckConstraint(
+            "(CASE WHEN number_value IS NOT NULL THEN 1 ELSE 0 END + "
+            "CASE WHEN enum_value IS NOT NULL THEN 1 ELSE 0 END + "
+            "CASE WHEN boolean_value IS NOT NULL THEN 1 ELSE 0 END + "
+            "CASE WHEN text_value IS NOT NULL THEN 1 ELSE 0 END) = 1",
+            name="ck_product_attribute_one_typed_value",
+        ),
+        Index("ix_product_attribute_number", "attribute_definition_id", "number_value", "product_id"),
+        Index("ix_product_attribute_enum", "attribute_definition_id", "enum_value", "product_id"),
+        Index("ix_product_attribute_boolean", "attribute_definition_id", "boolean_value", "product_id"),
+        Index("ix_product_attribute_text", "attribute_definition_id", "text_value", "product_id"),
+    )
 
 
 class ProductOption(Base):

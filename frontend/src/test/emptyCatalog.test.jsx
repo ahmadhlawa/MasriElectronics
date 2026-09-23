@@ -26,8 +26,8 @@ describe("storefront with no catalog", () => {
     renderApp("/");
 
     expect(await screen.findAllByText(settingsFixture.store_name_ar)).not.toHaveLength(0);
-    // The fixed service statement remains even before catalog data arrives.
-    expect(await screen.findByText("أجهزة أصلية + كفالة + أسعار تنافسية")).toBeInTheDocument();
+    // The service statement uses configured copy even before catalog data arrives.
+    expect((await screen.findAllByText(settingsFixture.seo_description)).length).toBeGreaterThan(0);
     // Empty catalog blocks are absent rather than rendered as empty headings.
     expect(screen.queryByText("تسوّق حسب القسم")).not.toBeInTheDocument();
     expect(screen.queryByText("منتجات مختارة")).not.toBeInTheDocument();

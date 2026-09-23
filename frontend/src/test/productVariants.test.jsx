@@ -308,6 +308,7 @@ describe("product editor variant wiring", () => {
     const calls = stubApi({
       "/api/v1/auth/me": ADMIN,
       "/api/v1/admin/products/7": adminProduct,
+      "/api/v1/admin/products/7/attributes": [],
       "PATCH /api/v1/admin/products/7/variants/101": { ...RED_SMALL, stock_quantity: 30 },
       "/api/v1/admin/categories": page([]),
       "/api/v1/admin/products": page([]),
@@ -488,6 +489,7 @@ describe("saving options from the product editor", () => {
     const calls = stubApi({
       "/api/v1/auth/me": ADMIN,
       "/api/v1/admin/products/7": adminProduct,
+      "/api/v1/admin/products/7/attributes": [],
       "PUT /api/v1/admin/products/7/options": OPTIONS,
       "/api/v1/admin/categories": page([]),
       "/api/v1/admin/products": page([]),

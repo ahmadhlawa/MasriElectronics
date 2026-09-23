@@ -392,7 +392,7 @@ describe("store logo", () => {
     // What the store *has* set still wins over the shipped defaults — the
     // fallback fills gaps, it does not overwrite the owner's identity.
     expect(document.querySelector(".vs-logo__name")).toHaveTextContent(settingsFixture.store_name_ar);
-    expect(document.querySelector(".vs-logo__tag")).toHaveTextContent("مستلزمات حرفية");
+    expect(document.querySelector(".vs-logo__tag")).toHaveTextContent("أجهزة كهربائية منزلية");
   });
 });
 

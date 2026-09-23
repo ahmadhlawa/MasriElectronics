@@ -103,6 +103,7 @@ export default function Footer() {
           {contact.map((item) => (
             <span key={item.key}>{item.node}</span>
           ))}
+          {settings.hours && <span>{settings.hours}</span>}
           <div className="vs-footer__pay">
             <span>الدفع عند الاستلام</span>
           </div>

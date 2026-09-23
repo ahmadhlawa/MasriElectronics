@@ -8,12 +8,7 @@ import { orderTokenStorage } from "../storage/authStorage.js";
 import { paymentMethods } from "../store.js";
 import { useMoney } from "../hooks/useStorefront.js";
 import { whatsappHref } from "../utils/format.js";
-
-const RETURN_POLICY_NOTICE = [
-  "سياسة الاستبدال والاسترجاع غير متاحة حالياً. يرجى التواصل مع المتجر قبل إتمام الطلب.",
-  "ولا تعد الاختلافات البسيطة والطبيعية في اللون أو الشكل أو القياس أو التفاصيل الناتجة عن طبيعة التصنيع اليدوي عيباً أو تلفاً في المنتج.",
-  "نرجو التأكد من تفاصيل المنتج والمواصفات المطلوبة قبل تأكيد الطلب.",
-];
+import { storefrontService } from "../services/storefront.js";
 
 function newClientReference() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -43,7 +38,20 @@ export default function CheckoutRoutePage() {
   const [errors, setErrors] = useState({});
   const [placing, setPlacing] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [priced, setPriced] = useState(null);
+  const [quote, setQuote] = useState({ key: null, status: "loading", value: null, error: null });
+  const [quoteRetry, setQuoteRetry] = useState(0);
+  const [policy, setPolicy] = useState(null);
+  const [shipping, setShipping] = useState(null);
+  useEffect(() => {
+    let active = true;
+    storefrontService.page("return-policy").then((page) => { if (active) setPolicy(page); }).catch(() => {});
+    storefrontService.page("shipping-policy").then((page) => { if (active) setShipping(page); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const quoteKey = JSON.stringify([cart, coupon.applied, form.areaId, form.deliveryMethod]);
+  const currentQuote = quote.key === quoteKey ? quote : null;
+  const priced = currentQuote?.status === "ready" ? currentQuote.value : null;
+  const quoteError = currentQuote?.status === "error" ? currentQuote.error : null;
   const clientReference = useRef(null);
   const submitting = useRef(false);
   const formRef = useRef(null);
@@ -60,25 +68,24 @@ export default function CheckoutRoutePage() {
   useEffect(() => {
     let cancelled = false;
     if (!cart.length) {
-      setPriced(null);
       return undefined;
     }
+    setQuote({ key: quoteKey, status: "loading", value: null, error: null });
+    setSubmitError(null);
     checkoutService
       .price(cart, { couponCode: coupon.applied || null, deliveryAreaId: form.areaId, deliveryMethod: form.deliveryMethod })
       .then((result) => {
         if (cancelled) return;
-        setPriced(result);
-        setSubmitError(null);
+        setQuote({ key: quoteKey, status: "ready", value: result, error: null });
       })
       .catch((error) => {
         if (cancelled) return;
-        setPriced(null);
-        setSubmitError(error.message);
+        setQuote({ key: quoteKey, status: "error", value: null, error: error.message });
       });
     return () => {
       cancelled = true;
     };
-  }, [cart, coupon.applied, form.areaId, form.deliveryMethod]);
+  }, [quoteKey, quoteRetry]);
 
   const update = (patch) => {
     const next = { ...form, ...patch };
@@ -90,7 +97,7 @@ export default function CheckoutRoutePage() {
 
   const placeOrder = async (event) => {
     event.preventDefault();
-    if (placing || submitting.current) return;
+    if (placing || submitting.current || !priced) return;
     const found = validate(form);
     setErrors(found);
     if (Object.keys(found).length) {
@@ -133,7 +140,7 @@ export default function CheckoutRoutePage() {
     }
   };
 
-  const totals = priced || { subtotal: 0, discount: 0, shipping: 0, total: 0, areaName: "", freeDeliveryApplied: false };
+  const totals = priced;
 
   if (!cart.length) {
     return (
@@ -218,6 +225,9 @@ export default function CheckoutRoutePage() {
                 <input type="radio" name="delivery-method" checked={form.deliveryMethod === "pickup"} onChange={() => update({ deliveryMethod: "pickup", areaId: null })} />
                 <span><strong>استلام من المحل</strong></span>
               </label>
+              {shipping?.body[form.deliveryMethod === "pickup" ? 1 : 0] && (
+                <p className="vs-form__note">{shipping.body[form.deliveryMethod === "pickup" ? 1 : 0]}</p>
+              )}
             </div>
 
             <label className="vs-field" hidden={form.deliveryMethod === "pickup"}>
@@ -299,13 +309,13 @@ export default function CheckoutRoutePage() {
             ))}
 
             <p className="vs-form__note">
-              لا يتم تحصيل أي مبلغ الآن؛ يُدفع نقداً للمندوب عند التسليم.
+              لا يتم تحصيل أي مبلغ الآن؛ يُدفع نقداً عند الاستلام.
             </p>
 
-            <div className="vs-return-policy" aria-labelledby="vs-return-policy-title">
+            {policy?.body.length > 0 && <div className="vs-return-policy" aria-labelledby="vs-return-policy-title">
               <h2 id="vs-return-policy-title">سياسة الإرجاع والاستبدال</h2>
-              {RETURN_POLICY_NOTICE.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-            </div>
+              {policy.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            </div>}
 
             <label className="vs-check vs-check--terms">
               <input
@@ -334,15 +344,24 @@ export default function CheckoutRoutePage() {
           <button
             type="submit"
             className="vs-btn vs-btn--primary vs-btn--lg vs-btn--block"
-            disabled={placing || !form.terms}
+            disabled={placing || !form.terms || !priced}
           >
             {placing && <span className="vs-spinner" aria-hidden="true" />}
-            {placing ? "جارٍ إرسال الطلب…" : `تأكيد وإرسال الطلب — ${money(totals.total)}`}
+            {placing ? "جارٍ إرسال الطلب…" : `تأكيد وإرسال الطلب — ${priced ? money(totals.total) : "الإجمالي غير متاح"}`}
           </button>
         </form>
 
         <aside className="vs-summary" aria-label="ملخّص الطلب">
           <h2 className="vs-summary__title">ملخّص الطلب</h2>
+          {!priced && !quoteError && <p className="vs-summary__note" role="status">جارٍ احتساب الإجمالي…</p>}
+          {quoteError && (
+            <div className="vs-state vs-state--error" role="alert">
+              <p className="vs-state__body">{quoteError}</p>
+              <button type="button" className="vs-btn vs-btn--outline" onClick={() => setQuoteRetry((count) => count + 1)}>
+                إعادة احتساب الإجمالي
+              </button>
+            </div>
+          )}
           {lines.map((line) => (
             <div className="vs-summary__line" key={line.key}>
               <span className="vs-summary__thumb">
@@ -359,21 +378,21 @@ export default function CheckoutRoutePage() {
 
           <div className="vs-summary__row">
             <span>المجموع الفرعي</span>
-            <strong>{money(totals.subtotal)}</strong>
+            <strong>{priced ? money(totals.subtotal) : "—"}</strong>
           </div>
-          {totals.discount > 0 && (
+          {priced && totals.discount > 0 && (
             <div className="vs-summary__row vs-summary__row--good">
               <span>الخصم</span>
               <strong>−{money(totals.discount)}</strong>
             </div>
           )}
           <div className="vs-summary__row">
-            <span>التوصيل {totals.areaName ? `(${totals.areaName})` : ""}</span>
+            <span>التوصيل {totals?.areaName ? `(${totals.areaName})` : ""}</span>
             <strong>{priced ? (totals.freeDeliveryApplied || form.deliveryMethod === "pickup" ? "مجاني" : money(totals.shipping)) : "—"}</strong>
           </div>
 
           {/* The server is authoritative; this only presents its configured rule. */}
-          {form.deliveryMethod === "delivery" && store.settings.freeDeliveryThreshold && !totals.freeDeliveryApplied && (
+          {priced && form.deliveryMethod === "delivery" && store.settings.freeDeliveryThreshold && !totals.freeDeliveryApplied && (
             <p className="vs-summary__note">التوصيل مجاني للطلبات من {money(store.settings.freeDeliveryThreshold)}.</p>
           )}
           {priced && (form.deliveryMethod === "pickup" || totals.freeDeliveryApplied) && (
@@ -384,7 +403,7 @@ export default function CheckoutRoutePage() {
           )}
           <div className="vs-summary__total">
             <span>الإجمالي</span>
-            <strong>{money(totals.total)}</strong>
+            <strong>{priced ? money(totals.total) : "—"}</strong>
           </div>
           <p className="vs-summary__note">جميع المبالغ محسوبة من الخادم عند إتمام الطلب.</p>
         </aside>

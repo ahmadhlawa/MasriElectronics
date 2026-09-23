@@ -3,9 +3,7 @@ import PackageCard from "./PackageCard.jsx";
 
 /**
  * Skeleton that matches the real card's box, so nothing shifts when data lands.
- * A card is now its image on desktop and image-plus-panel below 900px, and the
- * skeleton follows exactly that — the placeholder rows are inside the same
- * media-query, so it cannot promise a body the card will not have.
+ * On listing pages the CSS reserves a visible body at desktop sizes too.
  */
 export function CardSkeleton() {
   return (
@@ -43,13 +41,13 @@ export function GridSkeleton({ count = 8, variant = "grid" }) {
  * One grid for products and packages alike: a package renders its own card, so
  * a mixed result set still reads correctly.
  */
-export default function ProductGrid({ views, variant = "grid", eagerCount = 4 }) {
+export default function ProductGrid({ views, variant = "grid", eagerCount = 4, listing = false }) {
   if (!views?.length) return null;
   const cards = views.map((view, index) =>
     view.isPackage ? (
-      <PackageCard key={view.id} view={view} eager={index < eagerCount} revealDelay={Math.min(index * 70, 280)} />
+      <PackageCard key={view.id} view={view} listing={listing} eager={index < eagerCount} revealDelay={Math.min(index * 70, 280)} />
     ) : (
-      <ProductCard key={view.id} view={view} eager={index < eagerCount} revealDelay={Math.min(index * 70, 280)} />
+      <ProductCard key={view.id} view={view} listing={listing} eager={index < eagerCount} revealDelay={Math.min(index * 70, 280)} />
     ),
   );
   const wrapper = WRAPPER[variant];
