@@ -18,7 +18,11 @@ copy .env.example .env
 
 cd ..\frontend
 npm ci
+copy .env.example .env
 npm run dev
 ```
+
+The isolated local endpoints are frontend `http://localhost:5176`, backend
+`http://127.0.0.1:8002`, and health `http://127.0.0.1:8002/health`.
 
 Customer contact details, policies, domain, delivery areas, logo, verified brand palette, and catalog must be configured before launch. No customer catalog or demo seed ships with this clone.

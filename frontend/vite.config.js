@@ -4,11 +4,13 @@ import react from "@vitejs/plugin-react";
 // The dev server proxies the API and the uploaded media so the browser talks to a
 // single origin; deep links such as /product/slug fall back to the SPA entry point.
 export default defineConfig(({ mode }) => {
-  const apiTarget = loadEnv(mode, process.cwd(), "").VITE_DEV_API_TARGET || "http://127.0.0.1:8000";
+  const apiTarget = loadEnv(mode, process.cwd(), "").VITE_DEV_API_TARGET || "http://127.0.0.1:8002";
 
   return {
     plugins: [react()],
     server: {
+      port: 5176,
+      strictPort: true,
       proxy: {
         "/api": { target: apiTarget, changeOrigin: true },
         "/media": { target: apiTarget, changeOrigin: true },

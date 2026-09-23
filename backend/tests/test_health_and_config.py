@@ -34,11 +34,11 @@ def test_cors_origins_load_from_a_dotenv_file_in_the_documented_form(tmp_path: P
     """
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173\n",
+        "CORS_ORIGINS=http://localhost:5176,http://127.0.0.1:5176\n",
         encoding="utf-8",
     )
     config = Settings(_env_file=env_file)
-    assert config.CORS_ORIGINS == ["http://localhost:5173", "http://127.0.0.1:5173"]
+    assert config.CORS_ORIGINS == ["http://localhost:5176", "http://127.0.0.1:5176"]
 
 
 def test_cors_origins_load_from_an_environment_variable(monkeypatch) -> None:

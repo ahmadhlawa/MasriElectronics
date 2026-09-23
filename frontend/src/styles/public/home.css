@@ -105,7 +105,6 @@
      width back from the capped height and the band stops filling the row. */
   width: 100%;
   aspect-ratio: var(--vs-ar-hero);
-  max-height: var(--vs-hero-max-h);
   overflow: hidden;
   background: var(--vs-surface-2);
   isolation: isolate;
@@ -321,6 +320,5 @@
 .vs-hero--skel {
   width: 100%;
   aspect-ratio: var(--vs-ar-hero);
-  max-height: var(--vs-hero-max-h);
   border-radius: 0;
 }

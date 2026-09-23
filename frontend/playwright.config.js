@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Acceptance-only browser configuration.
  *
  * It never starts the servers itself: the acceptance run is driven against the one
- * canonical runtime (Vite on 5173 proxying the API to 127.0.0.1:8000) pointed at a
+ * canonical runtime (Vite on 5176 proxying the API to 127.0.0.1:8002) pointed at a
  * disposable validation database, and starting a second copy here would quietly split
  * that state in two.
  *
@@ -20,7 +20,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [["list"]],
   use: {
-    baseURL: process.env.E2E_BASE_URL || "http://localhost:5173",
+    baseURL: process.env.E2E_BASE_URL || "http://localhost:5176",
     locale: "ar",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",

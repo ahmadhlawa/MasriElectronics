@@ -14,7 +14,7 @@ const viewports = [
 async function authenticate(page) {
   if (process.env.QA_ADMIN_TOKEN) {
     await page.goto("/admin/login");
-    await page.evaluate((token) => localStorage.setItem("commerce_admin_auth_v1", JSON.stringify({ token, admin: null })), process.env.QA_ADMIN_TOKEN);
+    await page.evaluate((token) => localStorage.setItem("masri_electronics_admin_auth_v1", JSON.stringify({ token, admin: null })), process.env.QA_ADMIN_TOKEN);
     return;
   }
   await login(page, MANAGER);

@@ -42,8 +42,8 @@ class Settings(BaseSettings):
     # source, which would reject the documented comma-separated form before the
     # validator below ever runs.
     CORS_ORIGINS: Annotated[list[str], NoDecode] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
+        "http://localhost:5176",
+        "http://127.0.0.1:5176",
     ]
 
     STORAGE_PROVIDER: str = "local"

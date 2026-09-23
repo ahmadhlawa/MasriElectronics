@@ -2,9 +2,9 @@
 // prices are always recomputed by the server before an order is created.
 import { readJson, writeJson } from "./safeStorage.js";
 
-const CART_KEY = "commerce_cart_v1";
-const VIEWED_KEY = "commerce_viewed_v1";
-const SEARCHES_KEY = "commerce_searches_v1";
+const CART_KEY = "masri_electronics_cart_v1";
+const VIEWED_KEY = "masri_electronics_viewed_v1";
+const SEARCHES_KEY = "masri_electronics_searches_v1";
 
 export const lineKey = (productId, variantId, selectedIds = []) => `${productId}|${variantId ?? ""}|${[...selectedIds].map(Number).sort((a, b) => a - b).join("-")}`;
 
