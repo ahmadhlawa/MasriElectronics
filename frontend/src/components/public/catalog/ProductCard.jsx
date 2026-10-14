@@ -85,6 +85,7 @@ export default function ProductCard({ view, listing = false, eager = false, reve
           <AddToCartButton
             onAdd={primaryAction(view)}
             label={view.actionLabel}
+            mobileLabel={view.soldOut ? "غير متوفر" : view.canAddDirectly ? "أضف للعربة" : "اختر الخيارات"}
             icon={view.canAddDirectly ? <PlusIcon size={15} /> : null}
             disabled={view.soldOut}
             className="vs-btn vs-btn--primary vs-card__cta"

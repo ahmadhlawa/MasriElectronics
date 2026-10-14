@@ -12,7 +12,7 @@ import TrustStrip from "../components/public/home/TrustStrip.jsx";
 import BrandMosaic from "../components/public/home/BrandMosaic.jsx";
 import { homeBrands } from "../homeBrands.js";
 import SectionHead from "../components/public/shell/SectionHead.jsx";
-import CategoryCard from "../components/public/catalog/CategoryCard.jsx";
+import CategoryLogoCarousel from "../components/public/home/CategoryLogoCarousel.jsx";
 import ProductGrid, { GridSkeleton } from "../components/public/catalog/ProductGrid.jsx";
 import { ArrowForward } from "../components/public/shell/icons.jsx";
 import { useViewportReveal } from "../hooks/useViewportReveal.js";
@@ -164,7 +164,6 @@ export default function HomePage() {
 
       if (spec.kind === "categories") {
         if (!categories.length) return null;
-        const limit = section.config?.limit || 8;
         return (
           <section key={section.id} className="vs-container vs-section">
             <SectionHead
@@ -172,11 +171,7 @@ export default function HomePage() {
               title={title}
               moreHref={spec.more}
             />
-            <div className="vs-grid vs-grid--cats">
-              {categories.slice(0, limit).map((category, index) => (
-                <CategoryCard key={category.slug} category={category} compact eager={index < 6} revealDelay={Math.min(index * 70, 280)} />
-              ))}
-            </div>
+            <CategoryLogoCarousel categories={categories} label={title} />
           </section>
         );
       }
@@ -257,9 +252,7 @@ export default function HomePage() {
 
   return (
     <div className="vs-home">
-      {/* Deliberately outside `.vs-container`: the advertising band runs the full
-          storefront width, stopping only where the category rail's gutter
-          begins. Every section below it stays inside the container. */}
+      {/* The advertising band spans the storefront; sections below use the container. */}
       {hero.status === "loading" ? (
         <div className="vs-herorow">
           <div className="vs-skel vs-hero--skel" />

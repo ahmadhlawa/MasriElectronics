@@ -22,15 +22,14 @@ export default function MobileTabBar() {
         الرئيسية
       </Link>
 
-      <button
-        type="button"
+      <Link
+        to="/categories"
         className="vs-tabbar__item"
-        onClick={() => store.openOverlay(OVERLAY.MENU)}
-        aria-expanded={store.overlay === OVERLAY.MENU}
+        aria-current={pathname === "/categories" ? "page" : undefined}
       >
         <MenuIcon size={21} />
         الأقسام
-      </button>
+      </Link>
 
       <button
         type="button"

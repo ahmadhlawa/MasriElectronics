@@ -11,6 +11,7 @@ import {
   stubApi,
 } from "./utils.jsx";
 import { cartStorage } from "./../storage/cartStorage.js";
+import { navLinks } from "../store.js";
 
 const openCategories = () => screen.getByRole("button", { name: "كل الأقسام" });
 const cartButton = () => screen.getByRole("button", { name: "عربة التسوّق" });
@@ -116,41 +117,54 @@ describe("public shell", () => {
 });
 
 describe("category navigation", () => {
-  it("opens the category drawer from the header, locks the page and closes on escape", async () => {
+  it("links the header directly to categories without opening a panel", async () => {
     stubApi(storefrontRoutes);
     renderApp("/");
-
-    const trigger = await screen.findByRole("button", { name: "كل الأقسام" });
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-
-    await userEvent.click(trigger);
-    expect(openCategories()).toHaveAttribute("aria-expanded", "true");
-
-    const panel = screen.getByRole("dialog", { name: "تصنيفات المنتجات" });
-    expect(panel).toHaveAttribute("aria-modal", "true");
-    // Every category comes from the API, never from a hard-coded list.
-    expect(within(panel).getByText(categoryFixture.name)).toBeInTheDocument();
-    expect(document.body.style.overflow).toBe("hidden");
-    // Focus moved into the dialog rather than staying behind it.
-    expect(panel).toContainElement(document.activeElement);
-
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(dialogs()).toHaveLength(0));
+    const link = within(await screen.findByRole("navigation", { name: "التنقّل الرئيسي" }))
+      .getByRole("link", { name: "كل الأقسام" });
+    expect(link).toHaveAttribute("href", "/categories");
+    expect(screen.queryByRole("navigation", { name: "أقسام المتجر" })).not.toBeInTheDocument();
+    await userEvent.click(link);
+    expect(await screen.findByRole("heading", { level: 1, name: "كل الأقسام" })).toBeInTheDocument();
+    expect(dialogs()).toHaveLength(0);
     expect(document.body.style.overflow).not.toBe("hidden");
-    expect(openCategories()).toHaveFocus();
+    expect(within(screen.getByRole("main")).getByRole("link", { name: /ريزن/ }))
+      .toHaveAttribute("href", `/category/${categoryFixture.slug}`);
   });
 
-  it("links each category to its own route and closes the drawer on navigation", async () => {
-    stubApi(storefrontRoutes);
+  it("shows only shared navbar page links in the mobile menu, without category controls", async () => {
+    const parent = { ...categoryFixture, children: [{ id: 8, name: "لافتات", slug: "signs", product_count: 4 }] };
+    stubApi({ ...storefrontRoutes, "/api/v1/categories": [parent] });
     renderApp("/");
-
-    await userEvent.click(await screen.findByRole("button", { name: "كل الأقسام" }));
-    const panel = screen.getByRole("dialog", { name: "تصنيفات المنتجات" });
-    const link = within(panel).getByText(categoryFixture.name).closest("a");
-    expect(link).toHaveAttribute("href", `/category/${categoryFixture.slug}`);
-
-    await userEvent.click(link);
+    await userEvent.click(await screen.findByRole("button", { name: "فتح القائمة" }));
+    const menu = screen.getByRole("dialog", { name: "قائمة التنقّل" });
+    const links = within(menu.querySelector(".vs-menu")).getAllByRole("link");
+    expect(links.map((link) => ({ label: link.textContent, href: link.getAttribute("href") })))
+      .toEqual(navLinks);
+    expect(within(menu).queryByText(parent.name)).not.toBeInTheDocument();
+    expect(within(menu).queryByText("لافتات")).not.toBeInTheDocument();
+    expect(within(menu).queryByText("الأقسام")).not.toBeInTheDocument();
+    expect(menu.querySelector('a[href^="/category/"], button[aria-expanded], img')).toBeNull();
+    expect(within(menu).getAllByRole("button")).toHaveLength(1);
+    await userEvent.click(within(menu).getByRole("link", { name: "كل المنتجات" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "كل المنتجات" })).toBeInTheDocument();
     await waitFor(() => expect(dialogs()).toHaveLength(0));
+    expect(document.body.style.overflow).not.toBe("hidden");
+  });
+});
+
+describe("floating WhatsApp", () => {
+  it.each([true, false])("only mounts on desktop (mobile: %s) and preserves footer support", async (mobile) => {
+    window.__mediaMatches = (query) => query === "(max-width: 899px)" && mobile;
+    stubApi(storefrontRoutes);
+    const { container } = renderApp("/");
+    const footer = await screen.findByRole("contentinfo");
+    expect(container.querySelectorAll(".vs-wa")).toHaveLength(mobile ? 0 : 1);
+    if (!mobile) {
+      expect(container.querySelector(".vs-wa")).toHaveAttribute("href", expect.stringContaining("https://wa.me/0590000000?text="));
+      expect(container.querySelector(".vs-wa")).toHaveAttribute("target", "_blank");
+    }
+    expect(footer.querySelector('a[href^="https://wa.me/"]')).toHaveAttribute("href", "https://wa.me/0590000000?text=");
   });
 });
 

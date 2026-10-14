@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import {
   categoryFixture,
   renderApp,
@@ -9,7 +8,7 @@ import {
   stubApi,
 } from "./utils.jsx";
 
-/** A root category with children, so the drawer's nesting has something to expand. */
+/** A root category with children, so mobile navigation has children to expand. */
 const parentCategory = {
   ...categoryFixture,
   id: 7,
@@ -43,119 +42,6 @@ const heroSlides = [
     sort_order: 1,
   },
 ];
-
-const rail = () => document.querySelector(".vs-catbar");
-const drawer = () => screen.queryByRole("dialog", { name: "تصنيفات المنتجات" });
-
-describe("category rail", () => {
-  it("renders one rail item per active category, straight from the API", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [categoryFixture, parentCategory] });
-    renderApp("/");
-
-    await waitFor(() => expect(rail().querySelectorAll(".vs-catbar__item")).toHaveLength(2));
-
-    const items = within(rail()).getAllByRole("link");
-    expect(items[0]).toHaveAttribute("href", `/category/${categoryFixture.slug}`);
-    expect(items[1]).toHaveAttribute("href", "/category/event-print");
-    // Every item is labelled and carries a tooltip; none shows permanent text.
-    items.forEach((item) => {
-      expect(item).toHaveAccessibleName();
-      expect(item).toHaveAttribute("title");
-    });
-    expect(rail()).toHaveAccessibleName();
-  });
-
-  it("marks the category of the current route as active", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [categoryFixture, parentCategory] });
-    renderApp("/category/event-print");
-
-    await waitFor(() => expect(rail().querySelectorAll(".vs-catbar__item")).toHaveLength(2));
-    const active = within(rail()).getByRole("link", { name: parentCategory.name });
-    expect(active).toHaveAttribute("aria-current", "page");
-    expect(
-      within(rail()).getByRole("link", { name: categoryFixture.name }),
-    ).not.toHaveAttribute("aria-current");
-  });
-
-  it("opens and closes the drawer from the rail trigger", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [parentCategory] });
-    renderApp("/");
-
-    await waitFor(() => expect(rail()).not.toBeNull());
-    const trigger = within(rail()).getByRole("button", { name: "تصنيفات المنتجات" });
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
-    expect(drawer()).toBeNull();
-
-    await userEvent.click(trigger);
-    expect(drawer()).toBeInTheDocument();
-    expect(trigger).toHaveAttribute("aria-expanded", "true");
-
-    // The same trigger closes it again — one overlay, one state.
-    await userEvent.click(trigger);
-    await waitFor(() => expect(drawer()).toBeNull());
-  });
-
-  it("hands the categories over to the drawer instead of showing them twice", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [categoryFixture, parentCategory] });
-    renderApp("/");
-
-    // Collapsed: the rail is the only place the categories are drawn.
-    await waitFor(() => expect(rail().querySelectorAll(".vs-catbar__item")).toHaveLength(2));
-    expect(drawer()).toBeNull();
-
-    await userEvent.click(within(rail()).getByRole("button", { name: "تصنيفات المنتجات" }));
-    const panel = drawer();
-
-    // Expanded: one row per category in the panel, and the icon column is gone
-    // rather than left standing beside it as a second copy of the same list.
-    expect(panel.querySelectorAll(".vs-catdrawer__item")).toHaveLength(2);
-    expect(rail().querySelectorAll(".vs-catbar__item")).toHaveLength(0);
-    expect(rail().querySelectorAll(".vs-catbar__thumb, .vs-catbar__ico")).toHaveLength(0);
-    // The names the rail only whispered as tooltips are now real, visible rows.
-    expect(within(panel).getByRole("link", { name: /مطبوعات المناسبات/ })).toBeInTheDocument();
-    expect(within(panel).getAllByText("منتج واحد")).toHaveLength(2);
-    // The trigger stays put — it is still what reports and toggles the state.
-    expect(rail().querySelector(".vs-catbar__trigger")).toHaveAttribute("aria-expanded", "true");
-
-    // Closing hands them back.
-    await userEvent.click(within(rail()).getByRole("button", { name: "تصنيفات المنتجات" }));
-    await waitFor(() => expect(drawer()).toBeNull());
-    expect(rail().querySelectorAll(".vs-catbar__item")).toHaveLength(2);
-  });
-
-  it("expands a category's children inside the drawer", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [parentCategory] });
-    renderApp("/");
-
-    await waitFor(() => expect(rail()).not.toBeNull());
-    await userEvent.click(within(rail()).getByRole("button", { name: "تصنيفات المنتجات" }));
-
-    const panel = drawer();
-    expect(within(panel).queryByRole("link", { name: "لافتات" })).not.toBeInTheDocument();
-
-    const toggle = within(panel).getByRole("button", {
-      name: `الأقسام الفرعية لـ ${parentCategory.name}`,
-    });
-    expect(toggle).toHaveAttribute("aria-expanded", "false");
-
-    await userEvent.click(toggle);
-    expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(within(panel).getByRole("link", { name: "لافتات" })).toHaveAttribute(
-      "href",
-      "/category/signs",
-    );
-    expect(within(panel).getByRole("link", { name: "ستاندات" })).toBeInTheDocument();
-  });
-
-  it("keeps the rail out of the admin workspace", async () => {
-    stubApi(storefrontRoutes);
-    renderApp("/admin");
-
-    await waitFor(() => expect(document.querySelector(".vs-public")).toBeNull());
-    expect(document.querySelector(".vs-catbar")).toBeNull();
-    expect(screen.queryByRole("dialog", { name: "تصنيفات المنتجات" })).toBeNull();
-  });
-});
 
 describe("homepage hero", () => {
   const heroRoutes = {
@@ -305,48 +191,6 @@ describe("hero advertisement copy", () => {
   });
 });
 
-describe("category rail imagery", () => {
-  const withImage = {
-    ...categoryFixture,
-    id: 21,
-    name: "هدايا مخصصة",
-    slug: "custom-gifts",
-    image_url: "/media/preview/tile-gifts.png",
-  };
-  const withoutImage = { ...categoryFixture, id: 22, name: "سكارف", slug: "scarves", image_url: null };
-
-  it("uses the category's own picture, and a neutral icon when there is none", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [withImage, withoutImage] });
-    renderApp("/");
-
-    await waitFor(() => expect(rail().querySelectorAll(".vs-catbar__item")).toHaveLength(2));
-    const [first, second] = rail().querySelectorAll(".vs-catbar__item");
-
-    expect(first.querySelector("img")).toHaveAttribute("src", "/media/preview/tile-gifts.png");
-    expect(second.querySelector("img")).toBeNull();
-    expect(second.querySelector(".vs-catbar__ico")).not.toBeNull();
-
-    // No tinted square ever stands in for a picture the store does not have.
-    expect(rail().querySelectorAll(".vs-media--fallback")).toHaveLength(0);
-    // Labels and tooltips survive the change.
-    expect(second).toHaveAccessibleName("سكارف");
-    expect(second).toHaveAttribute("title", "سكارف");
-  });
-
-  it("applies the same rule inside the drawer", async () => {
-    stubApi({ ...storefrontRoutes, "/api/v1/categories": [withImage, withoutImage] });
-    renderApp("/");
-
-    await waitFor(() => expect(rail()).not.toBeNull());
-    await userEvent.click(within(rail()).getByRole("button", { name: "تصنيفات المنتجات" }));
-
-    const panel = drawer();
-    expect(panel.querySelectorAll(".vs-catdrawer__thumb img")).toHaveLength(1);
-    expect(panel.querySelectorAll(".vs-catdrawer__thumb svg")).toHaveLength(1);
-    expect(panel.querySelectorAll(".vs-media--fallback")).toHaveLength(0);
-  });
-});
-
 describe("store logo", () => {
   const branded = {
     ...storefrontRoutes,
@@ -396,27 +240,17 @@ describe("store logo", () => {
   });
 });
 
-describe("homepage category grid", () => {
-  it("puts each category's title over its own artwork and links the whole card", async () => {
-    stubApi({
-      ...storefrontRoutes,
-      "/api/v1/categories": [categoryFixture, parentCategory],
-    });
+describe("homepage category strip", () => {
+  it("keeps category artwork and routes in a dedicated strip", async () => {
+    stubApi({ ...storefrontRoutes, "/api/v1/categories": [categoryFixture, parentCategory] });
     renderApp("/");
-
-    expect(await screen.findByRole("heading", { name: "تسوّق حسب التصنيف" })).toBeInTheDocument();
-    const cards = document.querySelectorAll(".vs-cat");
-    expect(cards).toHaveLength(2);
-
-    // The title is over the image, and readable without any interaction.
-    const first = cards[0];
-    expect(first.tagName).toBe("A");
-    expect(first).toHaveAttribute("href", `/category/${categoryFixture.slug}`);
-    expect(within(first).getByText(categoryFixture.name)).toBeInTheDocument();
-    expect(first.querySelector(".vs-cat__center")).toContainElement(
-      within(first).getByText(categoryFixture.name),
-    );
-    // No white text panel under the artwork any more.
-    expect(first.querySelector(".vs-cat__text")).toBeNull();
+    const heading = await screen.findByRole("heading", { name: "تسوّق حسب التصنيف" });
+    const section = heading.closest("section");
+    const strip = await within(section).findByRole("region", { name: "تسوّق حسب التصنيف" });
+    expect(within(strip).getAllByRole("link")).toHaveLength(2);
+    expect(within(strip).getByRole("link", { name: categoryFixture.name }))
+      .toHaveAttribute("href", `/category/${categoryFixture.slug}`);
+    expect(within(section).getByRole("link", { name: /عرض الكل/ })).toHaveAttribute("href", "/categories");
+    expect(section.querySelector(".vs-cat")).toBeNull();
   });
 });

@@ -75,13 +75,6 @@
   /* How wide the header's search field is allowed to grow. Stated once: the
      field and the slot it sits in are two elements and were two numbers. */
   --vs-search-max: 820px;
-  /* The fixed category rail at the far right. It is a real gutter, not an
-     overlay: `--vs-rail-gutter` is what the page reserves for it, so the rail
-     can never sit on top of content. Both drop to 0 on mobile, where the rail
-     is replaced by a header trigger. */
-  --vs-rail-w: 64px;
-  --vs-rail-gutter: var(--vs-rail-w);
-  --vs-drawer-cat-w: 340px;
   /* What a sticky element must clear. Kept as one token so page-level sticky
      panels never re-derive it. */
   --vs-sticky-top: calc(var(--vs-header-h) + var(--vs-nav-h) + 16px);
@@ -214,7 +207,6 @@
     --vs-cols-pkg: 3;
     --vs-grid-gap: 18px;
     --vs-fs-h1: 28px;
-    --vs-rail-w: 58px;
   }
 }
 
@@ -229,7 +221,7 @@
     --vs-grid-gap: 14px;
     --vs-section: 40px;
     --vs-section-tight: 26px;
-    /* The nav band and the category rail leave the sticky header on mobile, so
+    /* The nav band leaves the sticky header on mobile, so
        only the 60px action row follows the scroll. */
     --vs-header-h: 60px;
     --vs-nav-h: 0px;
@@ -242,11 +234,6 @@
     /* A tablet still reads landscape artwork; the portrait crop is for phones
        only, and starts at 600 (below). At 768 a 5/6 hero was 878px tall â€” most
        of the screen for one advertisement. */
-    /* The fixed rail leaves the layout entirely below 900: its trigger moves
-       into the header, so no width is reserved and nothing is covered. */
-    --vs-rail-w: 0px;
-    --vs-rail-gutter: 0px;
-    --vs-drawer-cat-w: min(92vw, 400px);
   }
 }
 

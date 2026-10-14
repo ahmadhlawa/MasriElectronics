@@ -6,8 +6,6 @@ import PreviewNotice from "../../PreviewNotice.jsx";
 import Header from "./Header.jsx";
 import Footer from "./Footer.jsx";
 import MobileTabBar from "./MobileTabBar.jsx";
-import CategoryRail from "../navigation/CategoryRail.jsx";
-import { CategoryHoverProvider } from "../navigation/CategoryHover.jsx";
 import ShellOverlays from "../overlays/ShellOverlays.jsx";
 import { buildStorefrontThemeVariables } from "../../../theme/storefrontTheme.js";
 
@@ -37,30 +35,27 @@ export default function PublicShell() {
 
   return (
     <div className="vs-public" style={buildStorefrontThemeVariables(store.settings.raw)}>
-      <CategoryHoverProvider>
-        <a className="vs-skip" href="#vs-content">
-          تخطَّ إلى المحتوى
-        </a>
-        <PreviewNotice text={store.settings.demoBusinessContent ? "نسخة تجريبية للمراجعة — معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق" : undefined} />
-        <Header />
-        <CategoryRail />
+      <a className="vs-skip" href="#vs-content">
+        تخطَّ إلى المحتوى
+      </a>
+      <PreviewNotice text={store.settings.demoBusinessContent ? "نسخة تجريبية للمراجعة — معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق" : undefined} />
+      <Header />
 
-        <main className="vs-main" id="vs-content">
-          {store.loadError && (
-            <div className="vs-container" style={{ paddingTop: 16 }}>
-              <div role="alert" className="vs-inline-alert">
-                تعذّر تحميل بيانات المتجر من الخادم. تأكد من تشغيل واجهة FastAPI ثم أعد تحميل
-                الصفحة.
-              </div>
+      <main className="vs-main" id="vs-content">
+        {store.loadError && (
+          <div className="vs-container" style={{ paddingTop: 16 }}>
+            <div role="alert" className="vs-inline-alert">
+              تعذّر تحميل بيانات المتجر من الخادم. تأكد من تشغيل واجهة FastAPI ثم أعد تحميل
+              الصفحة.
             </div>
-          )}
-          <Outlet />
-        </main>
+          </div>
+        )}
+        <Outlet />
+      </main>
 
-        <Footer />
-        <MobileTabBar />
-        <ShellOverlays />
-      </CategoryHoverProvider>
+      <Footer />
+      <MobileTabBar />
+      <ShellOverlays />
     </div>
   );
 }

@@ -1,20 +1,79 @@
-/* Homepage-only density preserves shared catalog sizing. */
-.vs-home .vs-grid--cats {
-  --vs-ar-category: 4 / 3;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.vs-category-logos {
+  --vs-category-logo-width: clamp(112px, 14vw, 176px);
+  --vs-category-logo-height: clamp(80px, 10vw, 128px);
+  --vs-category-logo-gap: clamp(20px, 3vw, 40px);
+  min-width: 0;
+}
+
+.vs-category-logos__viewport {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-behavior: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vs-border) transparent;
+  padding-block: 4px 12px;
+}
+
+.vs-category-logos__track,
+.vs-category-logos__group {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+}
+
+.vs-category-logos__group {
+  flex: 0 0 auto;
+  gap: var(--vs-category-logo-gap);
+  padding-inline-end: var(--vs-category-logo-gap);
+}
+
+.vs-category-logos__item {
+  flex: 0 0 var(--vs-category-logo-width);
+  width: var(--vs-category-logo-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 12px;
+  text-align: center;
+  border-radius: var(--vs-r-sm);
 }
-.vs-home .vs-grid--cats .vs-cat__center { padding: 6px; }
-.vs-home .vs-grid--cats .vs-cat__plate { padding: 6px 8px; }
-.vs-home .vs-grid--cats .vs-cat__name { font-size: 14px; }
-@media (min-width: 600px) {
-  .vs-home .vs-grid--cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.vs-category-logos__item img,
+.vs-category-logos__fallback {
+  display: block;
+  width: 100%;
+  height: var(--vs-category-logo-height);
+  object-fit: contain;
 }
-@media (min-width: 1024px) {
-  .vs-home .vs-grid--cats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.vs-category-logos__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vs-ink-3);
+  font-size: var(--vs-fs-sm);
+  padding: 8px;
 }
-@media (min-width: 1280px) {
-  .vs-home .vs-grid--cats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.vs-category-logos__label {
+  font-size: var(--vs-fs-sm);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--vs-ink);
+}
+
+.vs-category-logos__motion {
+  display: block;
+  margin-inline-start: auto;
+  min-height: 44px;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--vs-ink-3);
+  font: inherit;
+  font-size: var(--vs-fs-sm);
+  cursor: pointer;
 }
 
 /* Eight-slot repeating composition: large anchors, small marks and wide tiles. */
@@ -89,8 +148,7 @@
 
 /* One advertising image across the full storefront width. Nothing sits beside
    it and nothing frames it: no container, no gutter, no radius â€” the band runs
-   edge to edge from the nav band down to the first section, and `.vs-public`'s
-   own rail gutter is what stops it short of the category rail. */
+   edge to edge from the nav band down to the first section. */
 .vs-herorow {
   padding: 0;
 }

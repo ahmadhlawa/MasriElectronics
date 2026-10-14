@@ -1,7 +1,7 @@
 import { OVERLAY, useStore } from "../../../app/StoreProvider.jsx";
+import useMediaQuery from "../../../hooks/useMediaQuery.js";
 import { whatsappHref } from "../../../utils/format.js";
 import CartDrawer from "../cart/CartDrawer.jsx";
-import CategoryDrawer from "../navigation/CategoryDrawer.jsx";
 import MobileMenu from "../navigation/MobileMenu.jsx";
 import SearchOverlay from "../search/SearchOverlay.jsx";
 import QuickView from "./QuickView.jsx";
@@ -16,12 +16,12 @@ import { WhatsAppIcon } from "../shell/icons.jsx";
 export default function ShellOverlays() {
   const store = useStore();
   const { overlay, closeAll, settings } = store;
+  const isMobile = useMediaQuery("(max-width: 899px)");
 
   const wa = whatsappHref(settings.whatsapp, `مرحباً، لدي استفسار عن ${settings.storeName}`);
 
   return (
     <>
-      <CategoryDrawer open={overlay === OVERLAY.CATEGORIES} onClose={closeAll} />
       <MobileMenu open={overlay === OVERLAY.MENU} onClose={closeAll} />
       <SearchOverlay open={overlay === OVERLAY.SEARCH} onClose={closeAll} />
       <CartDrawer open={overlay === OVERLAY.CART} onClose={closeAll} />
@@ -29,7 +29,7 @@ export default function ShellOverlays() {
 
       <Toast message={store.toast} onView={() => store.openOverlay(OVERLAY.CART)} />
 
-      {wa !== "#" && (
+      {!isMobile && wa !== "#" && (
         <a
           className="vs-wa"
           href={wa}

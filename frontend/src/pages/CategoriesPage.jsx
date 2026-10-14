@@ -1,10 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useStore } from "../app/StoreProvider.jsx";
 import { useCategoryNav } from "../hooks/useStorefront.js";
-import CategoryCard from "../components/public/catalog/CategoryCard.jsx";
+import { TagIcon } from "../components/public/shell/icons.jsx";
+
+function CategoryTile({ category, eager }) {
+  const [failedUrl, setFailedUrl] = useState(null);
+  const hasImage = category.imageUrl && category.imageUrl !== failedUrl;
+  return (
+    <Link to={category.href} className="vs-categories-page__tile" aria-label={`${category.name} — ${category.countText}`}>
+      <span className="vs-categories-page__image">
+        {hasImage ? (
+          <img src={category.imageUrl} alt="" loading={eager ? "eager" : "lazy"}
+            decoding="async" onError={() => setFailedUrl(category.imageUrl)} />
+        ) : (
+          <TagIcon size={28} />
+        )}
+      </span>
+      <span className="vs-categories-page__name">{category.name}</span>
+    </Link>
+  );
+}
 
 export default function CategoriesPage() {
   const categories = useCategoryNav();
+  const { ready, loadError } = useStore();
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -29,20 +49,14 @@ export default function CategoriesPage() {
         <h1>كل الأقسام</h1>
         <p>اختر القسم المناسب لتصفّح منتجاته.</p>
       </header>
-      <div className="vs-categories-page__grid">
+      <div className="vs-categories-page__grid" data-count={categories.length}>
         {categories.map((category, index) => (
-          <article className="vs-categories-page__item" key={category.slug}>
-            <CategoryCard category={category} eager={index < 4} />
-            {category.children.length > 0 && (
-              <nav className="vs-categories-page__children" aria-label={`الأقسام الفرعية لـ ${category.name}`}>
-                {category.children.map((child) => (
-                  <Link key={child.slug} to={child.href}>{child.name}</Link>
-                ))}
-              </nav>
-            )}
-          </article>
+          <CategoryTile category={category} eager={index < 4} key={category.slug} />
         ))}
       </div>
+      {ready && !loadError && categories.length === 0 && (
+        <p>لا توجد أقسام متاحة حاليًا.</p>
+      )}
     </div>
   );
 }

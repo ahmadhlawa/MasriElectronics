@@ -36,6 +36,7 @@ export function useAddToCartFeedback(onAdd) {
 export default function AddToCartButton({
   onAdd,
   label,
+  mobileLabel,
   icon,
   disabled = false,
   style,
@@ -48,6 +49,7 @@ export default function AddToCartButton({
       onClick={fire}
       disabled={disabled}
       aria-live="polite"
+      aria-label={mobileLabel && !added ? label : undefined}
       className={`vs-atc ${className}${added ? " is-added" : ""}`.trim()}
       style={style}
     >
@@ -59,7 +61,12 @@ export default function AddToCartButton({
       ) : (
         <>
           {icon}
-          {label}
+          {mobileLabel ? (
+            <>
+              <span className="vs-atc__label--desktop">{label}</span>
+              <span className="vs-atc__label--mobile" aria-hidden="true">{mobileLabel}</span>
+            </>
+          ) : label}
         </>
       )}
     </button>

@@ -39,13 +39,11 @@ function StoreMark({ settings }) {
 export default function Header() {
   const store = useStore();
   const money = useMoney();
-  const { settings, cart, scrolled, overlay, openOverlay, closeAll } = store;
+  const { settings, cart, scrolled, overlay, openOverlay } = store;
 
   const count = cart.reduce((sum, line) => sum + line.qty, 0);
   const subtotal = cart.reduce((sum, line) => sum + line.unit * line.qty, 0);
   const pulse = useCartCountPulse(count);
-  const catsOpen = overlay === OVERLAY.CATEGORIES;
-  const toggleCats = () => (catsOpen ? closeAll() : openOverlay(OVERLAY.CATEGORIES));
 
   return (
     <>
@@ -119,16 +117,10 @@ export default function Header() {
 
         <nav className="vs-nav" aria-label="التنقّل الرئيسي">
           <div className="vs-container vs-nav__row">
-            <button
-              type="button"
-              className="vs-nav__cats"
-              onClick={toggleCats}
-              aria-expanded={catsOpen}
-              aria-controls="vs-catdrawer"
-            >
-              <MenuIcon size={15} />
+            <Link to="/categories" className="vs-nav__cats">
+              <GridIcon size={15} />
               كل الأقسام
-            </button>
+            </Link>
 
             {navLinks.map((link) => (
               <NavLink

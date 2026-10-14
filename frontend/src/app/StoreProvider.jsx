@@ -13,7 +13,6 @@ const StoreContext = createContext(null);
 export const OVERLAY = {
   CART: "cart",
   MENU: "menu",
-  CATEGORIES: "categories",
   SEARCH: "search",
   FILTERS: "filters",
   QUICK: "quick",
@@ -41,7 +40,6 @@ export function StoreProvider({ children }) {
   // quick view is showing, which is the only overlay with a payload.
   const [overlay, setOverlay] = useState(null);
   const [quickSlug, setQuickSlug] = useState(null);
-  const [navOpenCat, setNavOpenCat] = useState(null);
   const [announce, setAnnounce] = useState(true);
   const [scrolled, setScrolled] = useState(false);
 
@@ -277,8 +275,6 @@ export function StoreProvider({ children }) {
       quickSlug,
       openOverlay,
       closeAll,
-      navOpenCat,
-      setNavOpenCat,
       announce,
       setAnnounce,
       scrolled,
@@ -299,7 +295,7 @@ export function StoreProvider({ children }) {
     [
        ready, loadError, settings, categories, deliveryAreas, cart, bump,
       addToCart, setLineQty, removeLine, clearCart, toast, showToast, overlay, quickSlug,
-      openOverlay, closeAll, navOpenCat, announce, scrolled, query,
+      openOverlay, closeAll, announce, scrolled, query,
       suggestions, suggestTried, runSuggest, recentSearches, rememberSearch,
       viewed, rememberViewed, coupon, checkoutForm,
     ],

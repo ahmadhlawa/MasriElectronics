@@ -12,13 +12,6 @@
   font-family: var(--vs-font);
   font-size: var(--vs-fs-body);
   line-height: var(--vs-lh);
-  /* The fixed category rail sits at the far right of the viewport, so the whole
-     storefront â€” header, content and footer alike â€” reserves its width as a real
-     gutter. Physical `right`, because the layout is RTL and the rail is not on
-     the logical end side. The gutter is 0 below 900px, where the rail is gone.
-     Drawers and the scrim are `position: fixed` and so are unaffected: they
-     still cover the viewport edge to edge. */
-  padding-right: var(--vs-rail-gutter);
 }
 
 .vs-public *,
