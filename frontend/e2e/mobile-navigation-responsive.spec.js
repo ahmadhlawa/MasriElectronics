@@ -73,3 +73,34 @@ test("floating WhatsApp only mounts on desktop, responds to resizing and keeps f
     await expect(page.getByRole("contentinfo").locator('a[href^="https://wa.me/"]')).toHaveCount(1);
   }
 });
+
+test("desktop support clears purchase controls and retains deliberate keyboard focus", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const floating = page.locator(".vs-wa");
+  await expect(floating).toBeVisible();
+  const cover = () => page.evaluate(() => {
+    const box = document.querySelector(".vs-wa").getBoundingClientRect();
+    const button = document.createElement("button");
+    button.id = "qa-purchase-overlap";
+    button.textContent = "QA purchase control";
+    Object.assign(button.style, { position: "fixed", left: `${box.left}px`, top: `${box.top}px`,
+      width: `${box.width}px`, height: `${box.height}px`, zIndex: "1" });
+    button.addEventListener("click", () => { button.dataset.clicked = "true"; });
+    document.querySelector(".vs-main").append(button);
+  });
+  await cover();
+  await expect(floating).toBeHidden();
+  await page.locator("#qa-purchase-overlap").click();
+  await expect(page.locator("#qa-purchase-overlap")).toHaveAttribute("data-clicked", "true");
+  await page.locator("#qa-purchase-overlap").evaluate((node) => node.remove());
+  await expect(floating).toBeVisible();
+  await floating.focus();
+  await cover();
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(floating).toBeVisible();
+  await expect(floating).toBeFocused();
+  await page.locator("#qa-purchase-overlap").focus();
+  await expect(floating).toBeHidden();
+  await page.locator("#qa-purchase-overlap").evaluate((node) => node.remove());
+  await expect(floating).toBeVisible();
+});

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useStore } from "../app/StoreProvider.jsx";
 import { useProductDetail, useVariantSelection } from "../hooks/useProductDetail.js";
@@ -6,6 +6,7 @@ import useMediaQuery from "../hooks/useMediaQuery.js";
 import { useMoney, useProductActions } from "../hooks/useStorefront.js";
 import { catalogService } from "../services/catalog.js";
 import { attributeDisplayValue, productView } from "../utils/productView.js";
+import { discountPercent } from "../utils/format.js";
 import AddToCartButton from "../components/AddToCartButton.jsx";
 import Gallery from "../components/public/product/Gallery.jsx";
 import OptionPicker from "../components/public/product/OptionPicker.jsx";
@@ -13,7 +14,6 @@ import ProductPanels from "../components/public/product/ProductPanels.jsx";
 import QuantityStepper from "../components/public/cart/QuantityStepper.jsx";
 import ProductGrid from "../components/public/catalog/ProductGrid.jsx";
 import SectionHead from "../components/public/shell/SectionHead.jsx";
-import Media from "../components/public/shell/Media.jsx";
 import NotFoundRoutePage from "./NotFoundRoutePage.jsx";
 import { BoxIcon, TruckIcon, WalletIcon } from "../components/public/shell/icons.jsx";
 
@@ -38,21 +38,64 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [related, setRelated] = useState([]);
   const [error, setError] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
+  const buyRef = useRef(null);
+  const optionsRef = useRef(null);
+  const buybarRef = useRef(null);
+  const [showBuybar, setShowBuybar] = useState(false);
+
+  useEffect(() => {
+    setShowBuybar(false);
+    const controls = buyRef.current;
+    if (!compact || status !== "ready" || !controls || !("IntersectionObserver" in window)) return undefined;
+    const top = parseFloat(getComputedStyle(controls).getPropertyValue("--vs-sticky-top")) || 76;
+    let passed = false;
+    let footerVisible = false;
+    const update = () => {
+      const visible = passed && !footerVisible;
+      if (!visible && buybarRef.current?.contains(document.activeElement)) {
+        controls.querySelector(".vs-pdp__cta")?.focus({ preventScroll: true });
+      }
+      setShowBuybar(visible);
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      passed = !entry.isIntersecting && entry.boundingClientRect.bottom <= top;
+      update();
+    }, { rootMargin: `-${top}px 0px 0px 0px`, threshold: 0 });
+    const footerObserver = new IntersectionObserver(([entry]) => {
+      footerVisible = entry.isIntersecting;
+      update();
+    });
+    observer.observe(controls);
+    const footer = document.querySelector(".vs-footer");
+    if (footer) footerObserver.observe(footer);
+    return () => { observer.disconnect(); footerObserver.disconnect(); };
+  }, [compact, status, slug]);
 
   useEffect(() => {
     setQty(1);
     setError("");
+    setShareStatus("");
   }, [slug]);
 
   useEffect(() => setError(""), [selection.variantId, selection.selectedOptionValueIds.join("-")]);
 
   useEffect(() => {
+    setRelated([]);
     if (status !== "ready" || !product) return undefined;
     let cancelled = false;
     store.rememberViewed(product.slug);
     catalogService
-      .related(product.slug, 4)
-      .then((rows) => !cancelled && setRelated(rows))
+      .related(product.slug, 6)
+      .then((rows) => {
+        if (cancelled) return;
+        const seen = new Set([product.slug]);
+        setRelated(rows.filter((item) => {
+          if (seen.has(item.slug)) return false;
+          seen.add(item.slug);
+          return true;
+        }).slice(0, 6));
+      })
       .catch(() => !cancelled && setRelated([]));
     return () => {
       cancelled = true;
@@ -90,6 +133,7 @@ export default function ProductDetailPage() {
   }
 
   const view = productView(product, money);
+  const selectionHasSale = view.hasSale && selection.price < product.price;
   const specs = product.specs || [];
   const structured = (product.attributes || [])
     .map((attribute) => ({ ...attribute, display: attributeDisplayValue(attribute) }))
@@ -108,10 +152,27 @@ export default function ProductDetailPage() {
   const add = () => {
     if (selection.missingChoice) {
       setError("اختر أحد الخيارات المتاحة قبل الإضافة إلى العربة.");
+      const option = optionsRef.current?.querySelector("button:not(:disabled)");
+      option?.focus({ preventScroll: true });
+      optionsRef.current?.scrollIntoView?.({ block: "center", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       return false;
     }
+    if (selection.soldOut || selection.unavailable) return false;
     addProduct(view, qty, selection.selected);
     return true;
+  };
+
+  const share = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) await navigator.share({ title: view.name, url });
+      else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareStatus("تم نسخ رابط المنتج");
+      } else setShareStatus("انسخ رابط المنتج من شريط العنوان");
+    } catch (cause) {
+      if (cause.name !== "AbortError") setShareStatus("تعذّرت المشاركة؛ انسخ الرابط من شريط العنوان");
+    }
   };
 
   const panels = [
@@ -201,7 +262,7 @@ export default function ProductDetailPage() {
           <div className="vs-pdp__info">
             <div className="vs-pdp__badges">
               {view.isPackage && <span className="vs-badge vs-badge--package">بكج</span>}
-              {view.hasSale && <span className="vs-badge vs-badge--sale">{view.discountText}</span>}
+              {selectionHasSale && <span className="vs-badge vs-badge--sale">−{discountPercent(selection.price, product.price)}٪</span>}
               {view.isNew && <span className="vs-badge vs-badge--new">جديد</span>}
             </div>
 
@@ -212,7 +273,7 @@ export default function ProductDetailPage() {
 
             <div className="vs-price vs-price--lg">
               <span className="vs-price__now">{money(selection.price * 1)}</span>
-              {view.hasSale && <span className="vs-price__was">{view.oldText}</span>}
+              {selectionHasSale && <span className="vs-price__was">{view.oldText}</span>}
             </div>
 
             <p className="vs-pdp__stock" data-tone={selection.soldOut ? "out" : selection.stock < 5 && product.trackInventory ? "low" : "ok"}>
@@ -241,15 +302,17 @@ export default function ProductDetailPage() {
             )}
 
             {selection.requiresChoice && (
-              <OptionPicker
-                product={product}
-                variants={selection.variants}
-                variantId={selection.variantId}
-                onPick={selection.setVariantId}
-                simpleChoices={selection.simpleChoices}
-                onSimplePick={selection.setSimpleChoice}
-                error={error}
-              />
+              <div ref={optionsRef}>
+                <OptionPicker
+                  product={product}
+                  variants={selection.variants}
+                  variantId={selection.variantId}
+                  onPick={selection.setVariantId}
+                  simpleChoices={selection.simpleChoices}
+                  onSimplePick={selection.setSimpleChoice}
+                  error={error}
+                />
+              </div>
             )}
 
             {selection.unavailable && (
@@ -278,7 +341,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <div className="vs-pdp__buy">
+            <div className="vs-pdp__buy" ref={buyRef}>
               <QuantityStepper
                 value={qty}
                 onDecrease={() => setQty((value) => Math.max(1, value - 1))}
@@ -297,6 +360,11 @@ export default function ProductDetailPage() {
               />
             </div>
 
+            <div className="vs-pdp__share">
+              <button type="button" className="vs-btn vs-btn--outline" onClick={share}>مشاركة المنتج</button>
+              <span role="status">{shareStatus}</span>
+            </div>
+
             <ul className="vs-pdp__assurance">
               <li>
                 <WalletIcon size={17} /> الدفع عند الاستلام
@@ -307,36 +375,33 @@ export default function ProductDetailPage() {
             </ul>
           </div>
 
-          {/* Inside the product grid rather than under it: on desktop the panels
-              fill the column beside the gallery instead of leaving it blank. */}
-          <section className="vs-pdp__panels">
-            <ProductPanels panels={panels} />
-          </section>
         </div>
+        <section className="vs-pdp__panels" aria-label="تفاصيل المنتج">
+          <ProductPanels panels={panels} />
+        </section>
       </div>
 
       {related.length > 0 && (
-        <section className="vs-container vs-section">
-          <SectionHead title="منتجات ذات صلة" moreHref={view.categoryHref || "/shop"} />
+        <section className="vs-container vs-section vs-related" aria-label="قد يعجبك أيضًا">
+          <SectionHead title="قد يعجبك أيضًا" moreHref={view.categoryHref || "/shop"} />
           <ProductGrid
             views={related.map((item) => productView(item, money))}
             eagerCount={0}
+            variant="rail"
+            listing
           />
         </section>
       )}
 
-      {compact && (
-      <div className="vs-buybar">
-        <div className="vs-buybar__media">
-          <Media src={view.imageUrl} fallback={view.bg} alt="" ratio="1 / 1" />
-        </div>
+      {compact && showBuybar && !store.overlay && (
+      <div className="vs-buybar" ref={buybarRef} role="region" aria-label="شراء المنتج">
         <div className="vs-buybar__text">
           <span className="vs-buybar__name">{view.name}</span>
           <span className="vs-buybar__price">{money(selection.price * qty)}</span>
         </div>
         <AddToCartButton
           onAdd={add}
-          label={selection.soldOut ? "غير متوفر" : "أضف إلى العربة"}
+          label={selection.soldOut ? "غير متوفر" : selection.missingChoice ? "اختر الخيارات" : "أضف إلى العربة"}
           disabled={selection.soldOut || selection.unavailable}
           className="vs-btn vs-btn--primary vs-buybar__cta"
         />

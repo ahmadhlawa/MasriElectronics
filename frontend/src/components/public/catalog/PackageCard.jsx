@@ -42,7 +42,7 @@ export default function PackageCard({ view, listing = false, eager = false, reve
       : view.short || "";
 
   return (
-    <article className="vs-pkg" {...revealProps} {...(listing ? {} : cardProps)}>
+    <article className={`vs-pkg${listing ? " vs-pkg--listing" : ""}`} {...revealProps} {...(listing ? {} : cardProps)}>
       <div className="vs-pkg__media">
         <Link to={view.href} className="vs-pkg__link" aria-label={view.name}>
           <Media

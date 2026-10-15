@@ -14,7 +14,7 @@ export default function Gallery({ images, fallback, alt }) {
   const active = list[index] || null;
 
   return (
-    <div className="vs-gallery">
+    <div className={`vs-gallery${list.length > 1 ? " vs-gallery--multiple" : ""}${!list.length ? " vs-gallery--empty" : ""}`}>
       <Media
         className="vs-gallery__main"
         ratio="1 / 1"

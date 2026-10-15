@@ -74,7 +74,16 @@ export default function FilterPanel({ filters, patch, reset, showCategories, cei
       ))}
 
       <fieldset className="vs-filters__group">
-        <legend className="vs-filters__legend">السعر الأقصى — {money(max)}</legend>
+        <legend className="vs-filters__legend">السعر</legend>
+        <div className="vs-filterrange">
+          <label>من
+            <input className="vs-select" type="number" min="0" step="any" aria-label="السعر الأدنى" placeholder="0" value={filters.minPrice ?? ""} onChange={(event) => patch({ min: event.target.value || null })} />
+          </label>
+          <label>إلى
+            <input className="vs-select" type="number" min="0" step="any" aria-label="السعر الأعلى" placeholder={String(ceiling)} value={filters.maxPrice ?? ""} onChange={(event) => patch({ max: event.target.value || null })} />
+          </label>
+        </div>
+        <span className="vs-filters__price">{money(filters.minPrice ?? 0)} — {money(max)}</span>
         <input
           className="vs-range"
           type="range"
