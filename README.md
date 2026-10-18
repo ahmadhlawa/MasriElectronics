@@ -1,28 +1,22 @@
-# Masri Electronics
+# Original appliance brand logos (SVG)
 
-Arabic RTL commerce storefront and administration application for **المصري للأدوات الكهربائية**.
+The 10 files in this archive are vector logo artwork obtained from published third-party SVG repositories, not AI-generated recreations.
 
-## Local setup
+For the Masri Electronics admin dashboard:
+1. Create each brand using the exact brand name in brands.csv.
+2. Upload the corresponding .svg file as its logo.
+3. Avoid renaming a brand or swapping logos.
 
-Requires Python 3.12+ and Node.js 18+.
+Trademark notice: All brands and trademarks belong to their respective owners. Availability of SVG files in third-party repositories is not a license for unrestricted trademark use. Check brand guidelines as appropriate.
 
-```powershell
-cd backend
-python -m venv .venv
-.venv\Scripts\python.exe -m pip install -e ".[dev]"
-copy .env.example .env
-.venv\Scripts\alembic.exe upgrade head
-.venv\Scripts\python.exe -m scripts.instance_cli apply --profile ..\instance\masri-electronics.yaml
-.venv\Scripts\python.exe -m app.initial_data --email you@example.com --password '<choose-one>'
-.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8002
-
-cd ..\frontend
-npm ci
-copy .env.example .env
-npm run dev
-```
-
-The isolated local endpoints are frontend `http://localhost:5176`, backend
-`http://127.0.0.1:8002`, and health `http://127.0.0.1:8002/health`.
-
-Customer contact details, policies, domain, delivery areas, logo, verified brand palette, and catalog must be configured before launch. No customer catalog or demo seed ships with this clone.
+Source links:
+- Samsung: https://github.com/ln-dev7/logos-apps/blob/master/logos/samsung.svg
+- LG: https://github.com/ln-dev7/logos-apps/blob/master/logos/lg-wordmark.svg
+- Philips: https://github.com/JetBrains/kotlin-web-site/blob/master/public/images/companies/philips.svg
+- Bosch: https://github.com/venetacucineBI/logos/blob/main/Bosch_.svg
+- Panasonic: https://github.com/ln-dev7/logos-apps/blob/master/logos/panasonic.svg
+- Beko: https://github.com/venetacucineBI/logos/blob/main/Beko.svg
+- Hisense: https://github.com/venetacucineBI/logos/blob/main/Hisense.svg
+- Toshiba: https://github.com/ln-dev7/logos-apps/blob/master/logos/toshiba.svg
+- Electrolux: https://github.com/haydenbleasel/blume/blob/main/apps/docs/public/logos/electrolux.svg
+- Midea: https://github.com/esphome/esphome.io/blob/current/public/images/midea.svg
