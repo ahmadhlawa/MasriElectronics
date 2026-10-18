@@ -26,7 +26,6 @@ export function Drawer({
   bodyClass = "",
   className = "",
   id,
-  hoverProps = null,
   autoFocus = true,
   children,
 }) {
@@ -46,7 +45,6 @@ export function Drawer({
         className={`vs-drawer vs-drawer--${side}${wide ? " vs-drawer--wide" : ""}${
           className ? ` ${className}` : ""
         }`}
-        {...(hoverProps || {})}
       >
         <div className="vs-drawer__head">
           {head}

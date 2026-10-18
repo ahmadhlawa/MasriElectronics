@@ -91,68 +91,6 @@
   padding: 12px 6px 6px;
 }
 
-.vs-menu__cat {
-  border-block-end: 1px solid var(--vs-border);
-}
-
-.vs-menu__catrow {
-  display: flex;
-  align-items: center;
-}
-
-.vs-menu__catlink {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 6px;
-  min-height: 56px;
-  min-width: 0;
-}
-
-.vs-menu__thumb {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  border-radius: var(--vs-r-sm);
-  overflow: hidden;
-}
-
-.vs-menu__catname {
-  display: block;
-  font-size: 14.5px;
-  font-weight: 500;
-  color: var(--vs-ink);
-  line-height: 1.4;
-}
-
-.vs-menu__catcount {
-  display: block;
-  font-size: 12px;
-  color: var(--vs-ink-4);
-}
-
-.vs-menu__toggle[data-open="true"] {
-  transform: rotate(180deg);
-}
-
-.vs-menu__children {
-  display: flex;
-  flex-direction: column;
-  padding: 0 6px 10px 6px;
-  animation: vs-fade var(--vs-t) var(--vs-ease) both;
-}
-
-.vs-menu__child {
-  padding: 10px 12px;
-  font-size: var(--vs-fs-sm);
-  color: var(--vs-ink-3);
-  border-radius: var(--vs-r-sm);
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-}
-
 .vs-menu__link {
   padding: 12px 6px;
   min-height: 48px;

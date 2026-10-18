@@ -56,6 +56,29 @@ const packageProduct = {
 const cardOf = async (name) => (await screen.findByText(name)).closest("article");
 
 describe("product card behaviour", () => {
+  it.each([
+    [productFixture, "أضف للعربة", "أضف إلى العربة", false],
+    [optionProduct, "اختر الخيارات", "اختر الخيارات", false],
+    [soldOutProduct, "غير متوفر", "غير متوفر حالياً", true],
+  ])("offers a compact label for $name while retaining its accessible action", async (product, compact, accessible, disabled) => {
+    stubApi({ ...storefrontRoutes, "/api/v1/products": page([product]) });
+    renderApp("/shop");
+    const card = within(await cardOf(product.name));
+    const action = card.getByRole("button", { name: accessible, exact: true });
+    expect(action.querySelector(".vs-atc__label--mobile")).toHaveTextContent(compact);
+    expect(action).toHaveAccessibleName(accessible);
+    expect(action.disabled).toBe(disabled);
+  });
+
+  it("announces successful addition with the compact label enabled", async () => {
+    stubApi(storefrontRoutes);
+    renderApp("/shop");
+    const card = within(await cardOf(productFixture.name));
+    await userEvent.click(card.getByRole("button", { name: "أضف إلى العربة" }));
+    expect(card.getByRole("button", { name: "تمت الإضافة" })).toBeInTheDocument();
+    expect(cartStorage.load()).toHaveLength(1);
+  });
+
   it("shows appliance identity and buying details on homepage cards at rest", async () => {
     const appliance = {
       ...productFixture,
@@ -148,7 +171,7 @@ describe("product card behaviour", () => {
     renderApp("/shop");
 
     const card = within(await cardOf(soldOutProduct.name));
-    expect(card.getByText("غير متوفر حالياً", { selector: "span" })).toBeInTheDocument();
+    expect(card.getByText("غير متوفر حالياً", { selector: ".vs-card__stock" })).toBeInTheDocument();
     const button = card.getByRole("button", { name: "غير متوفر حالياً" });
     expect(button).toBeDisabled();
 

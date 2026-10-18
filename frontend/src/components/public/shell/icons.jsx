@@ -58,6 +58,23 @@ export const TagIcon = icon(
   </>,
 );
 
+// Appliance fallbacks share the existing icon grid and stroke treatment.
+const applianceCategories = [
+  [/coffee|drink|قهو|مشروب/, icon(<><path d="M5 9h11v7a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4ZM16 10h2a3 3 0 0 1 0 6h-2M8 3v3M12 3v3M3 22h17" /></>)],
+  [/clean|vacuum|تنظيف|عناية بالمنزل|مكانس/, icon(<><path d="M7 16v-6a4 4 0 0 1 8 0v5M15 15l3 5M16 21h6" /><rect x="3" y="12" width="8" height="8" rx="3" /><circle cx="5.5" cy="21" r="1" /><circle cx="9" cy="21" r="1" /></>)],
+  [/heat|cool|climat|fan|تدفئ|تبريد|مراوح|تكييف/, icon(<><circle cx="12" cy="9" r="7" /><circle cx="12" cy="9" r="1.5" /><path d="M12 7.5V4M13.5 9H17M12 10.5V14M10.5 9H7M12 16v5M7 22h10" /></>)],
+  [/personal|hair|عناية شخص|شعر|حلاقة/, icon(<><path d="M5 6h10a4 4 0 0 1 0 8H5ZM5 6 2 5v10l3-1M10 14l1 7h4l-1-7M18 7l3-1M19 10h3M18 13l3 1" /></>)],
+  [/kitchen|cook|مطبخ|طهي|طبخ/, icon(<><path d="M7 4h10l-1 11H8ZM9 15l-2 6h12l-2-6M10 8h4M10 11h3M9 2h6M17 6h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2" /></>)],
+  [/small.home|iron|منزلية|مكاوي|كي/, icon(<><path d="M3 17 7 9h9l5 8v3H3ZM9 9V6h6l2 3M3 17h18M7 13h5M15 5V2" /></>)],
+];
+const ApplianceIcon = icon(<><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M5 8h14" /><circle cx="12" cy="14" r="4" /><path d="M8 5.5h1M12 5.5h1" /></>);
+
+export function CategoryIcon({ category, ...props }) {
+  const label = `${category?.slug || ""} ${category?.name || ""}`.toLowerCase();
+  const Icon = applianceCategories.find(([pattern]) => pattern.test(label))?.[1] || ApplianceIcon;
+  return <Icon {...props} />;
+}
+
 export const GridDenseIcon = icon(
   <>
     <rect x="3" y="3" width="4.6" height="4.6" rx="1" />

@@ -1,9 +1,49 @@
+import { useEffect, useId, useRef, useState } from "react";
 import ProductCard from "./ProductCard.jsx";
 import PackageCard from "./PackageCard.jsx";
+import { ArrowForward } from "../shell/icons.jsx";
+
+function ProductRail({ children }) {
+  const ref = useRef(null);
+  const id = useId();
+  const [edges, setEdges] = useState({ start: true, end: true });
+  const measure = () => {
+    const rail = ref.current;
+    if (!rail) return;
+    const position = Math.abs(rail.scrollLeft);
+    const start = position < 2;
+    const end = position + rail.clientWidth >= rail.scrollWidth - 2;
+    setEdges((current) => current.start === start && current.end === end ? current : { start, end });
+  };
+  useEffect(() => {
+    measure();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    if (ref.current) observer?.observe(ref.current);
+    return () => observer?.disconnect();
+  }, [children]);
+  const scroll = (forward) => {
+    const rail = ref.current;
+    const direction = getComputedStyle(rail).direction === "rtl" ? -1 : 1;
+    rail.scrollBy({ left: direction * (forward ? 1 : -1) * rail.clientWidth * 0.8,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
+  return (
+    <div className="vs-product-rail">
+      <div className="vs-rail" ref={ref} id={id} onScroll={measure} tabIndex={0} role="region" aria-label="تصفّح المنتجات">
+        {children}
+      </div>
+      {!(edges.start && edges.end) && (
+        <div className="vs-product-rail__controls" role="group" aria-label="التنقل بين المنتجات">
+          <button type="button" className="vs-iconbtn" aria-label="المنتجات السابقة" aria-controls={id} disabled={edges.start} onClick={() => scroll(false)}><ArrowForward size={18} /></button>
+          <button type="button" className="vs-iconbtn" aria-label="المنتجات التالية" aria-controls={id} disabled={edges.end} onClick={() => scroll(true)}><ArrowForward size={18} /></button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
- * Skeleton that matches the real card's box, so nothing shifts when data lands.
- * On listing pages the CSS reserves a visible body at desktop sizes too.
+ * Skeleton reserves both the appliance image and the visible buying details.
  */
 export function CardSkeleton() {
   return (
@@ -45,11 +85,12 @@ export default function ProductGrid({ views, variant = "grid", eagerCount = 4, l
   if (!views?.length) return null;
   const cards = views.map((view, index) =>
     view.isPackage ? (
-      <PackageCard key={view.id} view={view} listing={listing} eager={index < eagerCount} revealDelay={Math.min(index * 70, 280)} />
+      <PackageCard key={view.id} view={view} listing={listing} eager={index < eagerCount} />
     ) : (
-      <ProductCard key={view.id} view={view} listing={listing} eager={index < eagerCount} revealDelay={Math.min(index * 70, 280)} />
+      <ProductCard key={view.id} view={view} listing={listing} eager={index < eagerCount} />
     ),
   );
   const wrapper = WRAPPER[variant];
+  if (variant === "rail") return <ProductRail>{cards}</ProductRail>;
   return wrapper ? <div className={wrapper}>{cards}</div> : cards;
 }

@@ -119,8 +119,8 @@ export default function SearchBox({ autoFocus = false, onNavigate, placeholder }
       <span className="vs-hsearch__icon">
         <SearchIcon size={19} />
       </span>
-      <button type="submit" className="vs-hsearch__submit">
-        بحث
+      <button type="submit" className="vs-hsearch__submit" aria-label="بحث">
+        <SearchIcon size={19} />
       </button>
 
       {open && (

@@ -54,7 +54,7 @@ export default function ProductPanels({ panels }) {
 
   return (
     <div className="vs-tabs">
-      <div className="vs-tabs__list" role="tablist">
+      <div className="vs-tabs__list" role="tablist" aria-label="معلومات المنتج">
         {panels.map((panel) => (
           <button
             key={panel.key}
@@ -63,8 +63,19 @@ export default function ProductPanels({ panels }) {
             id={`vs-tab-${panel.key}`}
             aria-selected={openTab === panel.key}
             aria-controls={`vs-panel-${panel.key}`}
+            tabIndex={openTab === panel.key ? 0 : -1}
             className="vs-tabs__tab"
             onClick={() => setOpenTab(panel.key)}
+            onKeyDown={(event) => {
+              const position = panels.findIndex((item) => item.key === panel.key);
+              const next = event.key === "Home" ? 0 : event.key === "End" ? panels.length - 1
+                : event.key === "ArrowLeft" ? (position + 1) % panels.length
+                  : event.key === "ArrowRight" ? (position - 1 + panels.length) % panels.length : null;
+              if (next === null) return;
+              event.preventDefault();
+              setOpenTab(panels[next].key);
+              event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next].focus();
+            }}
           >
             {panel.label}
           </button>
@@ -78,6 +89,7 @@ export default function ProductPanels({ panels }) {
             id={`vs-panel-${panel.key}`}
             aria-labelledby={`vs-tab-${panel.key}`}
             className="vs-tabs__panel"
+            tabIndex={0}
           >
             {panel.content}
           </div>

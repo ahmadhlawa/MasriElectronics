@@ -2,36 +2,29 @@ import { Link } from "react-router-dom";
 import AddToCartButton from "../../AddToCartButton.jsx";
 import Media from "../shell/Media.jsx";
 import { productBadges } from "../../../utils/productView.js";
-import { useCardReveal } from "../../../hooks/useCardReveal.js";
-import { useViewportReveal } from "../../../hooks/useViewportReveal.js";
 import { useProductActions } from "../../../hooks/useStorefront.js";
-import { EyeIcon, PlusIcon } from "../shell/icons.jsx";
+import { CartIcon, EyeIcon } from "../shell/icons.jsx";
 
 /**
  * The catalogue card. Takes a view built by `productView`, so a card never
  * reaches into the raw API shape and every surface shows the same states.
  *
- * On the homepage the details panel keeps its existing reveal behaviour.
- * Listing cards keep the panel visible so name, price and stock can be scanned.
+ * Buying information stays visible on every storefront surface.
  *
  * The primary button is the product's own action: a direct add for a simple
  * product, "choose an option" for one that needs a variant, and disabled when
  * the product is sold out.
  */
-export default function ProductCard({ view, listing = false, eager = false, revealDelay = 0 }) {
+export default function ProductCard({ view, listing = false, eager = false }) {
   const { openQuick, primaryAction } = useProductActions();
-  const { cardProps } = useCardReveal();
-  const revealProps = useViewportReveal(revealDelay);
   if (!view) return null;
 
   const badges = productBadges(view);
-  const listingSpecs = view.cardAttributes.length ? view.cardAttributes : view.specs;
-  // Listing cards state availability in the visible panel. Other cards retain
-  // the existing sold-out veil and disabled button.
-  const stockLabel = view.soldOut ? (listing ? "غير متوفر حالياً" : "") : view.lowStock ? `بقي ${view.stock} فقط` : "متوفر";
+  const listingSpecs = (view.cardAttributes.length ? view.cardAttributes : view.specs).slice(0, 2);
+  const stockLabel = view.soldOut ? "غير متوفر حالياً" : view.lowStock ? `بقي ${view.stock} فقط` : "متوفر في المخزون";
 
   return (
-    <article className={`vs-card${listing ? " vs-card--listing" : ""}`} {...revealProps} {...(listing ? {} : cardProps)}>
+    <article className={`vs-card${listing ? " vs-card--listing" : ""}`} data-stock={view.soldOut ? "out" : "in"}>
       <div className="vs-card__media">
         <Link to={view.href} className="vs-card__link" aria-label={view.name}>
           <Media
@@ -54,19 +47,26 @@ export default function ProductCard({ view, listing = false, eager = false, reve
           </div>
         )}
 
-        {view.soldOut && !listing && (
-          <div className="vs-card__veil">
-            <span>غير متوفر حالياً</span>
-          </div>
-        )}
+        <button
+          type="button"
+          className="vs-iconbtn vs-card__quick"
+          onClick={() => openQuick(view)}
+          aria-label={`نظرة سريعة على ${view.name}`}
+          title="نظرة سريعة"
+        >
+          <EyeIcon size={17} />
+        </button>
       </div>
 
       <div className="vs-card__panel">
-        {listing && view.brandName && <span className="vs-card__brand">{view.brandName}</span>}
         <Link to={view.href} className="vs-card__title vs-clamp-2">
           {view.name}
         </Link>
-        {listing && (view.modelNumber || view.sku) && <span className="vs-card__sku">{view.modelNumber ? "رقم الموديل" : "رمز المنتج"}: <bdi>{view.modelNumber || view.sku}</bdi></span>}
+        {(view.brandName || view.modelNumber) && (
+          <span className="vs-card__identity vs-clamp-1">
+            {view.brandName}{view.brandName && view.modelNumber ? " | " : ""}<bdi>{view.modelNumber}</bdi>
+          </span>
+        )}
         {listing && listingSpecs.length > 0 && (
           <ul className="vs-card__specs">
             {listingSpecs.map(([name, value]) => <li key={`${name}-${value}`}>{name}: {value}</li>)}
@@ -76,7 +76,7 @@ export default function ProductCard({ view, listing = false, eager = false, reve
         <div className="vs-card__meta">
           <div className="vs-price">
             <span className="vs-price__now">{view.priceText}</span>
-            {view.hasSale && <span className="vs-price__was">{view.oldText}</span>}
+            {view.hasSale && <del className="vs-price__was">{view.oldText}</del>}
           </div>
           {stockLabel && <span className="vs-card__stock">{stockLabel}</span>}
         </div>
@@ -85,19 +85,11 @@ export default function ProductCard({ view, listing = false, eager = false, reve
           <AddToCartButton
             onAdd={primaryAction(view)}
             label={view.actionLabel}
-            icon={view.canAddDirectly ? <PlusIcon size={15} /> : null}
+            mobileLabel={view.soldOut ? "غير متوفر" : view.canAddDirectly ? "أضف للعربة" : "اختر الخيارات"}
+            icon={view.canAddDirectly ? <CartIcon size={16} /> : null}
             disabled={view.soldOut}
             className="vs-btn vs-btn--primary vs-card__cta"
           />
-          <button
-            type="button"
-            className="vs-iconbtn vs-card__quick"
-            onClick={() => openQuick(view)}
-            aria-label={`نظرة سريعة على ${view.name}`}
-            title="نظرة سريعة"
-          >
-            <EyeIcon size={16} />
-          </button>
         </div>
       </div>
     </article>

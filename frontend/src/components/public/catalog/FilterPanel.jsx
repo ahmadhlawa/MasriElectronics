@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useCategoryNav, useMoney } from "../../../hooks/useStorefront.js";
 
 /**
@@ -7,6 +8,7 @@ import { useCategoryNav, useMoney } from "../../../hooks/useStorefront.js";
  */
 export default function FilterPanel({ filters, patch, reset, showCategories, ceiling, brands = [], definitions = [] }) {
   const categories = useCategoryNav();
+  const groupId = useId();
   const money = useMoney();
   const max = filters.maxPrice ?? ceiling;
   const attributeValue = (key, operator) => filters.attributes
@@ -19,9 +21,9 @@ export default function FilterPanel({ filters, patch, reset, showCategories, cei
 
   return (
     <div className="vs-filters">
-      <div className="vs-filters__group">
+      <div className="vs-filters__head">
         <div className="vs-filters__legend-row">
-          <span className="vs-filters__legend">تصفية النتائج</span>
+          <h2 className="vs-filters__title">تصفية النتائج</h2>
           <button type="button" className="vs-activefilters__clear" onClick={reset}>
             إعادة تعيين
           </button>
@@ -35,46 +37,28 @@ export default function FilterPanel({ filters, patch, reset, showCategories, cei
             <label key={category.slug} className="vs-check">
               <input
                 type="radio"
-                name="vs-filter-category"
+                name={`${groupId}-category`}
                 checked={filters.category === category.slug}
                 onChange={() => patch({ cat: category.slug })}
               />
-              {category.name}
+              <span className="vs-check__label">{category.name}</span>
               <span className="vs-check__count">{category.count}</span>
             </label>
           ))}
         </fieldset>
       )}
 
-      {brands.length > 0 && (
-        <fieldset className="vs-filters__group">
-          <legend className="vs-filters__legend">العلامة التجارية</legend>
-          <select className="vs-select vs-filterselect" aria-label="العلامة التجارية" value={filters.brandId ?? ""} onChange={(event) => patch({ brand: event.target.value || null })}>
-            <option value="">كل العلامات</option>
-            {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
-          </select>
-        </fieldset>
-      )}
-
-      {definitions.filter((definition) => definition.filterable && definition.type !== "text").map((definition) => (
-        <fieldset className="vs-filters__group" key={definition.id}>
-          <legend className="vs-filters__legend">{definition.label}{definition.unit ? ` (${definition.unit})` : ""}</legend>
-          {definition.type === "number" ? (
-            <div className="vs-filterrange">
-              <input className="vs-select" type="number" step="any" aria-label={`${definition.label} من`} placeholder="من" value={attributeValue(definition.key, "gte")} onChange={(event) => setAttribute(definition.key, "gte", event.target.value)} />
-              <input className="vs-select" type="number" step="any" aria-label={`${definition.label} إلى`} placeholder="إلى" value={attributeValue(definition.key, "lte")} onChange={(event) => setAttribute(definition.key, "lte", event.target.value)} />
-            </div>
-          ) : (
-            <select className="vs-select vs-filterselect" aria-label={definition.label} value={attributeValue(definition.key, "eq")} onChange={(event) => setAttribute(definition.key, "eq", event.target.value)}>
-              <option value="">الكل</option>
-              {(definition.type === "boolean" ? [{ code: "true", label: "نعم" }, { code: "false", label: "لا" }] : definition.enum_choices || []).map((choice) => <option key={choice.code} value={choice.code}>{choice.label}</option>)}
-            </select>
-          )}
-        </fieldset>
-      ))}
-
       <fieldset className="vs-filters__group">
-        <legend className="vs-filters__legend">السعر الأقصى — {money(max)}</legend>
+        <legend className="vs-filters__legend">السعر</legend>
+        <div className="vs-filterrange">
+          <label>من
+            <input className="vs-select" type="number" min="0" step="any" aria-label="السعر الأدنى" placeholder="0" value={filters.minPrice ?? ""} onChange={(event) => patch({ min: event.target.value || null })} />
+          </label>
+          <label>إلى
+            <input className="vs-select" type="number" min="0" step="any" aria-label="السعر الأعلى" placeholder={String(ceiling)} value={filters.maxPrice ?? ""} onChange={(event) => patch({ max: event.target.value || null })} />
+          </label>
+        </div>
+        <span className="vs-filters__price">{money(filters.minPrice ?? 0)} - {money(max)}</span>
         <input
           className="vs-range"
           type="range"
@@ -108,6 +92,43 @@ export default function FilterPanel({ filters, patch, reset, showCategories, cei
           المتوفر في المخزون فقط
         </label>
       </fieldset>
+
+      {brands.length > 0 && (
+        <fieldset className="vs-filters__group">
+          <legend className="vs-filters__legend">العلامة التجارية</legend>
+          <label className="vs-check">
+            <input type="radio" name={`${groupId}-brand`} checked={filters.brandId == null} onChange={() => patch({ brand: null })} />
+            كل العلامات
+          </label>
+          {brands.map((brand) => (
+            <label className="vs-check" key={brand.id}>
+              <input type="radio" name={`${groupId}-brand`} checked={String(filters.brandId) === String(brand.id)} onChange={() => patch({ brand: brand.id })} />
+              <span className="vs-check__label">{brand.name}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+
+      {definitions.filter((definition) => definition.filterable && definition.type !== "text").map((definition) => (
+        <fieldset className="vs-filters__group" key={definition.id}>
+          <legend className="vs-filters__legend">{definition.label}{definition.unit ? ` (${definition.unit})` : ""}</legend>
+          {definition.type === "number" ? (
+            <div className="vs-filterrange">
+              <input className="vs-select" type="number" step="any" aria-label={`${definition.label} من`} placeholder="من" value={attributeValue(definition.key, "gte")} onChange={(event) => setAttribute(definition.key, "gte", event.target.value)} />
+              <input className="vs-select" type="number" step="any" aria-label={`${definition.label} إلى`} placeholder="إلى" value={attributeValue(definition.key, "lte")} onChange={(event) => setAttribute(definition.key, "lte", event.target.value)} />
+            </div>
+          ) : (
+            <select className="vs-select vs-filterselect" aria-label={definition.label} value={attributeValue(definition.key, "eq")} onChange={(event) => setAttribute(definition.key, "eq", event.target.value)}>
+              <option value="">الكل</option>
+              {(definition.type === "boolean" ? [{ code: "true", label: "نعم" }, { code: "false", label: "لا" }] : definition.enum_choices || []).map((choice) => <option key={choice.code} value={choice.code}>{choice.label}</option>)}
+            </select>
+          )}
+        </fieldset>
+      ))}
+
+
+
+
     </div>
   );
 }
