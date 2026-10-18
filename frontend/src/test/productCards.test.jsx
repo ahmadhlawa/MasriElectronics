@@ -94,12 +94,12 @@ describe("product card behaviour", () => {
 
     const cardElement = await cardOf(appliance.name);
     const card = within(cardElement);
-    expect(cardElement).toHaveClass("vs-card--listing");
-    expect(card.getByText("سامسونج")).toBeInTheDocument();
-    expect(card.getByText(/WW80T/)).toBeInTheDocument();
-    expect(card.getByText(/السعة.*8 كغم/)).toBeInTheDocument();
+    expect(cardElement.querySelector(".vs-card__panel")).toBeVisible();
+    expect(card.getByText(/سامسونج/)).toHaveTextContent("سامسونج | WW80T");
+    expect(card.getByText(/WW80T/)).toBeVisible();
+    expect(card.getByText(/السعة.*8 كغم/)).toBeVisible();
     expect(card.getByText("100 ₪")).toBeInTheDocument();
-    expect(card.getByText("متوفر")).toBeInTheDocument();
+    expect(card.getByText("متوفر في المخزون")).toBeInTheDocument();
     expect(card.getByRole("button", { name: /أضف إلى العربة/ })).toBeEnabled();
   });
 
@@ -245,12 +245,12 @@ describe("product card behaviour", () => {
     const cardElement = await cardOf(appliance.name);
     const card = within(cardElement);
     expect(cardElement).toHaveClass("vs-card--listing");
-    expect(card.getByText("سامسونج")).toBeInTheDocument();
+    expect(card.getByText(/سامسونج/)).toHaveTextContent("سامسونج | WW80T");
     expect(card.getByText(/WW80T/)).toBeInTheDocument();
     expect(card.getByText(/السعة.*8 كغم/)).toBeInTheDocument();
     expect(card.getByText(/سرعة العصر.*1400 دورة/)).toBeInTheDocument();
     expect(card.queryByText(/اللون.*أبيض/)).not.toBeInTheDocument();
-    expect(card.getByText("متوفر")).toBeInTheDocument();
+    expect(card.getByText("متوفر في المخزون")).toBeInTheDocument();
     expect(card.getByRole("button", { name: /أضف إلى العربة/ })).toBeEnabled();
   });
 
@@ -277,7 +277,7 @@ describe("product card behaviour", () => {
     );
   });
 
-  it("carries everything a shopper acts on in the card's reveal panel", async () => {
+  it("keeps buying details visible with quick view available from the card media", async () => {
     stubApi(storefrontRoutes);
     renderApp("/shop");
 
@@ -285,13 +285,13 @@ describe("product card behaviour", () => {
     const panel = card.querySelector(".vs-card__panel");
     expect(panel).not.toBeNull();
 
-    // Nothing the shopper needs sits outside the panel.
+    // Buying details stay together; quick view sits over the product image.
     expect(within(panel).getByText(productFixture.name)).toBeInTheDocument();
     expect(within(panel).getByText("100 ₪")).toBeInTheDocument();
     expect(within(panel).getByText("130 ₪")).toBeInTheDocument();
-    expect(within(panel).getByText("متوفر")).toBeInTheDocument();
+    expect(within(panel).getByText("متوفر في المخزون")).toBeInTheDocument();
     expect(within(panel).getByRole("button", { name: /أضف إلى العربة/ })).toBeInTheDocument();
-    expect(within(panel).getByRole("button", { name: /نظرة سريعة على/ })).toBeInTheDocument();
+    expect(within(card.querySelector(".vs-card__media")).getByRole("button", { name: /نظرة سريعة على/ })).toBeEnabled();
   });
 
   it("keeps ordinary product cards on their primary image", async () => {

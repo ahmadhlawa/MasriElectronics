@@ -258,11 +258,11 @@ export default function ProductDetailPage() {
       )}
     </div>
   );
-  const keySpecifications = highlights.length > 0 && (
+  const keySpecifications = keySpecs.length > 0 && (
     <section className="vs-pdp__key-specs" aria-label="أبرز المواصفات">
       <h2>أبرز المواصفات</h2>
       <dl>
-        {highlights.map((attribute) => (
+        {keySpecs.map((attribute) => (
           <div key={attribute.key}><dt>{attribute.label}</dt><dd>{attribute.display}</dd></div>
         ))}
       </dl>
@@ -309,7 +309,8 @@ export default function ProductDetailPage() {
 
             {availability}
             {pricing}
-            {shortDescription || keySpecifications}
+            {shortDescription}
+            {keySpecifications}
             <div className="vs-pdp__purchase">
               {selection.requiresChoice && (
                 <div ref={optionsRef}>

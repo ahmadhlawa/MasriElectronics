@@ -16,12 +16,13 @@ import { orderTokenStorage } from "../storage/authStorage.js";
 
 describe("public storefront", () => {
   it("renders the shell with store identity from the API", async () => {
-    stubApi(storefrontRoutes);
+    const settings = { ...settingsFixture, store_name_ar: "المصري — متجر الاختبار" };
+    stubApi({ ...storefrontRoutes, "/api/v1/store/settings": settings });
     renderApp("/");
 
-    expect(await screen.findAllByText(settingsFixture.store_name_ar)).not.toHaveLength(0);
+    expect(await screen.findAllByText(settings.store_name_ar)).not.toHaveLength(0);
     expect(screen.getByRole("search")).toBeInTheDocument();
-    expect(await screen.findByText(settingsFixture.announcement)).toBeInTheDocument();
+    expect(screen.queryByText(settingsFixture.announcement)).not.toBeInTheDocument();
     expect(document.querySelector(".vs-footer")).toHaveTextContent("الدفع عند الاستلام");
     expect(screen.queryByText(/تحويل بنكي|تحويل يدوي/)).not.toBeInTheDocument();
     expect(screen.queryByText("من الساعة العاشرة صباحاً حتى السابعة مساءً")).not.toBeInTheDocument();
@@ -58,7 +59,7 @@ describe("public storefront", () => {
 
     expect(await screen.findByRole("heading", { name: "كل المنتجات", level: 1 })).toBeInTheDocument();
     expect(await screen.findAllByText(productFixture.name)).not.toHaveLength(0);
-    expect(await screen.findByText("1 منتجاً")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("main").querySelector(".vs-toolbar__count")).toHaveTextContent(/^1 منتجاً$/));
   });
 
   it("shows an intentional empty state when nothing matches", async () => {

@@ -65,17 +65,32 @@ describe("public shell", () => {
     expect(footer.querySelectorAll('a[href="/track-order"]')).toHaveLength(0);
   });
 
-  it("labels configured demo content and hides unsupported trust claims", async () => {
+  it.each([
+    { demo: true, configured: true },
+    { demo: false, configured: true },
+    { demo: false, configured: false },
+  ])("gates trust claims with demo=$demo and configured=$configured without restoring banners", async ({ demo, configured }) => {
     stubApi({
       ...storefrontRoutes,
-      "/api/v1/store/settings": { ...settingsFixture, demo_business_content: true },
-      "/api/v1/delivery-areas": [],
+      "/api/v1/store/settings": { ...settingsFixture, store_name_ar: "متجر اختبار الحماية", demo_business_content: demo },
+      "/api/v1/delivery-areas": configured ? storefrontRoutes["/api/v1/delivery-areas"] : [],
+      "/api/v1/pages/return-policy": { title: "سياسة الإرجاع", content: configured ? "شروط المتجر المهيأة للإرجاع." : "" },
     });
     renderApp("/");
 
-    expect(await screen.findByText(/معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق/)).toBeInTheDocument();
-    expect(screen.queryByText("التوصيل إلى المناطق المتاحة")).not.toBeInTheDocument();
-    expect(document.querySelector('.vs-trust a[href="/page/return-policy"]')).toBeNull();
+    await within(screen.getByRole("banner")).findByText("متجر اختبار الحماية");
+    await within(screen.getByRole("main")).findByRole("heading", { name: "تسوّق حسب التصنيف", level: 2 });
+    const trust = within(screen.getByRole("region", { name: "معلومات الدفع والتوصيل" }));
+    expect(screen.queryByText(/معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق/)).not.toBeInTheDocument();
+    expect(screen.queryByText(settingsFixture.announcement)).not.toBeInTheDocument();
+    if (demo || !configured) {
+      expect(trust.queryByText("التوصيل إلى المناطق المتاحة")).not.toBeInTheDocument();
+      expect(trust.queryByRole("link", { name: /سياسة التبديل والإرجاع/ })).not.toBeInTheDocument();
+    } else {
+      expect(await trust.findByText("التوصيل إلى المناطق المتاحة")).toBeInTheDocument();
+      expect(await trust.findByRole("link", { name: /سياسة التبديل والإرجاع/ })).toHaveAttribute("href", "/page/return-policy");
+    }
+    expect(screen.queryByText(/24\/7|شحن مجاني|ضمان مدى الحياة/)).not.toBeInTheDocument();
   });
 
   it("does not expose the disabled molds page", async () => {
@@ -121,7 +136,7 @@ describe("category navigation", () => {
     stubApi(storefrontRoutes);
     renderApp("/");
     const link = within(await screen.findByRole("navigation", { name: "التنقّل الرئيسي" }))
-      .getByRole("link", { name: "كل الأقسام" });
+      .getByRole("link", { name: "جميع الأقسام" });
     expect(link).toHaveAttribute("href", "/categories");
     expect(screen.queryByRole("navigation", { name: "أقسام المتجر" })).not.toBeInTheDocument();
     await userEvent.click(link);

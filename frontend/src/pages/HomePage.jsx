@@ -161,6 +161,7 @@ export default function HomePage() {
         if (!categories.length) return null;
         return (
           <section key={section.id} className="vs-container vs-section vs-home-categories" aria-label={title}>
+            <SectionHead title={title} moreHref="/categories" />
             <CategoryLogoCarousel categories={categories} label={title} />
           </section>
         );

@@ -7,7 +7,7 @@ describe("contact route", () => {
     stubApi({ ...storefrontRoutes, "/api/v1/pages/contact": { lead: "تواصل مباشر", content: "اسألنا عن التوصيل أو الاستلام." } });
     renderApp("/contact");
 
-    const contact = await screen.findByRole("heading", { name: "تواصل معنا" });
+    const contact = await screen.findByRole("heading", { name: "تواصل معنا", level: 1 });
     const page = contact.closest("section");
     expect(within(page).getByText("اسألنا عن التوصيل أو الاستلام.")).toBeInTheDocument();
     const whatsapp = within(page).getByRole("link", { name: "تواصل عبر واتساب" });
@@ -27,7 +27,7 @@ describe("contact route", () => {
   it("hides the map after a location is cleared and restores it after a valid update", async () => {
     stubApi({ ...storefrontRoutes, "/api/v1/store/settings": { ...storefrontRoutes["/api/v1/store/settings"], location_url: "" } });
     renderApp("/contact");
-    await screen.findByRole("heading", { name: "تواصل معنا" });
+    await screen.findByRole("heading", { name: "تواصل معنا", level: 1 });
     expect(screen.queryByTitle("خريطة الموقع المهيأ")).not.toBeInTheDocument();
   });
 });

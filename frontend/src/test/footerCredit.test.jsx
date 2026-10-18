@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import { renderApp, storefrontRoutes, stubApi } from "./utils.jsx";
 
 describe("TFN footer credit", () => {
@@ -44,9 +44,15 @@ describe("TFN footer credit", () => {
     expect(instagram).toHaveAttribute("rel", "noopener noreferrer");
     expect(screen.queryByRole("link", { name: "فيسبوك" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "تيك توك" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "يوتيوب" })).toBeInTheDocument();
-    expect(document.querySelector(".vs-footer__bottom-row .vs-footer__social-row")).not.toBeNull();
-    expect(document.querySelector(".vs-footer > .vs-footer__social-row")).toBeNull();
+    const youtube = screen.getByRole("link", { name: "يوتيوب" });
+    expect(youtube).toHaveAttribute("href", "https://youtube.com/@masri");
+    expect(youtube).toHaveAttribute("target", "_blank");
+    expect(youtube).toHaveAttribute("rel", "noopener noreferrer");
+    const footer = screen.getByRole("contentinfo");
+    const contact = within(footer).getByRole("heading", { name: "تواصل معنا" }).closest("div");
+    expect(within(contact).getByRole("link", { name: "إنستغرام" })).toBe(instagram);
+    expect(within(contact).getByRole("link", { name: "يوتيوب" })).toBe(youtube);
+    expect(footer.querySelector(".vs-footer__bottom-row .vs-footer__social-row")).toBeNull();
   });
 
   it("omits the social row when no visible social URL is configured", async () => {
@@ -63,6 +69,6 @@ describe("TFN footer credit", () => {
     renderApp("/");
 
     await screen.findByText("Developed by TFN Technologies Team");
-    expect(document.querySelector(".vs-footer__social")).toBeNull();
+    expect(document.querySelector(".vs-footer__social-row")).toBeNull();
   });
 });

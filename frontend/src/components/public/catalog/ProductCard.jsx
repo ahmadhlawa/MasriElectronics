@@ -20,7 +20,8 @@ export default function ProductCard({ view, listing = false, eager = false }) {
   if (!view) return null;
 
   const badges = productBadges(view);
-  const listingSpecs = (view.cardAttributes.length ? view.cardAttributes : view.specs).slice(0, 2);
+  const cardSpecs = (view.cardAttributes.length ? view.cardAttributes : listing ? view.specs : []).slice(0, 2);
+  const identity = view.modelNumber || view.sku;
   const stockLabel = view.soldOut ? "غير متوفر حالياً" : view.lowStock ? `بقي ${view.stock} فقط` : "متوفر في المخزون";
 
   return (
@@ -62,14 +63,14 @@ export default function ProductCard({ view, listing = false, eager = false }) {
         <Link to={view.href} className="vs-card__title vs-clamp-2">
           {view.name}
         </Link>
-        {(view.brandName || view.modelNumber) && (
+        {(view.brandName || identity) && (
           <span className="vs-card__identity vs-clamp-1">
-            {view.brandName}{view.brandName && view.modelNumber ? " | " : ""}<bdi>{view.modelNumber}</bdi>
+            {view.brandName}{view.brandName && identity ? " | " : ""}<bdi>{identity}</bdi>
           </span>
         )}
-        {listing && listingSpecs.length > 0 && (
+        {cardSpecs.length > 0 && (
           <ul className="vs-card__specs">
-            {listingSpecs.map(([name, value]) => <li key={`${name}-${value}`}>{name}: {value}</li>)}
+            {cardSpecs.map(([name, value]) => <li key={`${name}-${value}`}>{name}: {value}</li>)}
           </ul>
         )}
 

@@ -10,7 +10,7 @@ import { storefrontService } from "../../../services/storefront.js";
  * that really exists. Nothing here is invented copy.
  */
 export default function TrustStrip() {
-  const { deliveryAreas } = useStore();
+  const { deliveryAreas, settings, ready } = useStore();
   const [hasReturnPolicy, setHasReturnPolicy] = useState(false);
   useEffect(() => {
     let active = true;
@@ -21,6 +21,7 @@ export default function TrustStrip() {
   }, []);
 
   const paymentText = "ادفع نقداً عند استلام الطلب";
+  const verifiedBusinessContent = ready && !settings.demoBusinessContent;
 
   return (
     <div className="vs-trust">
@@ -35,7 +36,7 @@ export default function TrustStrip() {
         </span>
       </div>
 
-      {deliveryAreas.length > 0 && <div className="vs-trust__item">
+      {verifiedBusinessContent && deliveryAreas.length > 0 && <div className="vs-trust__item">
           <span className="vs-trust__icon">
             <TruckIcon size={20} />
           </span>
@@ -46,7 +47,7 @@ export default function TrustStrip() {
           </span>
       </div>}
 
-      {hasReturnPolicy && <Link to="/page/return-policy" className="vs-trust__item">
+      {verifiedBusinessContent && hasReturnPolicy && <Link to="/page/return-policy" className="vs-trust__item">
         <span className="vs-trust__icon">
           <ShieldIcon size={20} />
         </span>

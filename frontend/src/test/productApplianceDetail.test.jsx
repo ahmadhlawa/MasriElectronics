@@ -39,6 +39,7 @@ describe("appliance product detail", () => {
     expect(screen.getByText("سامسونج")).toBeInTheDocument();
     expect(screen.getByText(/RF-420/)).toBeInTheDocument();
     expect(screen.getByText(/MASRI-42/)).toBeInTheDocument();
+    expect(screen.getByText(productFixture.short_description)).toBeInTheDocument();
     const key = within(screen.getByRole("region", { name: "أبرز المواصفات" }));
     expect(key.getByText("420 لتر")).toBeInTheDocument();
     expect(key.getByText("بابان")).toBeInTheDocument();
@@ -58,11 +59,11 @@ describe("appliance product detail", () => {
     expect(panel.getAllByText("السعة")).toHaveLength(1);
   });
 
-  it("keeps descriptive specifications when structured attributes are absent", async () => {
-    renderProduct(productFixture);
+  it.each(["", productFixture.short_description])("keeps free-form specs in their tab without a duplicate key block (short description: %s)", async (short) => {
+    renderProduct({ ...productFixture, short_description: short });
     await screen.findByRole("heading", { name: productFixture.name, level: 1 });
     expect(screen.queryByRole("region", { name: "أبرز المواصفات" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("tab", { name: "المواصفات" }));
-    expect(within(screen.getByRole("tabpanel")).getByText("الوزن")).toBeInTheDocument();
+    expect(within(screen.getByRole("tabpanel")).getAllByText("الوزن")).toHaveLength(1);
   });
 });

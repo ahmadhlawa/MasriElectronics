@@ -33,7 +33,7 @@ describe("appliance catalog", () => {
     stubApi({ ...routes, "/api/v1/products": page([fridge, { ...fridge, id: 10, name: "ثلاجة أخرى", slug: "another-fridge", card_attributes: [fridge.card_attributes[2]] }]) });
     renderApp("/category/resin");
     const card = (await screen.findByText("ثلاجة اختبار")).closest("article");
-    expect(within(card).getByText("سامسونج")).toBeInTheDocument();
+    expect(within(card).getByText(/سامسونج/)).toHaveTextContent("سامسونج | RF-42");
     expect(within(card).getByText(/RF-42/)).toBeInTheDocument();
     expect(within(card).getByText(/السعة: 420 لتر/)).toBeInTheDocument();
     expect(within(card).getByText(/إنفرتر: لا/)).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe("appliance catalog", () => {
     const calls = stubApi(routes);
     renderApp("/category/resin");
     await panel().findByLabelText("السعة من");
-    await userEvent.selectOptions(panel().getByLabelText("العلامة التجارية"), "4");
+    await userEvent.click(within(panel().getByRole("group", { name: "العلامة التجارية" })).getByRole("radio", { name: "سامسونج" }));
     await userEvent.type(panel().getByLabelText("السعة من"), "300");
     await userEvent.type(panel().getByLabelText("السعة إلى"), "500");
     await userEvent.selectOptions(panel().getByLabelText("نوع الباب"), "double");
@@ -86,13 +86,25 @@ describe("appliance catalog", () => {
   });
 
   it("uses filtered totals for count and pagination", async () => {
-    stubApi({ ...routes, "/api/v1/products": ({ path }) => path.includes("brand_id=4")
-      ? page([fridge], { total: 1, pages: 1 }) : page([fridge], { total: 18, pages: 2 }) });
+    const second = { ...fridge, id: 10, name: "ثلاجة الصفحة الثانية", slug: "second-page-fridge" };
+    const calls = stubApi({ ...routes, "/api/v1/products": ({ path }) => {
+      const params = new URLSearchParams(path.split("?")[1]);
+      if (params.get("brand_id") === "4") return page([fridge], { total: 1, pages: 1 });
+      return params.get("page") === "2"
+        ? page([second], { total: 18, pages: 2, page: 2 }) : page([fridge], { total: 18, pages: 2 });
+    } });
     renderApp("/category/resin");
-    expect(await screen.findByText("18 منتجاً")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /عرض المزيد/ })).toBeInTheDocument();
-    await userEvent.selectOptions(panel().getByLabelText("العلامة التجارية"), "4");
-    expect(await screen.findByText("1 منتجاً")).toBeInTheDocument();
+    const count = screen.getByRole("main").querySelector(".vs-toolbar__count");
+    await waitFor(() => expect(count).toHaveTextContent(/^18 منتجاً$/));
+    await userEvent.click(screen.getByRole("button", { name: /عرض المزيد/ }));
+    expect(await screen.findByText(second.name)).toBeInTheDocument();
+    expect(new URLSearchParams(listingCalls(calls).at(-1).path.split("?")[1]).get("page")).toBe("2");
+    await userEvent.click(within(panel().getByRole("group", { name: "العلامة التجارية" })).getByRole("radio", { name: "سامسونج" }));
+    await waitFor(() => expect(count).toHaveTextContent(/^1 منتجاً$/));
+    const filtered = new URLSearchParams(listingCalls(calls).at(-1).path.split("?")[1]);
+    expect(filtered.get("brand_id")).toBe("4");
+    expect(filtered.get("page")).toBe("1");
+    expect(screen.queryByText(second.name)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /عرض المزيد/ })).not.toBeInTheDocument();
   });
 

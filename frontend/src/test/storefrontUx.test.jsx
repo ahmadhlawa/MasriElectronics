@@ -64,7 +64,11 @@ describe("storefront UX polish", () => {
   it("links the homepage categories heading to the categories route", async () => {
     stubApi(storefrontRoutes);
     renderApp("/");
-    expect(await screen.findByRole("link", { name: "عرض الكل" })).toHaveAttribute("href", "/categories");
+    const heading = await screen.findByRole("heading", { name: "تسوّق حسب التصنيف", level: 2 });
+    const link = within(heading.closest("section")).getByRole("link", { name: "عرض الكل" });
+    expect(link).toHaveAttribute("href", "/categories");
+    await userEvent.click(link);
+    expect(await screen.findByRole("heading", { name: "كل الأقسام", level: 1 })).toBeInTheDocument();
   });
 
   it("uses one primary mobile menu with page navigation", async () => {
