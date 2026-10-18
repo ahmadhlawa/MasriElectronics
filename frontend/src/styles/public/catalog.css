@@ -1,178 +1,110 @@
-/* Product, package and category cards; catalogue page furniture.
-
-   Outside the listing, all three cards share one model: the artwork is the card, and everything a
-   shopper reads or presses lives in a panel that is absolutely positioned over
-   the bottom of it. Because the panel is out of flow, revealing it can never
-   change a card's height or shift the row around it â€” the single most visible
-   defect the previous permanent-body cards had.
-
-   The reveal is driven by three selectors that always travel together:
-     :hover        a pointer
-     :focus-within a keyboard
-     [data-revealed="true"]  the first tap of a coarse pointer (useCardReveal)
-
-   Below 900px the whole mechanism is switched off and the panel is laid out
-   statically, always visible. A phone has no hover, and a card that small has no
-   room to overlay a panel without clipping it. */
-
-/* â”€â”€ shared reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-
+/* One restrained appliance card; surfaces control density, never cart behavior. */
 .vs-card,
-.vs-pkg {
-  position: relative;
-  min-width: 0;
-  border-radius: var(--vs-r-lg);
-  overflow: hidden;
-  background: var(--vs-surface);
-  border: 1px solid var(--vs-border);
-  box-shadow: var(--vs-shadow-1);
-  transition: border-color var(--vs-t-card) var(--vs-ease),
-    box-shadow var(--vs-t-card) var(--vs-ease), transform var(--vs-t-card) var(--vs-ease);
-}
-
+.vs-pkg { position: relative; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--vs-border); border-radius: var(--vs-r-lg); background: var(--vs-surface); transition: border-color var(--vs-t) var(--vs-ease), box-shadow var(--vs-t) var(--vs-ease), transform var(--vs-t) var(--vs-ease); }
 .vs-card__media,
-.vs-pkg__media {
-  position: relative;
-  overflow: hidden;
-  background: var(--vs-surface-2);
-}
-
+.vs-pkg__media { position: relative; overflow: hidden; min-width: 0; border-radius: var(--vs-r-lg) var(--vs-r-lg) 0 0; background: var(--vs-surface); }
 .vs-card__link,
-.vs-pkg__link {
-  display: block;
-}
-
+.vs-pkg__link { display: block; }
+.vs-card__media .vs-mediabox,
+.vs-pkg__media .vs-mediabox { aspect-ratio: 4 / 3 !important; }
 .vs-card__img,
-.vs-pkg__img {
-  transition: transform var(--vs-t-hero) var(--vs-ease);
-}
-
-/* The second picture is stacked over the cover and cross-faded in. It is only
-   rendered when the product actually has one. */
-.vs-pkg__img2 {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transition: opacity var(--vs-t-card) var(--vs-ease);
-}
-
-.vs-card__panel,
-.vs-pkg__panel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
+.vs-pkg__img,
+.vs-pkg__img2 { object-fit: contain; padding: 12px 20px; background: var(--vs-surface); transition: transform var(--vs-t) var(--vs-ease), opacity var(--vs-t) var(--vs-ease); }
+.vs-pkg__img2 { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.vs-card__media .vs-media--fallback,
+.vs-pkg__media .vs-media--fallback { display: grid; place-items: center; background: var(--vs-surface-2) !important; }
+.vs-card__media .vs-media--fallback::after,
+.vs-pkg__media .vs-media--fallback::after { content: "الصورة غير متوفرة"; padding: 12px; color: var(--vs-ink-3); font-size: 11px; text-align: center; }
 .vs-card__badges,
-.vs-pkg__badges {
-  position: absolute;
-  inset-block-start: 10px;
-  inset-inline-start: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.vs-card__veil {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--vs-page) 78%, transparent);
-  z-index: 3;
-}
-
-.vs-card__veil span {
-  background: var(--vs-ink);
-  color: var(--vs-ink-invert);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 7px 14px;
-  border-radius: var(--vs-r-sm);
-}
-
-@media (min-width: 900px) {
-  .vs-card__panel,
-  .vs-pkg__panel {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 0;
-    z-index: 4;
-    padding: 14px;
-    background: linear-gradient(
-      to top,
-      color-mix(in srgb, var(--vs-surface) 97%, transparent) 72%,
-      transparent
-    );
-    backdrop-filter: blur(6px);
-    opacity: 0;
-    transform: translateY(100%);
-    pointer-events: none;
-    /* Clipped rather than allowed to grow: a long title shortens instead of
-       spilling out of the card. */
-    max-height: 100%;
-    overflow: hidden;
-    transition: opacity var(--vs-t-card) var(--vs-ease),
-      transform var(--vs-t-card) var(--vs-ease);
-  }
-
-  .vs-card:hover .vs-card__panel,
-  .vs-card:focus-within .vs-card__panel,
-  .vs-card[data-revealed="true"] .vs-card__panel,
-  .vs-pkg:hover .vs-pkg__panel,
-  .vs-pkg:focus-within .vs-pkg__panel,
-  .vs-pkg[data-revealed="true"] .vs-pkg__panel {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-  }
-
-  /* The hover is a warmth shift, not a jump: the edge picks up the brand brand colour
-     and the soft shadow deepens by one step. No lift, no scale on the card
-     itself â€” the artwork already scales inside it. */
+.vs-pkg__badges { position: absolute; inset-block-start: 10px; inset-inline-start: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: calc(100% - 64px); pointer-events: none; }
+.vs-card .vs-badge,
+.vs-pkg .vs-badge { border-radius: 5px; padding: 3px 8px; font-size: 10px; line-height: 1.6; }
+.vs-badge--sale { direction: ltr; unicode-bidi: isolate; }
+.vs-card__quick,
+.vs-pkg__details { position: absolute; inset-block-start: 4px; inset-inline-end: 4px; z-index: 1; background: rgb(255 255 255 / .92); color: var(--vs-primary); }
+.vs-card__quick { width: 44px; height: 44px; border: 0; border-radius: var(--vs-r-sm); }
+.vs-pkg__details { display: inline-flex; align-items: center; gap: 4px; padding: 8px; min-height: 40px; border: 0; border-radius: var(--vs-r-sm); font-size: 11px; }
+.vs-card__panel,
+.vs-pkg__panel { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 12px 14px 14px; }
+.vs-card__title,
+.vs-pkg__title { min-block-size: 3.2em; color: var(--vs-primary); font-size: 14px; font-weight: 600; line-height: 1.6; overflow-wrap: anywhere; transition: color var(--vs-t) var(--vs-ease); }
+.vs-card__identity,
+.vs-card__sku,
+.vs-card__brand { color: var(--vs-ink-3); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.vs-card__identity { min-width: 0; }
+.vs-card__specs { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 0; padding: 0; list-style: none; color: var(--vs-ink-3); font-size: 11px; line-height: 1.6; }
+.vs-card__specs li { overflow-wrap: anywhere; }
+.vs-pkg__contents { display: flex; align-items: flex-start; gap: 6px; color: var(--vs-ink-3); font-size: 12px; line-height: 1.6; }
+.vs-pkg__contents svg { flex: 0 0 auto; margin-block-start: 3px; }
+.vs-card__meta { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin-block-start: auto; padding-block-start: 5px; }
+.vs-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 10px; }
+.vs-price__now,
+.vs-price__was { unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+.vs-price__now { color: var(--vs-primary); font-size: 22px; line-height: 1.4; font-weight: 600; }
+.vs-price:has(.vs-price__was) .vs-price__now { color: var(--vs-accent); }
+.vs-price__was { color: var(--vs-ink-3); font-size: 12px; text-decoration: line-through; }
+.vs-card .vs-price,
+.vs-pkg .vs-price { width: 100%; justify-content: space-between; }
+.vs-price--lg .vs-price__now { font-size: 34px; }
+.vs-price--lg .vs-price__was { font-size: 15px; }
+.vs-card__stock { color: var(--vs-success); font-size: 10px; line-height: 1.5; }
+[data-stock="out"] .vs-card__stock { color: var(--vs-ink-3); }
+.vs-card__acts,
+.vs-pkg__acts { display: flex; margin-block-start: 3px; }
+.vs-card__cta,
+.vs-pkg__cta { flex: 1; width: 100%; min-width: 0; min-height: 40px; height: auto; padding: 9px 6px; border-radius: var(--vs-r-sm); font-size: 12px; line-height: 1.5; white-space: normal; }
+.vs-home-products .vs-card__cta,
+.vs-home-products .vs-pkg__cta { background: var(--vs-primary); border-color: var(--vs-primary); color: var(--vs-ink-invert); }
+.vs-atc__label--mobile { display: none; }
+.vs-cardskel { overflow: hidden; border: 1px solid var(--vs-border); border-radius: var(--vs-r-lg); background: var(--vs-surface); }
+.vs-cardskel__media { aspect-ratio: 4 / 3; }
+.vs-cardskel__body { display: flex; flex-direction: column; gap: 12px; padding: 14px; min-height: 168px; }
+@media (hover: hover) {
   .vs-card:hover,
-  .vs-card:focus-within,
-  .vs-pkg:hover,
-  .vs-pkg:focus-within {
-    border-color: var(--vs-primary-lite);
-    box-shadow: var(--vs-shadow-2);
-    transform: translateY(-3px);
-  }
-
+  .vs-pkg:hover { border-color: var(--vs-border-strong); box-shadow: var(--vs-shadow-2); transform: translateY(-2px); }
   .vs-card:hover .vs-card__img,
-  .vs-card:focus-within .vs-card__img,
-  .vs-card[data-revealed="true"] .vs-card__img,
-  .vs-pkg:hover .vs-pkg__img,
-  .vs-pkg:focus-within .vs-pkg__img,
-  .vs-pkg[data-revealed="true"] .vs-pkg__img {
-    transform: scale(1.025);
-  }
-
-  .vs-pkg:hover .vs-pkg__img2,
-  .vs-pkg:focus-within .vs-pkg__img2,
-  .vs-pkg[data-revealed="true"] .vs-pkg__img2 {
-    opacity: 1;
-  }
+  .vs-pkg:hover .vs-pkg__img { transform: scale(1.025); }
+  .vs-pkg:hover .vs-pkg__img2 { opacity: 1; }
+  .vs-card__title:hover,
+  .vs-pkg__title:hover { color: var(--vs-accent-dark); }
+  .vs-home-products .vs-card__cta:not(:disabled):hover,
+  .vs-home-products .vs-pkg__cta:not(:disabled):hover { background: var(--vs-primary-dark); border-color: var(--vs-primary-dark); }
 }
-
-/* Phones and small tablets: the panel is simply part of the card. Nothing is
-   hidden behind an interaction that a finger cannot perform. */
-@media (max-width: 899px) {
+@media (max-width: 599px) {
   .vs-card__panel,
-  .vs-pkg__panel {
-    padding: 12px;
-    border-block-start: 1px solid var(--vs-border);
-  }
+  .vs-pkg__panel { padding: 10px; gap: 6px; }
+  .vs-card__title,
+  .vs-pkg__title { font-size: 13px; line-height: 1.6; min-block-size: 3.2em; }
+  .vs-card__identity,
+  .vs-card__sku,
+  .vs-card__brand { font-size: 11px; }
+  .vs-card__specs { font-size: 10px; }
+  .vs-card__specs li + li { display: none; }
+  .vs-card__media .vs-media,
+  .vs-pkg__media .vs-media { padding: 10px; }
+  .vs-card .vs-price__now,
+  .vs-pkg .vs-price__now { font-size: 18px; }
+  .vs-card .vs-price__was,
+  .vs-pkg .vs-price__was { font-size: 11px; }
+  .vs-card__cta,
+  .vs-pkg__cta { min-height: 44px; font-size: 12px; padding-inline: 4px; }
+  .vs-card__cta svg { display: none; }
+  .vs-card__cta .vs-atc__label--desktop { display: none; }
+  .vs-card__cta .vs-atc__label--mobile { display: inline; }
+  .vs-card__badges,
+  .vs-pkg__badges { inset-block-start: 8px; inset-inline-start: 8px; }
+  .vs-card .vs-badge,
+  .vs-pkg .vs-badge { padding: 2px 6px; font-size: 10px; }
 }
-
+@media (max-width: 899px) {
+  .vs-rail :is(.vs-card__title, .vs-pkg__title, .vs-pkg__contents) { display: block; -webkit-line-clamp: unset; overflow: visible; overflow-wrap: anywhere; }
+  .vs-rail :is(.vs-card__panel, .vs-pkg__panel) { padding: 12px 10px; gap: 8px; }
+  .vs-rail .vs-price { justify-content: flex-start; gap: 4px 8px; }
+  .vs-rail .vs-price__now { font-size: 18px; white-space: nowrap; }
+  .vs-rail :is(.vs-card__cta, .vs-pkg__cta) { min-height: 44px; white-space: normal; }
+  .vs-categories-page__image[data-fallback="true"] { background: var(--vs-surface-2); color: var(--vs-primary); }
+  .vs-categories-page__image[data-fallback="true"] svg { width: 36px; height: 36px; padding: 4px; }
+}
 .vs-categories-page__head {
   margin-block: 22px 28px;
 }
@@ -261,195 +193,6 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-
-@media (max-width: 599px) {
-  .vs-card__panel,
-  .vs-pkg__panel {
-    gap: 5px;
-    padding: 8px;
-  }
-
-  .vs-card__badges,
-  .vs-pkg__badges {
-    inset-block-start: 6px;
-    inset-inline-start: 6px;
-    gap: 4px;
-  }
-
-  .vs-card__title,
-  .vs-pkg__title {
-    font-size: 13px;
-    line-height: 1.4;
-  }
-
-  .vs-card__stock,
-  .vs-pkg__contents,
-  .vs-card__quick,
-  .vs-pkg__acts > .vs-btn--quiet {
-    display: none;
-  }
-
-  .vs-card__acts,
-  .vs-pkg__acts {
-    justify-content: flex-start;
-    gap: 6px;
-  }
-
-  .vs-card__cta,
-  .vs-pkg__cta {
-    flex: 0 0 44px;
-    width: 44px;
-    min-width: 44px;
-    padding: 0;
-    font-size: 0;
-  }
-
-  .vs-card__cta svg,
-  .vs-pkg__cta svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .vs-card__cta:not(:has(svg))::before,
-  .vs-pkg__cta:not(:has(svg))::before {
-    content: "←";
-    font-size: 19px;
-    line-height: 1;
-  }
-
-  .vs-price__now {
-    font-size: 15px;
-  }
-
-  .vs-price__was {
-    font-size: 11px;
-  }
-}
-
-/* â”€â”€ product card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-
-.vs-card__title {
-  font-size: var(--vs-fs-product);
-  font-weight: var(--vs-fw-product);
-  line-height: 1.4;
-  color: var(--vs-ink);
-  transition: color var(--vs-t) var(--vs-ease);
-}
-
-@media (hover: hover) {
-  .vs-card__title:hover {
-    color: var(--vs-primary);
-  }
-}
-
-.vs-card__meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.vs-card__stock {
-  font-size: var(--vs-fs-xs);
-  color: var(--vs-ink-3);
-}
-
-.vs-card__acts {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.vs-card__cta {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 44px;
-}
-
-.vs-atc__label--mobile {
-  display: none;
-}
-
-.vs-card__quick {
-  flex: 0 0 auto;
-}
-
-/* â”€â”€ price block â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-
-.vs-price {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  flex-wrap: wrap;
-}
-
-/* Each amount is its own bidi run: without isolation the currency symbol of one
-   price can reorder next to the digits of the other. */
-.vs-price__now,
-.vs-price__was {
-  unicode-bidi: isolate;
-}
-
-.vs-price__now {
-  font-size: var(--vs-fs-price);
-  font-weight: var(--vs-fw-price);
-  line-height: 1.4;
-  color: var(--vs-primary);
-  font-feature-settings: "tnum";
-}
-
-.vs-price__was {
-  font-size: 13px;
-  color: var(--vs-ink-4);
-  text-decoration: line-through;
-}
-
-.vs-price--lg .vs-price__now {
-  font-size: 27px;
-}
-
-.vs-price--lg .vs-price__was {
-  font-size: 15px;
-}
-
-/* â”€â”€ package card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-
-.vs-pkg__title {
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.45;
-  color: var(--vs-ink);
-}
-
-.vs-pkg__contents {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: var(--vs-ink-3);
-}
-
-.vs-pkg__contents svg {
-  flex: 0 0 auto;
-  margin-block-start: 3px;
-  color: var(--vs-accent-dark);
-}
-
-.vs-pkg__acts {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.vs-pkg__cta {
-  flex: 1 1 150px;
-  min-height: 44px;
-}
-
-/* â”€â”€ category card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .vs-cat {
   position: relative;
@@ -567,589 +310,89 @@
 
 /* â”€â”€ catalogue page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
-.vs-cathead {
-  position: relative;
-  overflow: hidden;
-  background: var(--vs-surface-2);
-}
-
-.vs-cathead__media {
-  position: absolute;
-  inset: 0;
-}
-
-.vs-cathead__media img,
-.vs-cathead__media > span {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.vs-cathead__veil {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to left,
-    rgba(46, 33, 35, 0.78) 0%,
-    rgba(46, 33, 35, 0.55) 55%,
-    rgba(46, 33, 35, 0.32) 100%
-  );
-}
-
-.vs-cathead__inner {
-  position: relative;
-  padding-block: 40px;
-  min-height: 190px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  color: var(--vs-ink-invert);
-}
-
-.vs-cathead--plain {
-  background: var(--vs-surface);
-  border-block-end: 1px solid var(--vs-border);
-}
-
-.vs-cathead--plain .vs-cathead__inner {
-  color: var(--vs-ink);
-  min-height: 0;
-  padding-block: 26px 28px;
-}
-
-.vs-cathead__title {
-  font-size: var(--vs-fs-h1);
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.vs-cathead__desc {
-  font-size: var(--vs-fs-body);
-  max-width: 62ch;
-  opacity: 0.9;
-}
-
-.vs-cathead__subs {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-block-start: 4px;
-}
-
-.vs-cathead--image .vs-crumbs,
-.vs-cathead--image .vs-crumbs a {
-  color: rgba(255, 253, 250, 0.78);
-}
-
-.vs-cathead--image .vs-crumbs__here {
-  color: var(--vs-ink-invert);
-}
-
-.vs-cathead--image .vs-chip {
-  background: rgba(255, 253, 250, 0.16);
-  border-color: rgba(255, 253, 250, 0.28);
-  color: var(--vs-ink-invert);
-}
-
-/* toolbar --------------------------------------------------------------- */
-
-.vs-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 12px 14px;
-  background: var(--vs-surface);
-  border: 1px solid var(--vs-border);
-  border-radius: var(--vs-r-md);
-}
-
-.vs-toolbar__count {
-  font-size: var(--vs-fs-sm);
-  color: var(--vs-ink-3);
-}
-
-.vs-toolbar__spacer {
-  margin-inline-start: auto;
-}
-
-.vs-toolbar__density {
-  display: flex;
-  gap: 4px;
-}
-
-.vs-toolbar__density button {
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--vs-border);
-  border-radius: var(--vs-r-sm);
-  background: var(--vs-surface);
-  color: var(--vs-ink-3);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color var(--vs-t) var(--vs-ease), border-color var(--vs-t) var(--vs-ease);
-}
-
-.vs-toolbar__density button[aria-pressed="true"] {
-  color: var(--vs-primary);
-  border-color: var(--vs-primary);
-}
-
-.vs-select {
-  height: 40px;
-  /* A select is sized by its widest option, so on a narrow toolbar it grew past
-     its row and printed over the label beside it. Letting it shrink is the fix;
-     the native control ellipsises its own text. */
-  min-width: 0;
-  max-width: 100%;
-  border: 1px solid var(--vs-border-strong);
-  border-radius: var(--vs-r-sm);
-  background: var(--vs-page);
-  padding-inline: 12px 30px;
-  font-family: inherit;
-  font-size: var(--vs-fs-sm);
-  color: var(--vs-ink);
-  cursor: pointer;
-}
-
-.vs-sortlabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  /* Shrink-only: desktop keeps the control at its natural width. */
-  flex: 0 1 auto;
-  font-size: var(--vs-fs-sm);
-  color: var(--vs-ink-3);
-}
-
-.vs-sortlabel .vs-select {
-  flex: 0 1 auto;
-}
-
-/* catalogue body -------------------------------------------------------- */
-
-.vs-catalog {
-  display: grid;
-  grid-template-columns: 258px minmax(0, 1fr);
-  gap: 26px;
-  align-items: start;
-}
-
-.vs-catalog--full {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.vs-catalog__side {
-  position: sticky;
-  inset-block-start: var(--vs-sticky-top);
-  background: var(--vs-surface);
-  border: 1px solid var(--vs-border);
-  border-radius: var(--vs-r-lg);
-  padding: 18px;
-  max-height: calc(100vh - var(--vs-sticky-top) - 24px);
-  overflow-y: auto;
-}
-
-.vs-catalog__main {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-@media (max-width: 1023px) {
-  .vs-catalog {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vs-catalog__side {
-    display: none;
-  }
-}
-
-/* filters --------------------------------------------------------------- */
-
-.vs-filters {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.vs-filters__group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.vs-filters__group + .vs-filters__group {
-  border-block-start: 1px solid var(--vs-border);
-  padding-block-start: 16px;
-}
-
-.vs-filters__legend {
-  font-size: var(--vs-fs-sm);
-  font-weight: 600;
-  color: var(--vs-ink);
-}
-
-.vs-check {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: var(--vs-fs-sm);
-  color: var(--vs-ink-2);
-  cursor: pointer;
-  min-height: 30px;
-}
-
-.vs-check input {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--vs-primary);
-  cursor: pointer;
-  flex: 0 0 auto;
-}
-
-.vs-check__count {
-  margin-inline-start: auto;
-  font-size: var(--vs-fs-xs);
-  color: var(--vs-ink-4);
-}
-
-.vs-range {
-  width: 100%;
-  accent-color: var(--vs-primary);
-  cursor: pointer;
-}
-
-.vs-activefilters {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.vs-activefilters__clear {
-  color: var(--vs-danger);
-  font-weight: 500;
-  font-size: var(--vs-fs-sm);
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.vs-filterselect {
-  width: 100%;
-}
-
-.vs-filterrange {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.vs-filterrange input {
-  width: 100%;
-  min-width: 0;
-}
-
-/* Listing cards keep the approved card styling, with buying details in flow. */
-.vs-card--listing {
-  display: flex;
-  flex-direction: column;
-}
-
-.vs-card--listing .vs-card__panel {
-  flex: 1;
-}
-
-.vs-card--listing .vs-card__acts {
-  margin-block-start: auto;
-}
-
-.vs-card__brand {
-  color: var(--vs-primary);
-  font-size: var(--vs-fs-xs);
-  font-weight: 600;
-}
-
-.vs-card__sku,
-.vs-card__specs {
-  color: var(--vs-ink-3);
-  font-size: var(--vs-fs-xs);
-  line-height: 1.5;
-}
-
-.vs-card__sku {
-  overflow-wrap: anywhere;
-}
-
-.vs-card__specs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 10px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-@media (max-width: 899px) {
-  .vs-catalog .vs-card__panel {
-    gap: 6px;
-  }
-
-  .vs-catalog .vs-card__title {
-    font-size: var(--vs-fs-nav);
-    min-block-size: 2.8em;
-    overflow-wrap: anywhere;
-  }
-
-  .vs-catalog .vs-card__brand,
-  .vs-catalog .vs-card__specs {
-    overflow-wrap: anywhere;
-  }
-
-  .vs-catalog .vs-card__specs {
-    flex-direction: column;
-  }
-
-  .vs-catalog .vs-card__meta {
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .vs-catalog .vs-card .vs-price__now {
-    font-size: var(--vs-fs-h3);
-  }
-
-  .vs-catalog .vs-card .vs-price__was {
-    font-size: var(--vs-fs-sm);
-  }
-
-  .vs-catalog .vs-card__cta {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 0;
-    padding-inline: 6px;
-    gap: 4px;
-    font-size: var(--vs-fs-sm);
-    scroll-margin-block-end: calc(var(--vs-tabbar-h) + env(safe-area-inset-bottom) + 12px);
-  }
-
-  .vs-catalog .vs-card__cta .vs-atc__label--desktop,
-  .vs-catalog .vs-card__cta svg {
-    display: none;
-  }
-
-  .vs-catalog .vs-card__cta .vs-atc__label--mobile {
-    display: inline;
-  }
-
-  .vs-catalog .vs-card__cta::before {
-    content: none;
-  }
-}
-
-@media (min-width: 900px) {
-  .vs-catalog .vs-card__panel,
-  .vs-catalog .vs-pkg__panel,
-  .vs-home .vs-card__panel,
-  .vs-home .vs-pkg__panel {
-    position: static;
-    max-height: none;
-    overflow: visible;
-    padding: 14px;
-    border-block-start: 1px solid var(--vs-border);
-    background: var(--vs-surface);
-    backdrop-filter: none;
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-  }
-
-  .vs-catalog .vs-cardskel__body {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    padding: 14px;
-  }
-}
-
-@media (max-width: 599px) {
-  .vs-catalog .vs-card__stock {
-    display: inline;
-  }
-
-  .vs-activefilters {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-block: 2px 6px;
-  }
-
-  .vs-activefilters > * {
-    flex: 0 0 auto;
-  }
-}
-
-/* Compact retailer presentation, scoped to listing/recommendation cards. */
-.vs-cathead__inner {
-  min-height: 132px;
-  padding-block: 20px;
-  gap: 6px;
-}
-
-.vs-cathead--plain .vs-cathead__inner {
-  padding-block: 14px 16px;
-}
-
-.vs-cathead__title { font-size: clamp(24px, 3vw, 30px); }
-.vs-cathead + .vs-section--tight { padding-block-start: 24px; }
-.vs-catalog { grid-template-columns: 240px minmax(0, 1fr); gap: 20px; }
-.vs-catalog__side { border-radius: var(--vs-r-sm); padding: 16px; }
-.vs-catalog__main { gap: 16px; }
-.vs-catalog .vs-grid { gap: 16px; }
-.vs-catalog [data-viewport-reveal],
-.vs-related [data-viewport-reveal] { opacity: 1; transform: none; animation: none; }
-.vs-toolbar { border-radius: var(--vs-r-sm); background: var(--vs-surface-2); padding: 10px 12px; }
-.vs-filters fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-.vs-filters fieldset.vs-filters__group { border-block-start: 1px solid var(--vs-border); padding-block-start: 14px; }
-.vs-filters__legend { padding: 0; margin-block-end: 8px; }
-.vs-filters__price { font-size: var(--vs-fs-xs); color: var(--vs-ink-3); }
-.vs-filterrange label { min-width: 0; font-size: var(--vs-fs-xs); color: var(--vs-ink-3); }
-.vs-filterrange label input { margin-block-start: 4px; padding-inline: 8px; }
-
-:where(.vs-catalog, .vs-related) .vs-card--listing,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--vs-r-sm);
-  box-shadow: none;
-}
-:where(.vs-catalog, .vs-related) .vs-card--listing:hover,
-:where(.vs-catalog, .vs-related) .vs-card--listing:focus-within,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing:hover,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing:focus-within { transform: none; box-shadow: none; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__media,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__media,
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-mediabox,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-mediabox { background: var(--vs-surface); }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-mediabox,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-mediabox { aspect-ratio: 1 / 1 !important; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-media,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-media,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__img2 { object-fit: contain; padding: 16px; background: var(--vs-surface); transform: none; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-media--fallback,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-media--fallback {
-  background: var(--vs-surface-2) !important;
-  display: grid;
-  place-items: center;
-}
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-media--fallback::after,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-media--fallback::after {
-  content: "الصورة غير متوفرة";
-  font-size: var(--vs-fs-xs);
-  color: var(--vs-ink-3);
-}
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__panel,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__panel {
-  position: static;
-  flex: 1;
-  max-height: none;
-  overflow: visible;
-  padding: 12px;
-  gap: 6px;
-  border-block-start: 1px solid var(--vs-border);
-  background: var(--vs-surface);
-  backdrop-filter: none;
-  opacity: 1;
-  transform: none;
-  pointer-events: auto;
-}
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__title,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__title { font-size: 14px; line-height: 1.55; min-height: 3.1em; overflow-wrap: anywhere; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__meta { margin-block-start: auto; padding-block-start: 6px; gap: 4px; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__stock { display: block; width: 100%; font-size: 11px; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-price__now,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-price__now { font-size: 20px; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-price__was,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-price__was { font-size: 12px; color: var(--vs-ink-3); }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__acts,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__acts { margin-block-start: 6px; }
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-price { margin-block-start: auto; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__cta,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__cta { border-radius: var(--vs-r-sm); width: 100%; flex: 1 1 100%; min-height: 44px; padding: 6px 8px; font-size: 13px; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__quick { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; width: 34px; height: 34px; background: var(--vs-surface); }
-:where(.vs-catalog, .vs-related) .vs-pkg--listing [data-card-action="details"] { position: absolute; inset-block-start: 10px; inset-inline-end: 10px; font-size: 12px; min-height: 34px; padding: 4px 8px; background: var(--vs-surface); border: 1px solid var(--vs-border); border-radius: var(--vs-r-sm); }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-badge,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-badge { border-radius: 2px; font-size: 11px; padding: 3px 7px; }
-:where(.vs-catalog, .vs-related) .vs-card--listing .vs-badge--sale,
-:where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-badge--sale { direction: ltr; unicode-bidi: isolate; }
-
+/* PLP: one unboxed result grid, page heading and sorting beside the filter column. */
+.vs-catalog-page { background: var(--vs-page); padding-block-end: 12px; }
+.vs-cathead__inner { padding-block: 14px 8px; }
+.vs-cathead__title { color: var(--vs-primary); font-size: 28px; font-weight: 600; line-height: 1.5; }
+.vs-cathead__desc { color: var(--vs-ink-3); font-size: 13px; line-height: 1.7; margin-block-start: 4px; max-width: 65ch; }
+.vs-cathead__subs { display: flex; flex-wrap: wrap; gap: 8px; margin-block-start: 8px; }
+.vs-catalog { display: grid; grid-template-columns: 252px minmax(0, 1fr); align-items: start; gap: 28px; }
+.vs-catalog--full { grid-template-columns: minmax(0, 1fr); }
+.vs-catalog__side { min-width: 0; border: 1px solid var(--vs-border); border-radius: var(--vs-r-lg); background: var(--vs-surface); }
+.vs-catalog__main { --vs-cols: 3; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.vs-catalog__main > .vs-grid { gap: 16px; }
+.vs-catalog__heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 86px; }
+.vs-catalog__intro { min-width: 0; flex: 1; }
+.vs-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; max-width: 52%; }
+.vs-toolbar__count { order: 3; flex-basis: 100%; text-align: end; color: var(--vs-ink-3); font-size: 11px; }
+.vs-toolbar__count strong { color: var(--vs-primary); font-weight: 600; }
+.vs-toolbar__spacer { display: none; }
+.vs-toolbar__density { display: flex; gap: 6px; order: 2; }
+.vs-toolbar__density button { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--vs-border); border-radius: var(--vs-r-sm); background: var(--vs-surface); color: var(--vs-ink-3); cursor: pointer; transition: border-color var(--vs-t), color var(--vs-t); }
+.vs-toolbar__density button[aria-pressed="true"] { color: var(--vs-primary); border-color: var(--vs-primary); }
+.vs-toolbar__filter-count { padding-inline: 5px; border-radius: 4px; background: var(--vs-primary); color: var(--vs-ink-invert); font-size: 10px; }
+.vs-select { height: 38px; min-width: 0; max-width: 100%; border: 1px solid var(--vs-border-strong); border-radius: var(--vs-r-sm); background: var(--vs-surface); padding-inline: 10px; color: var(--vs-ink); font: inherit; font-size: 12px; }
+select.vs-select { cursor: pointer; }
+.vs-sortlabel { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--vs-ink-3); font-size: 11px; }
+.vs-sortlabel .vs-select { flex: 0 1 auto; }
+.vs-loadmore { align-self: center; margin-block: 8px 20px; }
+.vs-filters { display: flex; flex-direction: column; min-width: 0; }
+.vs-filters__head { padding: 16px 18px 8px; }
+.vs-filters__legend-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vs-filters__title { color: var(--vs-primary); font-size: 15px; font-weight: 600; }
+.vs-filters fieldset.vs-filters__group { display: flex; flex-direction: column; gap: 5px; min-width: 0; margin: 0 18px; padding: 16px 0; border: 0; border-block-end: 1px solid var(--vs-border); }
+.vs-filters fieldset.vs-filters__group:last-child { border-block-end: 0; }
+.vs-filters__legend { float: inline-start; width: 100%; margin-block-end: 8px; padding: 0; color: var(--vs-primary); font-size: 13px; font-weight: 600; }
+.vs-check { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 3px; border-radius: 5px; color: var(--vs-ink-2); font-size: 12px; cursor: pointer; transition: color var(--vs-t), background var(--vs-t); }
+.vs-check:hover,
+.vs-check:has(input:checked) { color: var(--vs-primary); background: var(--vs-surface-2); }
+.vs-check input { width: 16px; height: 16px; margin: 0; flex: 0 0 auto; accent-color: var(--vs-primary); cursor: pointer; }
+.vs-check__label { min-width: 0; overflow-wrap: anywhere; }
+.vs-check__count { margin-inline-start: auto; color: var(--vs-ink-3); font-size: 11px; }
+.vs-range { width: 100%; margin-block: 8px 0; accent-color: var(--vs-primary); cursor: pointer; }
+.vs-filterselect { width: 100%; }
+.vs-filterrange { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.vs-filterrange label { min-width: 0; color: var(--vs-ink-3); font-size: 11px; }
+.vs-filterrange input { width: 100%; min-width: 0; margin-block-start: 5px; padding-inline: 8px; }
+.vs-filters__price { margin-block-start: 4px; color: var(--vs-ink-3); font-size: 10px; }
+.vs-activefilters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.vs-activefilters__clear { min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--vs-accent-dark); font: inherit; font-size: 11px; cursor: pointer; }
 @media (min-width: 1280px) {
   .vs-catalog__main { --vs-cols: 4; }
+  .vs-catalog__main[data-density="comfortable"] { --vs-cols: 3; }
 }
-@media (min-width: 900px) {
-  .vs-catalog .vs-card--listing .vs-price__now { font-size: 15px; }
-}
+@media (min-width: 1024px) { .vs-toolbar__filter { display: none; } }
 @media (min-width: 1024px) and (max-width: 1279px) {
-  .vs-catalog__main { --vs-cols: 3; }
-  .vs-catalog { grid-template-columns: 220px minmax(0, 1fr); gap: 16px; }
+  .vs-catalog { grid-template-columns: 220px minmax(0, 1fr); gap: 20px; }
+  .vs-catalog__main[data-density="comfortable"] { --vs-cols: 2; }
+  .vs-catalog__heading { align-items: flex-start; }
+  .vs-toolbar { max-width: 48%; }
+  .vs-sortlabel { flex-wrap: wrap; }
 }
 @media (max-width: 1023px) {
   .vs-catalog { grid-template-columns: minmax(0, 1fr); }
+  .vs-catalog__side { display: none; }
+  .vs-catalog-page .vs-section--tight { padding-block-start: 12px; }
 }
-
-@media (max-width: 599px) {
-  .vs-catalog .vs-grid { gap: 12px; }
-  .vs-cathead--plain .vs-cathead__inner { padding-block: 12px; }
-  .vs-cathead + .vs-section--tight { padding-block-start: 16px; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__panel,
-  :where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__panel { padding: 8px; gap: 4px; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__title,
-  :where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__title { font-size: 12px; line-height: 1.65; min-height: 3.3em; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-price__now,
-  :where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-price__now { font-size: 17px; overflow-wrap: anywhere; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__cta { font-size: 13px; padding-inline: 4px; }
-  :where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__cta { font-size: 11px; padding-inline: 4px; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__cta svg { display: none; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__cta::before,
-  :where(.vs-catalog, .vs-related) .vs-pkg--listing .vs-pkg__cta::before { content: none; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__sku,
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__specs { font-size: 10px; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__specs { flex-direction: column; }
-  :where(.vs-catalog, .vs-related) .vs-card--listing .vs-card__stock { font-size: 10px; }
-  .vs-catalog .vs-sortlabel { margin-inline-start: auto; max-width: 100%; }
-  .vs-catalog .vs-toolbar { gap: 8px; padding: 8px; }
+@media (min-width: 900px) and (max-width: 1023px) {
+  .vs-catalog__main[data-density="comfortable"] { --vs-cols: 2; }
 }
-
-/* skeleton card --------------------------------------------------------- */
-
-.vs-cardskel {
-  border: 1px solid var(--vs-border);
-  border-radius: var(--vs-r-lg);
-  background: var(--vs-surface);
-  overflow: hidden;
-}
-
-.vs-cardskel__media {
-  aspect-ratio: var(--vs-ar-product);
-}
-
-/* On desktop the real card is its image alone â€” the panel is an overlay â€” so the
-   skeleton must not reserve a body the card will never occupy. */
-.vs-cardskel__body {
-  display: none;
-}
-
 @media (max-width: 899px) {
-  .vs-cardskel__body {
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    border-block-start: 1px solid var(--vs-border);
-  }
+  .vs-catalog__main { --vs-cols: 2; }
+  .vs-catalog__heading { flex-direction: column; align-items: stretch; gap: 16px; }
+  .vs-cathead__title { font-size: 25px; }
+  .vs-toolbar { max-width: none; justify-content: flex-start; }
+  .vs-toolbar__filter { padding-inline: 12px; min-height: 40px; }
+  .vs-toolbar__count { flex-basis: auto; margin-inline-start: auto; }
+  .vs-sortlabel { flex: 0 1 auto; }
+  .vs-filters .vs-activefilters__clear { min-height: 44px; }
+}
+@media (max-width: 599px) {
+  .vs-catalog__main { gap: 16px; }
+  .vs-catalog__main > .vs-grid { gap: 10px; }
+  .vs-cathead__desc { font-size: 12px; }
+  .vs-toolbar { gap: 10px; }
+  .vs-sortlabel { margin-inline-start: auto; }
+  .vs-sortlabel .vs-select { max-width: 158px; }
+  .vs-toolbar__count { flex-basis: 100%; text-align: start; margin: 0; }
 }

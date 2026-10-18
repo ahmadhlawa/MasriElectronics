@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { ShieldIcon, TruckIcon, WalletIcon } from "../shell/icons.jsx";
-import { useViewportReveal } from "../../../hooks/useViewportReveal.js";
 import { useStore } from "../../../app/StoreProvider.jsx";
 import { useEffect, useState } from "react";
 import { storefrontService } from "../../../services/storefront.js";
@@ -20,15 +19,12 @@ export default function TrustStrip() {
     }).catch(() => {});
     return () => { active = false; };
   }, []);
-  const paymentReveal = useViewportReveal(0);
-  const deliveryReveal = useViewportReveal(70);
-  const returnReveal = useViewportReveal(140);
 
   const paymentText = "ادفع نقداً عند استلام الطلب";
 
   return (
     <div className="vs-trust">
-      <div className="vs-trust__item" {...paymentReveal}>
+      <div className="vs-trust__item">
         <span className="vs-trust__icon">
           <WalletIcon size={20} />
         </span>
@@ -39,7 +35,7 @@ export default function TrustStrip() {
         </span>
       </div>
 
-      {deliveryAreas.length > 0 && <div className="vs-trust__item" {...deliveryReveal}>
+      {deliveryAreas.length > 0 && <div className="vs-trust__item">
           <span className="vs-trust__icon">
             <TruckIcon size={20} />
           </span>
@@ -50,7 +46,7 @@ export default function TrustStrip() {
           </span>
       </div>}
 
-      {hasReturnPolicy && <Link to="/page/return-policy" className="vs-trust__item" {...returnReveal}>
+      {hasReturnPolicy && <Link to="/page/return-policy" className="vs-trust__item">
         <span className="vs-trust__icon">
           <ShieldIcon size={20} />
         </span>

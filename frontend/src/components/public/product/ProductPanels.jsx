@@ -54,7 +54,7 @@ export default function ProductPanels({ panels }) {
 
   return (
     <div className="vs-tabs">
-      <div className="vs-tabs__list" role="tablist">
+      <div className="vs-tabs__list" role="tablist" aria-label="معلومات المنتج">
         {panels.map((panel) => (
           <button
             key={panel.key}

@@ -43,9 +43,9 @@
   --vs-font: "Masri Cairo", Arial, Helvetica, sans-serif;
   --vs-container-narrow: 1080px;
   --vs-gutter: 20px;
-  --vs-section: 56px;
-  --vs-section-tight: 34px;
-  --vs-grid-gap: 20px;
+  --vs-section: 40px;
+  --vs-section-tight: 24px;
+  --vs-grid-gap: 16px;
   --vs-cols: 4;
   --vs-cols-cat: 4;
   --vs-cols-pkg: 3;
@@ -56,7 +56,7 @@
      nav band is just tall enough for a 34px trigger. Everything in the identity
      row is centred on one axis, so shrinking the band moves nothing sideways. */
   --vs-strip-h: 34px;
-  --vs-header-h: 64px;
+  --vs-header-h: 74px;
   --vs-nav-h: 46px;
   --vs-rail-h: 0px;
   /* A fixed-size viewport the logo is clipped to. The owner's file carries its
@@ -89,8 +89,8 @@
   /* Neutral surfaces mixed from the configurable brand scale. */
   --vs-page: var(--page-background);
   --vs-surface: var(--surface-background);
-  --vs-surface-2: color-mix(in srgb, var(--vs-brand-lite) 28%, #fff);
-  --vs-surface-3: color-mix(in srgb, var(--vs-brand-lite) 58%, #fff);
+  --vs-surface-2: color-mix(in srgb, var(--brand-primary) 3%, #fff);
+  --vs-surface-3: color-mix(in srgb, var(--brand-primary) 6%, #fff);
   --vs-surface-deep: color-mix(in srgb, var(--vs-primary) 62%, #111827);
   /* Kept under their old names so existing components continue to resolve them. */
   --vs-surface-dark: var(--vs-surface-deep);
@@ -98,17 +98,17 @@
 
   /* â”€â”€ borders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   /* Hairlines mixed from the configurable brand values. */
-  --vs-border: color-mix(in srgb, var(--vs-brand-lite) 52%, #fff);
-  --vs-border-strong: color-mix(in srgb, var(--vs-brand) 46%, #fff);
+  --vs-border: color-mix(in srgb, var(--brand-primary) 9%, #fff);
+  --vs-border-strong: color-mix(in srgb, var(--brand-primary) 24%, #fff);
   --vs-border-accent: color-mix(in srgb, var(--vs-accent) 52%, #fff);
   --vs-border-dark: color-mix(in srgb, var(--vs-primary) 34%, #374151);
 
   /* â”€â”€ text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   /* Text steps retain readable contrast against the white surface. */
-  --vs-ink: var(--text-primary);
-  --vs-ink-2: var(--text-secondary);
-  --vs-ink-3: #6B7280;
-  --vs-ink-4: var(--text-muted);
+  --vs-ink: var(--brand-primary);
+  --vs-ink-2: #42536c;
+  --vs-ink-3: #64728a;
+  --vs-ink-4: #69768b;
   --vs-ink-invert: var(--brand-on-primary);
   --vs-on-primary-action: var(--button-primary-text);
 
@@ -135,10 +135,10 @@
   --vs-warn: var(--color-warning);
 
   /* â”€â”€ radius â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-  --vs-r-sm: 8px;
-  --vs-r-md: 12px;
-  --vs-r-lg: 16px;
-  --vs-r-xl: 22px;
+  --vs-r-sm: 7px;
+  --vs-r-md: 10px;
+  --vs-r-lg: 12px;
+  --vs-r-xl: 16px;
   --vs-r-pill: 999px;
 
   /* â”€â”€ shadow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -146,7 +146,7 @@
      than the template's: on a white page a grey shadow reads as dirt, and a
      boutique card should look lifted, not dropped. */
   --vs-shadow-1: 0 1px 2px color-mix(in srgb, var(--brand-primary) 6%, transparent);
-  --vs-shadow-2: 0 8px 24px color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  --vs-shadow-2: 0 4px 16px color-mix(in srgb, var(--brand-primary) 8%, transparent);
   --vs-shadow-3: 0 16px 40px color-mix(in srgb, var(--brand-primary) 14%, transparent);
   --vs-shadow-4: 0 0 60px rgba(59, 50, 67, 0.24);
   --vs-shadow-header: 0 4px 18px color-mix(in srgb, var(--brand-primary) 8%, transparent);
@@ -154,15 +154,15 @@
   /* â”€â”€ motion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   --vs-t-fast: 140ms;
   --vs-t: 200ms;
-  --vs-t-card: 260ms;
+  --vs-t-card: 220ms;
   --vs-t-drawer: 300ms;
-  --vs-t-hero: 600ms;
-  --vs-t-reveal: 440ms;
+  --vs-t-hero: 250ms;
+  --vs-t-reveal: 220ms;
   --vs-ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* â”€â”€ type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   --vs-fs-h1: 28px;
-  --vs-fs-h2: 26px;
+  --vs-fs-h2: 23px;
   --vs-fs-h3: 18px;
   --vs-fs-body: 15px;
   --vs-fs-sm: 13px;
@@ -172,7 +172,7 @@
   --vs-fs-price: 15px;
   --vs-fw-body: 400;
   --vs-fw-support: 500;
-  --vs-fw-heading: 500;
+  --vs-fw-heading: 600;
   --vs-fw-nav: 600;
   --vs-fw-product: 500;
   --vs-fw-price: 600;
@@ -198,7 +198,7 @@
      hero reserves, so the box is correct before the image decodes. The cap
      stops the same ratio from turning a 1852px-wide band into a 700px wall on
      a large monitor; the artwork covers, so a shorter box only crops. */
-  --vs-ar-hero: 21 / 8;
+  --vs-ar-hero: 3 / 1;
 }
 @media (max-width: 1279px) {
   .vs-public {

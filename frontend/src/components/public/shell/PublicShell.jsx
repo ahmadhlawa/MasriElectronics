@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useStore } from "../../../app/StoreProvider.jsx";
 import MaintenanceScreen from "../../Maintenance.jsx";
-import PreviewNotice from "../../PreviewNotice.jsx";
 import Header from "./Header.jsx";
 import Footer from "./Footer.jsx";
 import MobileTabBar from "./MobileTabBar.jsx";
@@ -38,7 +37,6 @@ export default function PublicShell() {
       <a className="vs-skip" href="#vs-content">
         تخطَّ إلى المحتوى
       </a>
-      <PreviewNotice text={store.settings.demoBusinessContent ? "نسخة تجريبية للمراجعة — معلومات الخدمة والرسوم والسياسات غير معتمدة للإطلاق" : undefined} />
       <Header />
 
       <main className="vs-main" id="vs-content">

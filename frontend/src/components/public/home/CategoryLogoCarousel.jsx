@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useReducedMotion } from "../../../hooks/useMediaQuery.js";
-import { TagIcon } from "../shell/icons.jsx";
+import useMediaQuery, { useReducedMotion } from "../../../hooks/useMediaQuery.js";
+import { isPreviewPlaceholder } from "../../../utils/placeholder.js";
+import { ArrowForward, CategoryIcon } from "../shell/icons.jsx";
 
 function CategoryLogo({ category, duplicate }) {
   const [failedUrl, setFailedUrl] = useState(null);
-  const hasImage = category.imageUrl && category.imageUrl !== failedUrl;
+  const hasImage = category.imageUrl && category.imageUrl !== failedUrl && !isPreviewPlaceholder(category.imageUrl);
   return (
     <Link to={category.href} className="vs-category-logos__item" aria-label={category.name} tabIndex={duplicate ? -1 : undefined}>
       {hasImage ? (
         <img src={category.imageUrl} alt="" loading="lazy" decoding="async" onError={() => setFailedUrl(category.imageUrl)} />
       ) : (
-        <span className="vs-category-logos__fallback" aria-hidden="true"><TagIcon size={28} /></span>
+        <span className="vs-category-logos__fallback" aria-hidden="true"><CategoryIcon category={category} size={28} /></span>
       )}
       <span className="vs-category-logos__label">{category.name}</span>
+      <span className="vs-category-logos__arrow" aria-hidden="true"><ArrowForward size={14} /></span>
     </Link>
   );
 }
@@ -24,11 +26,16 @@ export default function CategoryLogoCarousel({ categories, label = "تسوّق �
   const groupRef = useRef(null);
   const spanRef = useRef(0);
   const reducedMotion = useReducedMotion();
+  const mobile = useMediaQuery("(max-width: 899px)");
   const [overflow, setOverflow] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [stopped, setStopped] = useState(false);
-  const looping = overflow && !reducedMotion;
+  const looping = overflow && !reducedMotion && !mobile;
+
+  useEffect(() => {
+    if (mobile && viewportRef.current) viewportRef.current.scrollLeft = 0;
+  }, [mobile]);
 
   useEffect(() => {
     const viewport = viewportRef.current;

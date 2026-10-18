@@ -3,7 +3,10 @@ import { useStore } from "../../../app/StoreProvider.jsx";
 import { useCategoryNav } from "../../../hooks/useStorefront.js";
 import { footerLinks } from "../../../store.js";
 import { ltrContactNumberProps, whatsappHref } from "../../../utils/format.js";
-import { FOOTER_LOGO_URL } from "../../../brand.js";
+import { FOOTER_LOGO_URL, HEADER_LOGO_URL } from "../../../brand.js";
+import useMediaQuery from "../../../hooks/useMediaQuery.js";
+import TrustStrip from "../home/TrustStrip.jsx";
+import { HomeIcon, PhoneIcon, WalletIcon, WhatsAppIcon } from "./icons.jsx";
 
 function SocialIcon({ name }) {
   const paths = {
@@ -24,116 +27,100 @@ function validExternalUrl(value) {
   }
 }
 
-/**
- * Everything here is real data or nothing. A field the owner has not filled in
- * is omitted rather than shown as a placeholder — the storefront never invents
- * a phone number, an address or a legal claim.
- */
+/** Contact, categories and policies are sourced from the existing storefront. */
 export default function Footer() {
   const { settings } = useStore();
+  const mobile = useMediaQuery("(max-width: 699px)");
   const categories = useCategoryNav();
-  const year = new Date().getFullYear();
-  // The same viewport as the header's, so the mark is the size of the mark here
-  // too — and the file's white box is cropped back to it instead of sitting on
-  // the dark footer as a pale slab.
 
+  if (mobile) {
+    const locationUrl = validExternalUrl(settings.locationUrl);
+    return (
+      <footer className="vs-footer vs-footer--compact">
+        <div className="vs-container vs-footer__compact-inner">
+          <img className="vs-footer__compact-logo" src={HEADER_LOGO_URL} alt={settings.storeName} loading="lazy" />
+          {(settings.phone || settings.whatsapp || locationUrl) && (
+            <nav className="vs-footer__compact-actions" aria-label="تواصل معنا">
+              {settings.phone && <a href={`tel:${settings.phone}`}><PhoneIcon size={18} />اتصال</a>}
+              {settings.whatsapp && <a href={whatsappHref(settings.whatsapp, "")} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={18} />واتساب</a>}
+              {locationUrl && <a href={locationUrl} target="_blank" rel="noopener noreferrer"><HomeIcon size={18} />الموقع</a>}
+            </nav>
+          )}
+        </div>
+      </footer>
+    );
+  }
+
+  const year = new Date().getFullYear();
   const socials = [
     { key: "instagram", label: "إنستغرام", href: settings.instagram, visible: settings.instagramVisible },
     { key: "facebook", label: "فيسبوك", href: settings.facebook, visible: settings.facebookVisible },
     { key: "tiktok", label: "تيك توك", href: settings.tiktok, visible: settings.tiktokVisible },
     { key: "youtube", label: "يوتيوب", href: settings.youtube, visible: settings.youtubeVisible },
   ].map((item) => ({ ...item, href: item.visible ? validExternalUrl(item.href) : null })).filter((item) => item.href);
-
-  const contact = [
-    settings.phone && { key: "phone", node: <a href={`tel:${settings.phone}`} {...ltrContactNumberProps}>{settings.phone}</a> },
-    settings.whatsapp && { key: "whatsapp", node: <a href={whatsappHref(settings.whatsapp, "")} target="_blank" rel="noopener noreferrer" {...ltrContactNumberProps}>{settings.whatsapp}</a> },
-    settings.email && { key: "email", node: <a href={`mailto:${settings.email}`}>{settings.email}</a> },
-    settings.address && {
-      key: "address",
-      node: settings.locationUrl ? (
-        <a href={settings.locationUrl} target="_blank" rel="noopener">
-          {settings.address}
-        </a>
-      ) : (
-        <span>{settings.address}</span>
-      ),
-    },
-  ].filter(Boolean);
+  const supportLinks = [...footerLinks.service.items, ...footerLinks.policies.items];
+  const linkGroups = [
+    { title: "روابط سريعة", items: [["الرئيسية", "/"], ...footerLinks.shop.items] },
+    { title: "خدمة العملاء", items: supportLinks },
+    ...(categories.length ? [{ title: "الأقسام الرئيسية", items: categories.slice(0, 7).map((category) => [category.name, category.href]) }] : []),
+  ];
 
   return (
-    <footer className="vs-footer">
-      <div className="vs-container vs-footer__top">
-        <div className="vs-footer__brand">
-          {FOOTER_LOGO_URL ? (
-            <span className="vs-footer__logo">
-              <img className="vs-footer__logo-img" src={FOOTER_LOGO_URL} alt={settings.storeName} />
-            </span>
-          ) : (
+    <>
+      <section className="vs-prefooter" aria-label="معلومات الدفع والتوصيل">
+        <div className="vs-container"><TrustStrip /></div>
+      </section>
+      <footer className="vs-footer">
+        <div className="vs-container vs-footer__top">
+          <div className="vs-footer__brand">
+            {FOOTER_LOGO_URL && <img className="vs-footer__logo-img" src={FOOTER_LOGO_URL} alt={settings.storeName} loading="lazy" />}
             <span className="vs-footer__name">{settings.storeName}</span>
-          )}
-          {(settings.seoDescription || settings.tagline) && (
-            <p className="vs-footer__desc">{settings.seoDescription || settings.tagline}</p>
-          )}
-        </div>
+            {(settings.seoDescription || settings.tagline) && <p className="vs-footer__desc">{settings.seoDescription || settings.tagline}</p>}
+          </div>
 
-        {categories.length > 0 && (
-          <nav className="vs-footer__col" aria-label="الأقسام">
-            <h2 className="vs-footer__title">الأقسام</h2>
-            {categories.slice(0, 6).map((category) => (
-              <Link key={category.slug} to={category.href}>
-                {category.name}
-              </Link>
-            ))}
-          </nav>
-        )}
+          {linkGroups.map((group) => {
+            const links = group.items.map(([label, href]) => <Link key={href} to={href}>{label}</Link>);
+            return (
+              <nav key={group.title} className="vs-footer__col" aria-label={group.title}>
+                <h2 className="vs-footer__title">{group.title}</h2>
+                {links}
+              </nav>
+            );
+          })}
 
-        {Object.entries(footerLinks).map(([key, column]) => (
-          <nav key={key} className="vs-footer__col" aria-label={column.title}>
-            <h2 className="vs-footer__title">{column.title}</h2>
-            {column.items.map(([label, href]) => (
-              <Link key={href} to={href}>
-                {label}
-              </Link>
-            ))}
-          </nav>
-        ))}
-
-        <div className="vs-footer__col">
-          <h2 className="vs-footer__title">الدفع والتوصيل</h2>
-          {contact.map((item) => (
-            <span key={item.key}>{item.node}</span>
-          ))}
-          {settings.hours && <span>{settings.hours}</span>}
-          <div className="vs-footer__pay">
-            <span>الدفع عند الاستلام</span>
+          <div className="vs-footer__col vs-footer__contact">
+            <h2 className="vs-footer__title">تواصل معنا</h2>
+            {settings.address && <div className="vs-footer__contact-line"><HomeIcon size={19} />{settings.locationUrl ? <a href={settings.locationUrl} target="_blank" rel="noopener noreferrer">{settings.address}</a> : <span>{settings.address}</span>}</div>}
+            {settings.phone && <div className="vs-footer__contact-line"><PhoneIcon size={19} /><a href={`tel:${settings.phone}`} {...ltrContactNumberProps}>{settings.phone}</a></div>}
+            {settings.whatsapp && <div className="vs-footer__contact-line"><WhatsAppIcon size={19} /><a href={whatsappHref(settings.whatsapp, "")} target="_blank" rel="noopener noreferrer" {...ltrContactNumberProps}>{settings.whatsapp}</a></div>}
+            {settings.email && <div className="vs-footer__contact-line"><span aria-hidden="true">@</span><a href={`mailto:${settings.email}`}>{settings.email}</a></div>}
+            {settings.hours && <p className="vs-footer__hours">{settings.hours}</p>}
+            {socials.length > 0 && (
+              <div className="vs-footer__social-row" aria-label="روابط التواصل الاجتماعي">
+                {socials.map((item) => <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label} title={item.label}><SocialIcon name={item.key} /></a>)}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      <div className="vs-footer__bottom">
-        <div className="vs-container vs-footer__bottom-row">
-          <span>
-            © {year} {settings.storeName} — جميع الحقوق محفوظة
-          </span>
-          {socials.length > 0 && (
-            <div className="vs-footer__social-row" aria-label="روابط التواصل الاجتماعي">
-              {socials.map((item) => (
-                <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label} title={item.label}>
-                  <SocialIcon name={item.key} />
-                </a>
-              ))}
-            </div>
-          )}
-          <Link to="/page/terms">الشروط والأحكام</Link>
+        <div className="vs-footer__bottom">
+          <div className="vs-container vs-footer__bottom-row">
+            <nav className="vs-footer__legal" aria-label="السياسات">
+              <Link to="/page/privacy-policy">الخصوصية</Link>
+              <Link to="/page/terms">الشروط والأحكام</Link>
+              <Link to="/page/return-policy">سياسة الإرجاع</Link>
+            </nav>
+            <span>© {year} {settings.storeName}. جميع الحقوق محفوظة</span>
+            <span className="vs-footer__payment"><WalletIcon size={22} /> الدفع عند الاستلام</span>
+          </div>
         </div>
-      </div>
-
-      <div className="vs-footer__credit">
-        <div className="vs-container vs-footer__credit-row">
-          <img src="/branding/tfn.png" alt="TFN Technologies Team" />
-          <span>Developed by TFN Technologies Team</span>
+        <div className="vs-footer__credit">
+          <div className="vs-container vs-footer__credit-row">
+            <img src="/branding/tfn.png" alt="TFN Technologies Team" loading="lazy" />
+            <span>Developed by TFN Technologies Team</span>
+          </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }

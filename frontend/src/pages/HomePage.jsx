@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useStore } from "../app/StoreProvider.jsx";
 import { useCategoryNav, useMoney } from "../hooks/useStorefront.js";
 import { catalogService } from "../services/catalog.js";
 import { storefrontService } from "../services/storefront.js";
@@ -8,7 +7,6 @@ import { publicApi } from "../api/publicApi.js";
 import { isStaticPreview } from "../preview/staticPreview.js";
 import { productView } from "../utils/productView.js";
 import Hero from "../components/public/home/Hero.jsx";
-import TrustStrip from "../components/public/home/TrustStrip.jsx";
 import BrandMosaic from "../components/public/home/BrandMosaic.jsx";
 import { homeBrands } from "../homeBrands.js";
 import SectionHead from "../components/public/shell/SectionHead.jsx";
@@ -55,7 +53,6 @@ const SECTIONS = {
     more: "/packages",
     limit: 6,
   },
-  custom_text: { kind: "text", fallbackTitle: "" },
 };
 
 const LOADERS = {
@@ -70,7 +67,6 @@ const HOME_SECTIONS = [
   { id: "featured", type: "featured_products", title: "منتجات مختارة", description: "اختيارات عملية للاستخدام اليومي.", config: {} },
   { id: "bestsellers", type: "bestsellers", title: "الأكثر طلباً", description: "أجهزة يحبها عملاؤنا.", config: {} },
   { id: "new", type: "new_products", title: "وصل حديثاً", description: "تشكيلة حديثة تواكب احتياجات المنزل.", config: {} },
-  { id: "service", type: "custom_text", title: "معلومات الخدمة", description: null, config: {} },
 ];
 
 function RevealSection({ className, children }) {
@@ -79,7 +75,6 @@ function RevealSection({ className, children }) {
 }
 
 export default function HomePage() {
-  const store = useStore();
   const money = useMoney();
   const categories = useCategoryNav();
 
@@ -165,30 +160,9 @@ export default function HomePage() {
       if (spec.kind === "categories") {
         if (!categories.length) return null;
         return (
-          <section key={section.id} className="vs-container vs-section">
-            <SectionHead
-              eyebrow={section.description || null}
-              title={title}
-              moreHref={spec.more}
-            />
+          <section key={section.id} className="vs-container vs-section vs-home-categories" aria-label={title}>
             <CategoryLogoCarousel categories={categories} label={title} />
           </section>
-        );
-      }
-
-      if (spec.kind === "text") {
-        const description = store.settings.seoDescription;
-        if (!description) return null;
-        return (
-          <RevealSection key={section.id} className="vs-container vs-section">
-            <div className="vs-split__panel">
-              <h2 className="vs-split__title">{section.title}</h2>
-              <p className="vs-split__desc">{description}</p>
-              <Link to="/shop" className="vs-btn vs-btn--lg vs-split__cta">
-                تصفّح المتجر <ArrowForward size={16} />
-              </Link>
-            </div>
-          </RevealSection>
         );
       }
 
@@ -197,9 +171,11 @@ export default function HomePage() {
 
       if (list.status === "loading") {
         return (
-          <RevealSection key={section.id} className="vs-container vs-section">
-            <SectionHead title={title} description={section.description} />
-            <GridSkeleton count={spec.layout === "packages" ? 3 : 4} />
+          <RevealSection key={section.id} className="vs-container vs-section vs-home-products">
+            <div className="vs-merch">
+              <SectionHead title={title} description={section.description} />
+              <GridSkeleton count={spec.layout === "packages" ? 3 : 6} variant={spec.layout === "grid" ? "rail" : spec.layout} />
+            </div>
           </RevealSection>
         );
       }
@@ -229,13 +205,15 @@ export default function HomePage() {
       }
 
       return (
-        <section key={section.id} className="vs-container vs-section">
-          <SectionHead
-            title={title}
-            description={section.description}
-            moreHref={spec.more}
-          />
-          <ProductGrid views={items} variant={spec.layout} eagerCount={0} listing />
+        <section key={section.id} className={`vs-container vs-section vs-home-products vs-home-products--${spec.source}`}>
+          <div className="vs-merch">
+            <SectionHead
+              title={title}
+              description={section.description}
+              moreHref={spec.more}
+            />
+            <ProductGrid views={items} variant={spec.layout === "grid" ? "rail" : spec.layout} eagerCount={0} />
+          </div>
         </section>
       );
     })
@@ -282,9 +260,6 @@ export default function HomePage() {
         </RevealSection>
       )}
 
-      <section className="vs-container vs-section--tight">
-        <TrustStrip />
-      </section>
     </div>
   );
 }

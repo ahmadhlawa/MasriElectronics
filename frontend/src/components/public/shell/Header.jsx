@@ -47,22 +47,6 @@ export default function Header() {
 
   return (
     <>
-      {store.announce && settings.announcement && (
-        <div className="vs-announce">
-          <div className="vs-container vs-announce__row">
-            <span>{settings.announcement}</span>
-            <button
-              type="button"
-              className="vs-announce__close"
-              onClick={() => store.setAnnounce(false)}
-              aria-label="إغلاق شريط الإعلان"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       <header className="vs-header" data-scrolled={scrolled}>
         <div className="vs-header__main">
           <div className="vs-container vs-header__row">
@@ -119,7 +103,7 @@ export default function Header() {
           <div className="vs-container vs-nav__row">
             <Link to="/categories" className="vs-nav__cats">
               <GridIcon size={15} />
-              كل الأقسام
+              جميع الأقسام
             </Link>
 
             {navLinks.map((link) => (

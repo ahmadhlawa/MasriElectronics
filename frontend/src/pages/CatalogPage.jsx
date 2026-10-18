@@ -7,7 +7,6 @@ import { catalogService } from "../services/catalog.js";
 import { productView } from "../utils/productView.js";
 import ProductGrid, { GridSkeleton } from "../components/public/catalog/ProductGrid.jsx";
 import FilterPanel from "../components/public/catalog/FilterPanel.jsx";
-import Media from "../components/public/shell/Media.jsx";
 import { Drawer } from "../components/public/overlays/Overlay.jsx";
 import {
   FilterIcon,
@@ -236,7 +235,6 @@ export default function CatalogPage({ mode = "shop" }) {
         : spec.subtitle;
 
   const children = mode === "category" ? categories.find((c) => c.slug === params.slug)?.children || [] : [];
-  const hasImage = mode === "category" && !!category?.imageUrl;
   // An empty search box is a prompt, not a result set: listing the whole
   // catalogue under "search results" would be a lie about what was searched.
   const awaitingTerm = mode === "search" && !term;
@@ -255,37 +253,14 @@ export default function CatalogPage({ mode = "shop" }) {
   );
 
   return (
-    <>
-      <header className={`vs-cathead ${hasImage ? "vs-cathead--image" : "vs-cathead--plain"}`}>
-        {hasImage && (
-          <>
-            <Media
-              className="vs-cathead__media"
-              src={category.imageUrl}
-              fallback={category.bg}
-              alt=""
-              eager
-            />
-            <span className="vs-cathead__veil" />
-          </>
-        )}
+    <div className="vs-catalog-page">
+      <header className="vs-cathead">
         <div className="vs-container vs-cathead__inner">
           <nav className="vs-crumbs" aria-label="مسار التصفح">
             <Link to="/">الرئيسية</Link>
             <span aria-hidden="true">›</span>
             <span className="vs-crumbs__here">{title}</span>
           </nav>
-          <h1 className="vs-cathead__title">{title}</h1>
-          {subtitle && <p className="vs-cathead__desc">{subtitle}</p>}
-          {children.length > 0 && (
-            <div className="vs-cathead__subs">
-              {children.map((child) => (
-                <Link key={child.slug} to={child.href} className="vs-chip">
-                  {child.name}
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       </header>
 
@@ -295,7 +270,7 @@ export default function CatalogPage({ mode = "shop" }) {
             <span className="vs-state__icon">
               <SearchIcon size={26} />
             </span>
-            <h2 className="vs-state__title">ابدأ بالبحث</h2>
+            <h1 className="vs-state__title">ابدأ بالبحث</h1>
             <p className="vs-state__body">
               اكتب اسم منتج أو قسم في شريط البحث أعلى الصفحة لعرض النتائج.
             </p>
@@ -312,48 +287,59 @@ export default function CatalogPage({ mode = "shop" }) {
           </aside>
 
           <div className="vs-catalog__main" data-density={density}>
-            <div className="vs-toolbar">
-              <button
-                type="button"
-                className="vs-btn vs-btn--ghost vs-toolbar__filter"
-                onClick={() => store.openOverlay(OVERLAY.FILTERS)}
-              >
-                <FilterIcon size={17} /> التصفية
-              </button>
-              <span className="vs-toolbar__count">
-                {status === "loading" ? "جارٍ التحميل…" : `${meta.total} منتجاً`}
-              </span>
-
-              <div className="vs-toolbar__spacer" />
-
-              <div className="vs-toolbar__density vs-desk" role="group" aria-label="كثافة العرض">
-                {DENSITIES.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    aria-pressed={density === item.value}
-                    aria-label={item.label}
-                    onClick={() => setDensity(item.value)}
-                  >
-                    <item.Icon size={17} />
-                  </button>
-                ))}
+            <div className="vs-catalog__heading">
+              <div className="vs-catalog__intro">
+                <h1 className="vs-cathead__title">{title}</h1>
+                {subtitle && <p className="vs-cathead__desc">{subtitle}</p>}
+                {children.length > 0 && (
+                  <div className="vs-cathead__subs">
+                    {children.map((child) => <Link key={child.slug} to={child.href} className="vs-chip">{child.name}</Link>)}
+                  </div>
+                )}
               </div>
-
-              <label className="vs-sortlabel">
-                ترتيب حسب
-                <select
-                  className="vs-select"
-                  value={filters.sort}
-                  onChange={(event) => patch({ sort: event.target.value })}
+              <div className="vs-toolbar">
+                <button
+                  type="button"
+                  className="vs-btn vs-btn--ghost vs-toolbar__filter"
+                  onClick={() => store.openOverlay(OVERLAY.FILTERS)}
                 >
-                  {SORTS.map((sort) => (
-                    <option key={sort.value} value={sort.value}>
-                      {sort.label}
-                    </option>
+                  <FilterIcon size={17} /> التصفية {activeChips.length > 0 && <span className="vs-toolbar__filter-count">{activeChips.length}</span>}
+                </button>
+                <span className="vs-toolbar__count">
+                  {status === "loading" ? "جارٍ التحميل…" : <><strong>{meta.total}</strong> منتجاً</>}
+                </span>
+
+                <div className="vs-toolbar__spacer" />
+
+                <div className="vs-toolbar__density vs-desk" role="group" aria-label="كثافة العرض">
+                  {DENSITIES.map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      aria-pressed={density === item.value}
+                      aria-label={item.label}
+                      onClick={() => setDensity(item.value)}
+                    >
+                      <item.Icon size={17} />
+                    </button>
                   ))}
-                </select>
-              </label>
+                </div>
+
+                <label className="vs-sortlabel">
+                  ترتيب حسب
+                  <select
+                    className="vs-select"
+                    value={filters.sort}
+                    onChange={(event) => patch({ sort: event.target.value })}
+                  >
+                    {SORTS.map((sort) => (
+                      <option key={sort.value} value={sort.value}>
+                        {sort.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </div>
 
             {activeChips.length > 0 && (
@@ -433,6 +419,6 @@ export default function CatalogPage({ mode = "shop" }) {
       >
         <div className="vs-filterdrawer">{filterPanel}</div>
       </Drawer>
-    </>
+    </div>
   );
 }

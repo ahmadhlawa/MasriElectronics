@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useStore } from "../app/StoreProvider.jsx";
 import { useCategoryNav } from "../hooks/useStorefront.js";
-import { TagIcon } from "../components/public/shell/icons.jsx";
+import { CategoryIcon } from "../components/public/shell/icons.jsx";
+import { isPreviewPlaceholder } from "../utils/placeholder.js";
 
 function CategoryTile({ category, eager }) {
   const [failedUrl, setFailedUrl] = useState(null);
-  const hasImage = category.imageUrl && category.imageUrl !== failedUrl;
+  const hasImage = category.imageUrl && category.imageUrl !== failedUrl && !isPreviewPlaceholder(category.imageUrl);
   return (
     <Link to={category.href} className="vs-categories-page__tile" aria-label={`${category.name} — ${category.countText}`}>
-      <span className="vs-categories-page__image">
+      <span className="vs-categories-page__image" data-fallback={!hasImage}>
         {hasImage ? (
           <img src={category.imageUrl} alt="" loading={eager ? "eager" : "lazy"}
             decoding="async" onError={() => setFailedUrl(category.imageUrl)} />
         ) : (
-          <TagIcon size={28} />
+          <CategoryIcon category={category} size={28} />
         )}
       </span>
       <span className="vs-categories-page__name">{category.name}</span>

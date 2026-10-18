@@ -15,7 +15,7 @@ import QuantityStepper from "../components/public/cart/QuantityStepper.jsx";
 import ProductGrid from "../components/public/catalog/ProductGrid.jsx";
 import SectionHead from "../components/public/shell/SectionHead.jsx";
 import NotFoundRoutePage from "./NotFoundRoutePage.jsx";
-import { BoxIcon, TruckIcon, WalletIcon } from "../components/public/shell/icons.jsx";
+import { BoxIcon, CartIcon } from "../components/public/shell/icons.jsx";
 
 function paragraphsOf(text) {
   return String(text || "")
@@ -34,11 +34,11 @@ export default function ProductDetailPage() {
   // The sticky buy bar is a phone affordance; rendering it on desktop would only
   // duplicate the price and the button in the accessibility tree.
   const compact = useMediaQuery("(max-width: 899px)");
+  const desktop = useMediaQuery("(min-width: 1024px)");
 
   const [qty, setQty] = useState(1);
   const [related, setRelated] = useState([]);
   const [error, setError] = useState("");
-  const [shareStatus, setShareStatus] = useState("");
   const buyRef = useRef(null);
   const optionsRef = useRef(null);
   const buybarRef = useRef(null);
@@ -75,7 +75,6 @@ export default function ProductDetailPage() {
   useEffect(() => {
     setQty(1);
     setError("");
-    setShareStatus("");
   }, [slug]);
 
   useEffect(() => setError(""), [selection.variantId, selection.selectedOptionValueIds.join("-")]);
@@ -145,6 +144,9 @@ export default function ProductDetailPage() {
   const specIdentity = (name, value) => `${String(name).trim().replace(/\s+/g, " ").toLowerCase()}|${String(value).trim().replace(/\s+/g, " ").toLowerCase()}`;
   const structuredPairs = new Set(structured.map((attribute) => specIdentity(attribute.label, attribute.display)));
   const freeSpecs = specs.filter(([name, value]) => name && value && !structuredPairs.has(specIdentity(name, value)));
+  const highlights = keySpecs.length
+    ? keySpecs.map((attribute) => ({ key: attribute.key, label: attribute.label, display: attribute.display }))
+    : freeSpecs.slice(0, 4).map(([label, display], index) => ({ key: `${label}-${index}`, label, display }));
   const description = paragraphsOf(product.description || product.short);
 
   // Returns false when the add was refused, so the button does not announce a
@@ -162,29 +164,22 @@ export default function ProductDetailPage() {
     return true;
   };
 
-  const share = async () => {
-    const url = window.location.href;
-    try {
-      if (navigator.share) await navigator.share({ title: view.name, url });
-      else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        setShareStatus("تم نسخ رابط المنتج");
-      } else setShareStatus("انسخ رابط المنتج من شريط العنوان");
-    } catch (cause) {
-      if (cause.name !== "AbortError") setShareStatus("تعذّرت المشاركة؛ انسخ الرابط من شريط العنوان");
-    }
-  };
-
   const panels = [
     {
       key: "desc",
       label: "الوصف",
       content: description.length ? (
-        description.map((text, index) => (
-          <p key={index} className="vs-prose">
-            {text}
-          </p>
-        ))
+        <div className="vs-pdp__description">
+          <div>
+            <h2 className="vs-pdp__spec-heading">نبذة عن المنتج</h2>
+            {description.map((text, index) => <p key={index} className="vs-prose">{text}</p>)}
+          </div>
+          {highlights.length > 0 && (
+            <dl className="vs-pdp__overview">
+              {highlights.slice(0, 3).map((attribute) => <div key={attribute.key}><dt>{attribute.label}</dt><dd>{attribute.display}</dd></div>)}
+            </dl>
+          )}
+        </div>
       ) : (
         <p className="vs-prose vs-prose--muted">لا يتوفر وصف تفصيلي لهذا المنتج بعد.</p>
       ),
@@ -239,6 +234,43 @@ export default function ProductDetailPage() {
     },
   ];
 
+  const availability = (
+    <p className="vs-pdp__stock" data-tone={selection.soldOut ? "out" : selection.stock < 5 && product.trackInventory ? "low" : "ok"}>
+      {selection.soldOut
+        ? "غير متوفر حالياً"
+        : !product.trackInventory
+          ? "متوفر"
+          : selection.stock < 5
+            ? `متبقٍ ${selection.stock} فقط`
+            : "متوفر في المخزون"}
+    </p>
+  );
+  const pricing = (
+    <div className="vs-pdp__pricing">
+      <div className="vs-price vs-price--lg">
+        <span className="vs-price__now">{money(selection.price)}</span>
+        {selectionHasSale && <del className="vs-price__was">{view.oldText}</del>}
+      </div>
+      {selectionHasSale && (
+        <span className="vs-pdp__saving">
+          وفّر {desktop ? `${discountPercent(selection.price, product.price)}٪` : money(product.price - selection.price)}
+        </span>
+      )}
+    </div>
+  );
+  const keySpecifications = highlights.length > 0 && (
+    <section className="vs-pdp__key-specs" aria-label="أبرز المواصفات">
+      <h2>أبرز المواصفات</h2>
+      <dl>
+        {highlights.map((attribute) => (
+          <div key={attribute.key}><dt>{attribute.label}</dt><dd>{attribute.display}</dd></div>
+        ))}
+      </dl>
+    </section>
+  );
+  const shortDescription = product.short && (
+    <p className="vs-pdp__short">{product.short}</p>
+  );
   return (
     <>
       <div className="vs-container vs-pdp-crumbs">
@@ -260,119 +292,91 @@ export default function ProductDetailPage() {
           <Gallery images={product.images} fallback={view.bg} alt={view.name} />
 
           <div className="vs-pdp__info">
-            <div className="vs-pdp__badges">
-              {view.isPackage && <span className="vs-badge vs-badge--package">بكج</span>}
-              {selectionHasSale && <span className="vs-badge vs-badge--sale">−{discountPercent(selection.price, product.price)}٪</span>}
-              {view.isNew && <span className="vs-badge vs-badge--new">جديد</span>}
+            <div className="vs-pdp__heading">
+              <div className="vs-pdp__badges" data-empty={!(view.isPackage || view.isNew || (!desktop && selectionHasSale))}>
+                {view.isPackage && <span className="vs-badge vs-badge--package">بكج</span>}
+                {!desktop && selectionHasSale && <span className="vs-badge vs-badge--sale">−{discountPercent(selection.price, product.price)}٪</span>}
+                {view.isNew && <span className="vs-badge vs-badge--new">جديد</span>}
+              </div>
+
+              <h1 className="vs-pdp__title">{view.name}</h1>
+              <div className="vs-pdp__identity">
+                {product.brandName && <span className="vs-pdp__brand">{product.brandName}</span>}
+                {product.modelNumber && <span className="vs-pdp__model">الموديل: <bdi>{product.modelNumber}</bdi></span>}
+                {product.sku && <span className="vs-pdp__sku">رمز المنتج: <bdi>{product.sku}</bdi></span>}
+              </div>
             </div>
 
-            <h1 className="vs-pdp__title">{view.name}</h1>
-            {product.brandName && <span className="vs-pdp__brand">{product.brandName}</span>}
-            {product.modelNumber && <span className="vs-pdp__model">رقم الموديل: <bdi>{product.modelNumber}</bdi></span>}
-            {product.sku && <span className="vs-pdp__sku">رمز المنتج: <bdi>{product.sku}</bdi></span>}
+            {availability}
+            {pricing}
+            {shortDescription || keySpecifications}
+            <div className="vs-pdp__purchase">
+              {selection.requiresChoice && (
+                <div ref={optionsRef}>
+                  <OptionPicker
+                    product={product}
+                    variants={selection.variants}
+                    variantId={selection.variantId}
+                    onPick={selection.setVariantId}
+                    simpleChoices={selection.simpleChoices}
+                    onSimplePick={selection.setSimpleChoice}
+                    error={error}
+                  />
+                </div>
+              )}
 
-            <div className="vs-price vs-price--lg">
-              <span className="vs-price__now">{money(selection.price * 1)}</span>
-              {selectionHasSale && <span className="vs-price__was">{view.oldText}</span>}
-            </div>
+              {selection.unavailable && (
+                <p className="vs-pdp__notice" role="status">
+                  هذا المنتج بحاجة إلى تحديد الخيارات مع فريق المتجر قبل الطلب.
+                </p>
+              )}
 
-            <p className="vs-pdp__stock" data-tone={selection.soldOut ? "out" : selection.stock < 5 && product.trackInventory ? "low" : "ok"}>
-              {selection.soldOut
-                ? "غير متوفر حالياً"
-                : !product.trackInventory
-                  ? "متوفر"
-                  : selection.stock < 5
-                    ? `متبقٍ ${selection.stock} فقط`
-                    : "متوفر في المخزون"}
-            </p>
+              {view.isPackage && product.packageItems.length > 0 && (
+                <div className="vs-pkgbox">
+                  <h2 className="vs-pkgbox__title">
+                    <BoxIcon size={17} /> محتويات البكج
+                  </h2>
+                  <ul>
+                    {product.packageItems.map((item) => (
+                      <li key={item.id}>
+                        {item.slug ? (
+                          <Link to={`/product/${item.slug}`}>{item.label}</Link>
+                        ) : (
+                          item.label
+                        )}
+                        {item.quantity > 1 ? ` ×${item.quantity}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-            {keySpecs.length > 0 && (
-              <section className="vs-pdp__key-specs" aria-label="أبرز المواصفات">
-                <h2>أبرز المواصفات</h2>
-                <dl>
-                  {keySpecs.map((attribute) => (
-                    <div key={attribute.key}><dt>{attribute.label}</dt><dd>{attribute.display}</dd></div>
-                  ))}
-                </dl>
-              </section>
-            )}
-
-            {product.short && description[0] !== product.short && (
-              <p className="vs-pdp__short">{product.short}</p>
-            )}
-
-            {selection.requiresChoice && (
-              <div ref={optionsRef}>
-                <OptionPicker
-                  product={product}
-                  variants={selection.variants}
-                  variantId={selection.variantId}
-                  onPick={selection.setVariantId}
-                  simpleChoices={selection.simpleChoices}
-                  onSimplePick={selection.setSimpleChoice}
-                  error={error}
+              <div className="vs-pdp__buy" ref={buyRef}>
+                <span className="vs-pdp__quantity-label">الكمية</span>
+                <QuantityStepper
+                  value={qty}
+                  onDecrease={() => setQty((value) => Math.max(1, value - 1))}
+                  onIncrease={() => setQty((value) => value + 1)}
+                  size="lg"
                 />
+                {qty > 1 && <span className="vs-pdp__subtotal">الإجمالي: <bdi>{money(selection.price * qty)}</bdi></span>}
+                <div className="vs-pdp__actions">
+                  <AddToCartButton
+                    onAdd={add}
+                    icon={<CartIcon size={18} />}
+                    label={
+                      selection.soldOut
+                        ? "غير متوفر حالياً"
+                        : "أضف إلى العربة"
+                    }
+                    disabled={selection.soldOut || selection.unavailable}
+                    className="vs-btn vs-btn--primary vs-btn--lg vs-pdp__cta"
+                  />
+                </div>
               </div>
-            )}
-
-            {selection.unavailable && (
-              <p className="vs-pdp__notice" role="status">
-                هذا المنتج بحاجة إلى تحديد الخيارات مع فريق المتجر قبل الطلب.
-              </p>
-            )}
-
-            {view.isPackage && product.packageItems.length > 0 && (
-              <div className="vs-pkgbox">
-                <h2 className="vs-pkgbox__title">
-                  <BoxIcon size={17} /> محتويات البكج
-                </h2>
-                <ul>
-                  {product.packageItems.map((item) => (
-                    <li key={item.id}>
-                      {item.slug ? (
-                        <Link to={`/product/${item.slug}`}>{item.label}</Link>
-                      ) : (
-                        item.label
-                      )}
-                      {item.quantity > 1 ? ` ×${item.quantity}` : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="vs-pdp__buy" ref={buyRef}>
-              <QuantityStepper
-                value={qty}
-                onDecrease={() => setQty((value) => Math.max(1, value - 1))}
-                onIncrease={() => setQty((value) => value + 1)}
-                size="lg"
-              />
-              <AddToCartButton
-                onAdd={add}
-                label={
-                  selection.soldOut
-                    ? "غير متوفر حالياً"
-                    : `أضف إلى العربة — ${money(selection.price * qty)}`
-                }
-                disabled={selection.soldOut || selection.unavailable}
-                className="vs-btn vs-btn--primary vs-btn--lg vs-pdp__cta"
-              />
             </div>
 
-            <div className="vs-pdp__share">
-              <button type="button" className="vs-btn vs-btn--outline" onClick={share}>مشاركة المنتج</button>
-              <span role="status">{shareStatus}</span>
-            </div>
 
-            <ul className="vs-pdp__assurance">
-              <li>
-                <WalletIcon size={17} /> الدفع عند الاستلام
-              </li>
-              <li>
-                <TruckIcon size={17} /> رسوم التوصيل تُحسب حسب المنطقة
-              </li>
-            </ul>
           </div>
 
         </div>

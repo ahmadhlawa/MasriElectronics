@@ -23,6 +23,22 @@ const TONES = {
 const TONE_NAMES = Object.keys(TONES);
 const ANGLES = [145, 215, 120, 35];
 
+/** Compare media paths consistently for local uploads, CDN URLs and query strings. */
+export function imagePath(src) {
+  try {
+    return decodeURIComponent(new URL(String(src || "").trim(), "https://storefront.invalid").pathname);
+  } catch {
+    return "";
+  }
+}
+
+/** Static demo washes and the importer's generated-media namespace contain no photos. */
+export function isPreviewPlaceholder(src) {
+  const path = imagePath(src);
+  return /(?:^|\/)masri-electronics\/preview\/[^/]+$/.test(path)
+    || /(?:^|\/)preview\/(?:hero-home|hero-offers|kitchen|coffee|cleaning|climate|personal|small-home)\.png$/.test(path);
+}
+
 function hashOf(value) {
   const text = String(value || "");
   let hash = 0;
